@@ -1,0 +1,5 @@
+*.launch
+Debug/
+Release/
+
+Thumbs.db
