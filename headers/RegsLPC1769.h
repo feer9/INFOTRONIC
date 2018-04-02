@@ -231,16 +231,85 @@
 	//!< ///////////////////   PCONP   //////////////////////////
 	//!<  Power Control for Peripherals register (PCONP - 0x400F C0C4) [pag. 62 user manual LPC1769]
 	//!< 0x400FC0C4UL : Direccion de inicio del registro de habilitación de dispositivos:
-	#define 	PCONP	(* ( ( __RW uint32_t  * ) 0x400FC0C4UL ))
+	#define 	PCONP			( ( PCONP_t  * ) 0x400FC0C4UL )
+	#define		PCONP_ 		( * ( ( __RW uint32_t * ) 0x400FC0C4UL ) )
+
+	typedef struct {
+		__RW uint32_t reserved1:1;
+		__RW uint32_t TIM0:1;
+		__RW uint32_t TIM1:1;
+		__RW uint32_t UART0:1;
+		__RW uint32_t UART1:1;
+		__RW uint32_t reserved2:1;
+		__RW uint32_t PWM1:1;
+		__RW uint32_t I2C0:1;
+		__RW uint32_t SPI:1;
+		__RW uint32_t RTC:1;
+		__RW uint32_t SSP1:1;
+		__RW uint32_t reserved3:1;
+		__RW uint32_t ADC:1;
+		__RW uint32_t CAN1:1;
+		__RW uint32_t CAN2:1;
+		__RW uint32_t GPIO:1;
+		__RW uint32_t RIT:1;
+		__RW uint32_t MCPWM:1;
+		__RW uint32_t QEI:1;
+		__RW uint32_t I2C1:1;
+		__RW uint32_t reserved4:1;
+		__RW uint32_t SSP0:1;
+		__RW uint32_t TIM2:1;
+		__RW uint32_t TIM3:1;
+		__RW uint32_t UART2:1;
+		__RW uint32_t UART3:1;
+		__RW uint32_t I2C2:1;
+		__RW uint32_t I2S:1;
+		__RW uint32_t reserved5:1;
+		__RW uint32_t GPDMA:1;
+		__RW uint32_t ENET:1;
+		__RW uint32_t USB:1;
+	}PCONP_t;
 
 
 	//!< ///////////////////   PCLKSEL   //////////////////////////
 	//!< Peripheral Clock Selection registers 0 and 1 (PCLKSEL0 -0x400F C1A8 and PCLKSEL1 - 0x400F C1AC) [pag. 56 user manual]
 	//!< 0x400FC1A8UL : Direccion de inicio de los registros de seleccion de los CLKs de los dispositivos:
-	#define		PCLKSEL		( ( __RW uint32_t  * ) 0x400FC1A8UL )
+	#define		PCLKSEL		( ( PCLKSEL_t  * ) 0x400FC1A8UL )
 	//!< Registros PCLKSEL
-	#define		PCLKSEL0	PCLKSEL[0]
-	#define		PCLKSEL1	PCLKSEL[1]
+	#define		PCLKSEL0		(*( ( __RW uint32_t  * ) 0x400FC1A8UL ))
+	#define		PCLKSEL1		(*( ( __RW uint32_t  * ) 0x400FC1ACUL ))
+
+	typedef struct{
+		__RW uint32_t WDT:2;
+		__RW uint32_t TIMER0:2;
+		__RW uint32_t TIMER1:2;
+		__RW uint32_t UART0:2;
+		__RW uint32_t UART1:2;
+		__RW uint32_t reserved1:2;
+		__RW uint32_t PWM1:2;
+		__RW uint32_t I2C0:2;
+		__RW uint32_t SPI:2;
+		__RW uint32_t reserved2:2;
+		__RW uint32_t SSP1:2;
+		__RW uint32_t DAC:2;
+		__RW uint32_t ADC:2;
+		__RW uint32_t CAN1:2;
+		__RW uint32_t ACF:2;
+		__RW uint32_t QEI:2;
+		__RW uint32_t GPIOINT:2;
+		__RW uint32_t PCB:2;
+		__RW uint32_t I2C1:2;
+		__RW uint32_t SSP0:2;
+		__RW uint32_t TIMER2:2;
+		__RW uint32_t TIMER3:2;
+		__RW uint32_t UART2:2;
+		__RW uint32_t UART3:2;
+		__RW uint32_t I2C2:2;
+		__RW uint32_t I2S:2;
+		__RW uint32_t reserved3:2;
+		__RW uint32_t RIT:2;
+		__RW uint32_t SYSCON:2;
+		__RW uint32_t MC:2;
+	}PCLKSEL_t;
 
 
 	//!< /////////////		SYSTICK		///////////////////////////
@@ -399,6 +468,130 @@
 	#define		U1IIR		DIR_UART1[2]
 	#define		U1LCR		DIR_UART1[3]
 	#define		U1LSR		DIR_UART1[5]
+
+
+	//!< ////////////		RTC		///////////////////
+
+	typedef struct {
+		union {
+			__RW uint32_t ILR;
+			struct {
+				__RW uint32_t CIF:1;
+				__RW uint32_t ALF:1;
+				__RW uint32_t reserved:30;
+			} ILR_;
+		};
+		uint32_t dummy;
+		union {
+			__RW uint32_t CCR;
+			struct {
+				__RW uint32_t CLKEN:1;
+				__RW uint32_t CTCRST:1;
+				__RW uint32_t internal_test:2;
+				__RW uint32_t CCALEN:1;
+				__RW uint32_t reserved:27;
+			} CCR_;
+		};
+		union {
+			__RW uint32_t CIIR;
+			struct {
+				__RW uint32_t IMSEC:1;
+				__RW uint32_t IMMIN:1;
+				__RW uint32_t IMHOUR:1;
+				__RW uint32_t IMDOM:1;
+				__RW uint32_t IMDOW:1;
+				__RW uint32_t IMDOY:1;
+				__RW uint32_t IMMONTH:1;
+				__RW uint32_t IMYEAR:1;
+				__RW uint32_t reserved:24;
+			} CIIR_;
+		};
+		union {
+			__RW uint32_t AMR;
+			struct {
+				__RW uint32_t AMRSEC:1;
+				__RW uint32_t AMRMIN:1;
+				__RW uint32_t AMRHOUR:1;
+				__RW uint32_t AMRDOM:1;
+				__RW uint32_t AMRDOW:1;
+				__RW uint32_t AMRDOY:1;
+				__RW uint32_t AMRMONTH:1;
+				__RW uint32_t AMRYEAR:1;
+				__RW uint32_t reserved:24;
+			} AMR_;
+		};
+		struct{
+			__R uint32_t Seconds:6;
+			__R uint32_t reserved1:2;
+			__R uint32_t Minutes:6;
+			__R uint32_t reserved2:2;
+			__R uint32_t Hours:5;
+			__R uint32_t reserved3:3;
+			__R uint32_t DayOfWeek:3;
+			__R uint32_t reserved4:5;
+
+			__R uint32_t DayOfMonth:5;
+			__R uint32_t reserved5:3;
+			__R uint32_t Month:4;
+			__R uint32_t reserved6:4;
+			__R uint32_t Year:12;
+			__R uint32_t reserved7:4;
+
+			__R uint32_t DayOfYear:12;
+			__R uint32_t reserved8:20;
+		}CTIME;
+
+		__RW uint32_t SEC;
+		__RW uint32_t MIN;
+		__RW uint32_t HOUR;
+		__RW uint32_t DOM;
+		__RW uint32_t DOW;
+		__RW uint32_t DOY;
+		__RW uint32_t MONTH;
+		__RW uint32_t YEAR;
+
+		__RW uint32_t CALIBRATION; // faltan los campos de esto
+
+		__RW uint32_t GPREG0;
+		__RW uint32_t GPREG1;
+		__RW uint32_t GPREG2;
+		__RW uint32_t GPREG3;
+		__RW uint32_t GPREG4;
+
+		struct{
+			__RW uint32_t reserved1:4;
+			__RW uint32_t OSCFEN:1;
+			__RW uint32_t reserved2:27;
+		}RTC_AUXEN;
+		struct{
+			__RW uint32_t reserved1:4;
+			__RW uint32_t OSCF:1;
+			__RW uint32_t reserved2:27;
+		}RTC_AUX;
+
+		__RW uint32_t ALSEC;
+		__RW uint32_t ALMIN;
+		__RW uint32_t ALHOUR;
+		__RW uint32_t ALDOM;
+		__RW uint32_t ALDOW;
+		__RW uint32_t ALDOY;
+		__RW uint32_t ALMON;
+		__RW uint32_t ALYEAR;
+	} RTC_t;
+
+	#define		LPC_RTC		( (RTC_t *) 0x40024000UL )
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #endif /* REGS_H_ */

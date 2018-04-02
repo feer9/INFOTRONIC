@@ -7,8 +7,8 @@ void InicExtInt		( void );
 void InicPLL		( void );
 void InicSysTick	( void );
 void InicTimer0		( void );
+void inicRTC		( void );
 
-//uint32_t* pconp =(uint32_t*) 0x400FC0C4UL;
 
 void InicializarKit ( void )
 {
@@ -16,6 +16,7 @@ void InicializarKit ( void )
 	InicPower();
 	InicTimer0();
 	InicSysTick();
+	inicRTC();
 	InicExtInt();
 	InicLED();
 	SetLED(0);
@@ -23,7 +24,7 @@ void InicializarKit ( void )
 
 void InicPower()
 {
-	PCONP &= ~0b00000100001010000000010111011110;
+	PCONP_ &= ~0b11101111111011110111010111011110;
 	/*	apago los siguientes perifericos:
 	bit	1	timer0
 		2	timer1
@@ -35,5 +36,6 @@ void InicPower()
 		10	SSP1
 		19	I2C1
 		21	SSP0
-		26	I2C2 */
+		26	I2C2
+	(tambien escribo un 0 en los que amanecen en 0, kcyo */
 }

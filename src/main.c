@@ -7,12 +7,9 @@
 
 #include <TPO.h>
 
-TIMER* T0_g = (TIMER*) 0x40004000UL;
 
 int main(void)
 {
-	TIMER* dummy = T0_g;
-
 	InicializarKit();
 	setearTimers();
 
@@ -24,3 +21,23 @@ int main(void)
 
 
 
+
+/** boludeces del timer */
+void timerEnd_Handler(uint8_t n)
+{
+	if (n == 0)
+		write_pin(0,22,1);
+	else if(n == 1)
+		write_pin(0,22,0);
+
+//	timer(7,ON,20000);
+	if(n==0 || n==7)
+		setearTimers();
+
+}
+void setearTimers()
+{
+	timer(0,ON,2000);
+	timer(1,ON,1900);
+	timer(7,ON,20000);
+}

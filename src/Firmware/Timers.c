@@ -1,28 +1,6 @@
 #include <TPO.h>
 
 
-
-
-void timerEnd_Handler(uint8_t n)
-{
-	if (n == 0)
-		write_pin(0,22,1);
-	else if(n == 1)
-		write_pin(0,22,0);
-
-//	timer(7,ON,20000);
-	if(n==0 || n==7)
-		setearTimers();
-
-}
-
-void setearTimers()
-{
-	timer(0,ON,2000);
-	timer(1,ON,1900);
-	timer(7,ON,20000);
-}
-
 void TIMER0_IRQHandler (void)
 {
 	if(T0->IR_.MR0)
@@ -39,7 +17,6 @@ void TIMER0_IRQHandler (void)
 		// do stuff
     }
 }
-
 
 int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 {
@@ -118,7 +95,6 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 	return 0;
 }
 
-
 int8_t nextTimer(uint32_t* timerCount, uint8_t* timerState, uint8_t size)
 {
 	uint32_t nextNum;
@@ -142,17 +118,26 @@ int8_t nextTimer(uint32_t* timerCount, uint8_t* timerState, uint8_t size)
 	return nextPos;
 }
 
+void timerEnded(void)
+{
+	timer(0,TIMER_FINISHED,0);
+}
+
+
+
+/**  FUNCIONES DE USUARIO */
+
 uint8_t isTimerEnd(uint8_t n)
 {
 	return timer(n,IS_TIMER_END,0);
 }
 
+void startTimer(uint8_t n, uint32_t time)
+{
+	timer(n,ON,time);
+}
+
 void stopTimer(uint8_t n)
 {
 	timer(n, OFF, 0);
-}
-
-void timerEnded(void)
-{
-	timer(0,TIMER_FINISHED,0);
 }

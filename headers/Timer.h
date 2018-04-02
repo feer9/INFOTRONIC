@@ -9,9 +9,13 @@
 
 int32_t timer(int8_t n, uint8_t action, uint32_t time);
 int8_t nextTimer(uint32_t* timerCount, uint8_t* timerState, uint8_t size);
-uint8_t isTimerEnd(uint8_t);
-void timerEnd_Handler(uint8_t);
-void stopTimer(uint8_t);
 void timerEnded(void);
+
+
+/** funciones de usuario */
+void timerEnd_Handler(uint8_t);
+uint8_t isTimerEnd(uint8_t);
+void stopTimer(uint8_t);
+void startTimer(uint8_t n, uint32_t time);
 
 #endif // _TIMER_H
