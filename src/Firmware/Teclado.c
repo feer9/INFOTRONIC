@@ -5,6 +5,7 @@ __RW uint8_t g_Teclado = 0;
 __RW uint8_t FlagTeclado = 0;
      uint8_t ledActual = 0;
 
+extern __RW uint8_t LCD_Action;
 
 void Teclado()
 {
@@ -20,11 +21,13 @@ void Teclado()
 
 	if(g_Teclado)
 	{
+		LCD_Action = g_Teclado;
 		switch(g_Teclado)
 		{
 		case 1:
 			ledActual = 0;
 			SetLED(0);
+
 			break;
 		case 2:
 			ledDOWN();
@@ -54,6 +57,21 @@ void Teclado()
 		g_Teclado = 0;
 	}
 }
+
+
+/*
+
+	#define		LCD_D4		PORT0,5			//GPIO0
+	#define		LCD_D5		PORT0,10		//GPIO0
+	#define		LCD_D6		PORT2,4			//GPIO2
+	#define		LCD_D7		PORT2,5			//GPIO2
+
+	#define		LCD_RS		PORT2,6			//GPIO2		register selector
+	#define		LCD_BF		PORT0,28		//GPIO1		busy flag
+	#define		LCD_E		PORT0,4			//GPIO0		chip enable signal
+
+*/
+
 
 void Debounce_Teclado(void)
 {
@@ -94,7 +112,7 @@ void Debounce_Teclado(void)
 #if _5_ENTRADAS
 	if(!debounceActivo)
 	{
-		sw5 = read(1,26, ACTIVO_BAJO);
+		sw5 = read_pin(1,26, ACTIVO_BAJO);
 		if(!sw5ant && sw5)
 			FlagTeclado = 5;
 		sw5ant = sw5;
@@ -113,11 +131,11 @@ uint8_t readSW(uint8_t n)
 {
 	switch(n)
 	{
-	case 1: return read(2,10, ACTIVO_BAJO);	// SW1
-	case 2:	return read(0,18, ACTIVO_BAJO);	// SW2
-	case 3:	return read(0,11, ACTIVO_BAJO);	// SW3
-	case 4:	return read(2,13, ACTIVO_BAJO);	// SW4
-	case 5: return read(1,26, ACTIVO_BAJO); // SW5
+	case 1: return read_pin(2,10, ACTIVO_BAJO);	// SW1
+	case 2:	return read_pin(0,18, ACTIVO_BAJO);	// SW2
+	case 3:	return read_pin(0,11, ACTIVO_BAJO);	// SW3
+	case 4:	return read_pin(2,13, ACTIVO_BAJO);	// SW4
+	case 5: return read_pin(1,26, ACTIVO_BAJO); // SW5
 	default: return 0;
 	}
 }

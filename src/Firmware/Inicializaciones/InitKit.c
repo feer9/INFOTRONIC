@@ -8,7 +8,7 @@ void InicPLL		( void );
 void InicSysTick	( void );
 void InicTimer0		( void );
 void inicRTC		( void );
-
+void InicLCD		( void );
 
 void InicializarKit ( void )
 {
@@ -20,6 +20,7 @@ void InicializarKit ( void )
 	InicExtInt();
 	InicLED();
 	SetLED(0);
+	InicLCD();
 }
 
 void InicPower()

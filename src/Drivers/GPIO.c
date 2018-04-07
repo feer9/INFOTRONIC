@@ -17,38 +17,27 @@ void SetPINMODE(uint8_t port, uint8_t pin, uint8_t modo)
 	PINMODE[ port ] = PINMODE[ port ] | ( modo << pin );	//!< Set de bits en campo
 }
 
-void SetDIR(uint8_t port, uint8_t pin, uint8_t dir )
+void SetMODE_OD (uint8_t port, uint8_t pin, uint8_t mode)
 {
-	port = port * 8;									//!< Calcula registro FIODIR
-	GPIOs[ port ] = GPIOs[ port ] & ( ~ ( 1 << pin ) );	//!< Limpia campo de bits
-	GPIOs[ port ] = GPIOs[ port ] | ( dir << pin );		//!< Set de bits en campo
+	mode ?	(PINMODE_OD [port] |=  (1 << pin)) : (PINMODE_OD [port] &= ~(1 << pin));
 }
 
-void SetPIN(uint8_t port, uint8_t pin, uint8_t estado )
+void SetDIR (uint8_t port, uint8_t pin, uint8_t dir)
 {
-	port = port * 8 + 5;									//!< Calcula registro FIOPIN
-	GPIOs[ port ] = GPIOs[ port ] & ( ~ ( 1 << pin ) );		//!< Limpia campo de bits
-	GPIOs[ port ] = GPIOs[ port ] | ( estado << pin );		//!< Set de bits en campo
+	dir	?	(*(FIODIR + 8*port) |=  (1 << pin)) : (*(FIODIR + 8*port) &= ~(1 << pin)) ;
 }
 
-uint8_t GetPIN(uint8_t port, uint8_t pin, uint8_t actividad )
+void SetPIN (uint8_t port, uint8_t pin, uint8_t state)
 {
-	port = port * 8 + 5;							//!< Calcula registro FIOPIN
-	return ( ( ( GPIOs[ port ] >> pin ) & 1 ) == actividad ) ? 1 : 0;	//!< Retorna estado de pin en relacion a la actividad
+	state ? (*(FIOSET + 8*port) |= (1 << pin)) : (*(FIOCLR + 8*port) |= (1 << pin)) ;
 }
 
-void SetMODE_OD( uint8_t port , uint8_t pin , uint8_t dir )
+uint8_t GetPIN (uint8_t port, uint8_t pin, uint8_t activ)
 {
-	PINMODE_OD[ port ] = PINMODE_OD[ port ] & ( ~ ( 1 << pin ) );	//!< Limpia campo de bits
-	PINMODE_OD[ port ] = PINMODE_OD[ port ] | ( dir << pin );		//!< Set de bits en campo
+	return (((*(FIOPIN + 8*port) >> pin) & 0x01) == activ) ? 1 : 0 ;
 }
 
-void TooglePIN( uint8_t port , uint8_t pin)
+void TooglePIN(uint8_t port, uint8_t pin)
 {
-	port = port * 8 + 5;			//!< Calcula registro FIOPIN
-	
-	if ( (GPIOs[ port ] >> pin) & 1 )
-		GPIOs[ port ] &= ( ~ ( 1 << pin ) );	//!< Si vale 1, lo limpia
-	else
-		GPIOs[ port ] |= ( 1 << pin );			//!< Si vale 0, lo setea
+	read(port,pin) ? write_pin(port,pin, 0) : write_pin(port,pin, 1) ;
 }

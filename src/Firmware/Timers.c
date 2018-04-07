@@ -34,7 +34,7 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 			timersActivos --;
 			if(!timersActivos) // apago t0do
 			{
-				ICER0 |= (0x01 << 1);	// Deshabilito Interrupcion TIMER0
+				ICER0 = (0x01 << 1);	// Deshabilito Interrupcion TIMER0
 				T0->MCR_.MR0I = 0;		// Desactivo interrupcion match 0
 				T0->TCR = 2;			// Apago y reseteo el temporizador
 				T0->MR0 = 0;			// Restablezco el Match Register
@@ -63,7 +63,7 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 			T0->MCR_.MR0I = 1;		// Interrumpe en match0
 			MR0isOnTimer = n;
 			T0->TCR = 1;			// Enciendo el temporizador
-			ISER0 |= (0x01 << 1);	// Habilito Interrupcion TIMER0
+			ISER0 = (0x01 << 1);	// Habilito Interrupcion TIMER0
 		}
 		else
 		{
@@ -82,7 +82,8 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 			n = MR0isOnTimer;
 			timer(n, OFF, 0); // stopTimer(n);
 			timerEnd_Handler(n);
-		} while(T0->TCR_.CE && T0->MR0 < T0->TC);
+		}
+		while (T0->TCR_.CE && T0->MR0 < T0->TC);
 		break;
 
 	case IS_TIMER_END:

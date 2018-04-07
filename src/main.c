@@ -16,28 +16,33 @@ int main(void)
 	while(1)
 	{
 		Teclado();
+		LCD();
 	}
 }
 
 
-
+extern __RW uint8_t flagTimerLCD;
 
 /** boludeces del timer */
 void timerEnd_Handler(uint8_t n)
 {
-	if (n == 0)
-		write_pin(0,22,1);
-	else if(n == 1)
-		write_pin(0,22,0);
+	switch (n)
+	{
+	case 6:
+		write_pin(0,22,1); setearTimers(); break;
+	case 7:
+		write_pin(0,22,0); break;
 
-//	timer(7,ON,20000);
-	if(n==0 || n==7)
-		setearTimers();
+	case 0:
+		flagTimerLCD |= 0x01; break;
+	case 1:
+		flagTimerLCD |= 0x02; break;
 
+	default: break;
+	}
 }
 void setearTimers()
 {
-	timer(0,ON,2000);
-	timer(1,ON,1900);
-	timer(7,ON,20000);
+	timer(6,ON,200000000);
+	timer(7,ON,190000000);
 }

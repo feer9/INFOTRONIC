@@ -8,7 +8,7 @@
 #ifndef KIT_INFO2BASEBOARD_H_
 #define KIT_INFO2BASEBOARD_H_
 
-	#include <FW_GPIO.h>
+	#include <GPIO.h>
 //******agregue aquí debajo los includes propios de su aplicación.
 
 	#define SW1 0x02
@@ -57,8 +57,8 @@
 
 	//Led RGB:
 	#define		RGBB		PORT2,1			//GPIO2
-	#define		RGBR		PORT2,2			//GPIO2
-	#define		RGBG		PORT2,3			//GPIO2
+	#define		RGBG		PORT2,2			//GPIO2
+	#define		RGBR		PORT2,3			//GPIO2
 	#define		BUZZ		PORT0,28		//GPIO0
 	//Led LPCXPresso
 	#define		LEDLPC_R	PORT0,22
@@ -87,6 +87,14 @@
 	#define		LCD_RS		PORT2,6			//GPIO2
 	#define		LCD_BF		PORT0,28		//GPIO1
 	#define		LCD_E		PORT0,4			//GPIO0
+/*
+	RS = 0: IR write as an internal operation (display clear, etc.)
+	RS = 1: Write data to DDRAM or CGRAM (DR to DDRAM or CGRAM)
+
+	RS: register selector			BF: busy flag		E: chip enable signal
+	IR: instruction register		DR: data register
+	DDRAM: display data ram			CGRAM: character generator ram
+*/
 
 	//ADC
 	#define 	ADC5		P1,31	//ADC5	//es el pote (OJO! el plano indica ADC0)

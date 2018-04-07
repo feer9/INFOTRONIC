@@ -20,7 +20,7 @@ void InicExtInt(void)
 	IO0IntEnR |= (0x01 << 18);	// SW2
 	IO2IntEnR |= (0x01 << 10);	// SW1
 
-	ISER0 |= (0x01 << 21);            		// Habilito Interrupcion externa 3
+	ISER0 = (0x01 << 21);            		// Habilito Interrupcion externa 3
 
 	// Limpio flags de interrupciones
 	IO2IntClr |= (0x01 << 13);	// SW4
