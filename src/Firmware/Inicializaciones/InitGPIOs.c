@@ -15,7 +15,6 @@ void InicLED ( void )
 	set_dir(BUZZ, SALIDA);
 
 	write_pin(RGBR, OFF);
-	write_pin(RGBG, ON);
 	write_pin(RGBG, OFF);
 	write_pin(RGBB, OFF);
 	write_pin(LEDLPC_R, LEDLPC_OFF);

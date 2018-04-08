@@ -1,6 +1,6 @@
 #include <TPO.h>
 
-extern __RW uint8_t tick;
+__RW uint8_t tick = 0;
 
 void SysTick_Handler(void)		// systick cada 2,5ms
 {

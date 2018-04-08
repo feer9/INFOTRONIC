@@ -8,7 +8,7 @@ void EINT3_IRQHandler (void)
 	{
 		if(IO0IntStatF & (0x01 << 18))		// en P0.18, SW2, presionado
 		{
-			FlagTeclado = 2;				// Seteo flag del SW2
+			FlagTeclado = SW2;				// Seteo flag del SW2
 			IO0IntEnF &= ~(0x01 << 18);		// deshabilito interrupcion de SW2
 			IO0IntEnR &= ~(0x01 << 18);
 			IO0IntClr |= (0x01 << 18);		// Limpia flag de interrupcion
@@ -20,7 +20,7 @@ void EINT3_IRQHandler (void)
 		}
 		if(IO0IntStatF & (0x01 << 11))		// en P0.11, SW3, presionado
 		{
-			FlagTeclado = 3;				// Seteo flag del SW3
+			FlagTeclado = SW3;				// Seteo flag del SW3
 			IO0IntEnF &= ~(0x01 << 11);		// deshabilito interrupcion de SW3
 			IO0IntEnR &= ~(0x01 << 11);
 			IO0IntClr |= (0x01 << 11);		// Limpia flag de interrupcion
@@ -35,7 +35,7 @@ void EINT3_IRQHandler (void)
 	{
 		if(IO2IntStatF & (0x01 << 10))		// en P2.10, SW1, presionado
 		{
-			FlagTeclado = 1;				// Seteo flag del SW1
+			FlagTeclado = SW1;				// Seteo flag del SW1
 			IO2IntEnF &= ~(0x01 << 10);		// deshabilito interrupcion de SW1
 			IO2IntEnR &= ~(0x01 << 10);
 			IO2IntClr |= (0x01 << 10);		// Limpia flag de interrupcion
@@ -47,7 +47,7 @@ void EINT3_IRQHandler (void)
 		}
 		if(IO2IntStatF & (0x01 << 13))		// en P2.13, SW4, presionado
 		{
-			FlagTeclado = 4;				// Seteo flag del SW4
+			FlagTeclado = SW4;				// Seteo flag del SW4
 			IO2IntEnF &= ~(0x01 << 13);		// deshabilito interrupcion de SW4
 			IO2IntEnR &= ~(0x01 << 13);
 			IO2IntClr |= (0x01 << 13);		// Limpia flag de interrupcion

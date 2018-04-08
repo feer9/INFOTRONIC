@@ -11,11 +11,11 @@
 	#include <GPIO.h>
 //******agregue aquí debajo los includes propios de su aplicación.
 
-	#define SW1 0x02
-	#define SW2 0x04
-	#define SW3 0x08
-	#define SW4 0x10
-	#define SW5 0x20
+	#define SW1 1
+	#define SW2 2
+	#define SW3 3
+	#define SW4 4
+	#define SW5 5
 
 //******                ****************                  *******//
 
@@ -65,6 +65,8 @@
 	#define		LEDLPC_G	PORT3,25
 	#define		LEDLPC_B	PORT3,26
 	#define		LEDXpresso	LEDLPC_R
+	#define		LEDLPC_ON	0
+	#define		LEDLPC_OFF	1
 
 	//Teclas (teclado 5x1)
 	#define		KEY0		PORT2,10		//SW1

@@ -1,5 +1,5 @@
-#ifndef FW_ENTRADAS_H_
-#define FW_ENTRADAS_H_
+#ifndef TECLADO_H_
+#define TECLADO_H_
 
 #include <RegsLPC1769.h>
 
@@ -17,4 +17,13 @@
 void Debounce_Teclado(void);
 uint8_t readSW(uint8_t);
 
-#endif /* FW_ENTRADAS_H_ */
+
+void ToggleLEDActual( void );
+void SetLEDActual	( void );
+void SetLED			( uint8_t );
+void ledUP			( void );
+void ledDOWN		( void );
+void pressedKey		( uint8_t );
+void releasedKey	( uint8_t );
+
+#endif /* TECLADO_H_ */
