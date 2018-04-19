@@ -1,42 +1,30 @@
-#include <TPO.h>
+#include <Aplicacion.h>
 
-void InicPower		( void );
-void InicializarKit	( void );
-void InicLED		( void );
-void InicExtInt		( void );
-void InicPLL		( void );
-void InicSysTick	( void );
-void InicTimer0		( void );
-void inicRTC		( void );
-void InicLCD		( void );
+void initPower		( void );
+void initializarKit	( void );
+void initGPIOs		( void );
+void initExtInt		( void );
+void initPLL		( void );
+void initSysTick	( void );
+void initTimer0		( uint32_t ); // prescaler * 10ns
+void initRTC		( void );
 
-void InicializarKit ( void )
+void inicializarKit ( void )
 {
-	InicPLL();
-	InicPower();
-	InicTimer0();
-	InicSysTick();
-	inicRTC();
-	InicExtInt();
-	InicLED();
-	SetLED(0);
-	InicLCD();
+	initPLL();
+	initPower();
+	initTimer0(100000);
+	initSysTick();
+	initRTC();
+	initExtInt();
+	initGPIOs();
+	initLCD();
 }
 
-void InicPower()
+void initPower()
 {
-	PCONP_ &= ~0b11101111111011110111010111011110;
-	/*	apago los siguientes perifericos:
-	bit	1	timer0
-		2	timer1
-		3	UART0
-		4	UART1
-		6	PWM1
-		7	I2C0
-		8	SPI
-		10	SSP1
-		19	I2C1
-		21	SSP0
-		26	I2C2
-	(tambien escribo un 0 en los que amanecen en 0, kcyo */
+	PConP =   0b00000000000000001000001000000000;
+/*	solo dejo encendidos los perifericos:
+	bit	9	RTC
+	bit	15	GPIO  */
 }

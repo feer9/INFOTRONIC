@@ -1,20 +1,20 @@
-#include <TPO.h>
+#include <Aplicacion.h>
 
 
 void SetPINSEL(uint8_t port, uint8_t pin, uint8_t sel)
 {
-	port = port * 2 + pin / 16;								//!< Calcula registro PINSEL
-	pin = ( pin % 16 ) * 2;									//!< Calcula campo de bits
-	PINSEL[ port ] = PINSEL[ port ] & ( ~ ( 3 << pin ) );	//!< Limpia campo de bits
-	PINSEL[ port ] = PINSEL[ port ] | ( sel << pin );		//!< Set de bits en campo
+	port = port * 2 + pin / 16;				//!< Calcula registro PINSEL
+	pin = ( pin % 16 ) * 2;					//!< Calcula campo de bits
+	PINSEL_[ port ] &= ( ~ ( 3 << pin ) );	//!< Limpia campo de bits
+	PINSEL_[ port ] |= ( sel << pin );		//!< Set de bits en campo
 }
 
 void SetPINMODE(uint8_t port, uint8_t pin, uint8_t modo)
 {
-	port = port * 2 + pin / 16;								//!< Calcula registro PINMODE
-	pin = ( pin % 16 ) * 2;									//!< Calcula campo de bits
-	PINMODE[ port ] = PINMODE[ port ] & ( ~ ( 3 << pin ) );	//!< Limpia campo de bits
-	PINMODE[ port ] = PINMODE[ port ] | ( modo << pin );	//!< Set de bits en campo
+	port = port * 2 + pin / 16;				//!< Calcula registro PINMODE
+	pin = ( pin % 16 ) * 2;					//!< Calcula campo de bits
+	PINMODE_[ port ] &= ( ~ ( 3 << pin ) );	//!< Limpia campo de bits
+	PINMODE_[ port ] |= ( modo << pin );	//!< Set de bits en campo
 }
 
 void SetMODE_OD (uint8_t port, uint8_t pin, uint8_t mode)

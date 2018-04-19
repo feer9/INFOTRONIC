@@ -2,7 +2,7 @@
 #include <RegsLPC1769.h>
 
 
-void InicPLL ( void )
+void initPLL ( void )
 {
 	SCS       = SCS_Value;
 
@@ -48,7 +48,7 @@ void InicPLL ( void )
 
 	while (!(PLL1STAT & ((1<< 9) | (1<< 8))));/* Wait for PLLC1_STAT & PLLE1_STAT */
 
-	PCONP_   = PCONP_Value;		/* Power Control for Peripherals      */
+	PConP   = PCONP_Value;		/* Power Control for Peripherals      */
 
 	CLKOUTCFG = CLKOUTCFG_Value;    /* Clock Output Configuration         */
 

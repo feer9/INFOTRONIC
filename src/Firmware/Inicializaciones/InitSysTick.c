@@ -1,12 +1,10 @@
 #include <RegsLPC1769.h>
 
-
-void InicSysTick ( void );
-
-void InicSysTick(void)
+void initSysTick(void)
 {
-	// N=1 para 10ms
+	// STCALIB valor por defecto para 10ms
 	// si divido x 4, interrumpe cada 2,5ms
+	// para temporizaciones repetitivas se resta 1
 	STRELOAD  = ( STCALIB / 4 ) - 1;
 	STCURR = 0;
 

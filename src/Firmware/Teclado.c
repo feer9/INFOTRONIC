@@ -1,4 +1,4 @@
-#include <TPO.h>
+#include <Aplicacion.h>
 
 
 __RW uint8_t g_Teclado = 0;
@@ -34,7 +34,7 @@ void Debounce_Teclado(void)
 					if(contador[i] > ACEPTAReSTADO)
 					{
 						g_Teclado = i+1;
-						LCD_Action = g_Teclado;
+//						LCD_Action = g_Teclado;
 					}
 					contador[i] = 0;
 					debounceActivo --;

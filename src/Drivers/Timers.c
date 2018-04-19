@@ -1,4 +1,4 @@
-#include <TPO.h>
+#include <Aplicacion.h>
 
 
 void TIMER0_IRQHandler (void)
@@ -6,7 +6,7 @@ void TIMER0_IRQHandler (void)
 	if(T0->IR_.MR0)
 	{
 		// Interrumpió match 0 -> terminó un timer
-		T0->IR_.MR0 = 1;	// Borro flag del Match 0
+		T0->IR_.MR0 = 1;		// Borro flag del Match 0
 		timerEnded();
 	}
 

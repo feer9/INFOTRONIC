@@ -1,18 +1,18 @@
-#ifndef TPO_H_
-#define TPO_H_
+#ifndef APLICACION_H_
+#define APLICACION_H_
 
 #include <Teclado.h>
 #include <GPIO.h>
 #include <KitInfo2_BaseBoard.h>
 #include <RegsLPC1769.h>
 #include <Timer.h>
+#include <LCD.h>
 
-void InicializarKit	( void );
+void inicializarKit	( void );
 void Teclado		( void );
-void LCD			( void );
 
 
 
 
 
-#endif /* TPO_H_ */
+#endif /* APLICACION_H_ */

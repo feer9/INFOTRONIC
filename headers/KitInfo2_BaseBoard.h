@@ -72,8 +72,10 @@
 	#define		KEY0		PORT2,10		//SW1
 	#define		KEY1		PORT0,18		//SW2
 	#define		KEY2		PORT0,11		//SW3
-	#define		KEY3_RC		PORT2,13		//SW4
-	#define		KEY4_RC		PORT1,26		//SW5
+	#define		KEY3		PORT2,13		//SW4
+	#define		KEY3_RC		PORT2,13
+	#define		KEY4		PORT1,26		//SW5
+	#define		KEY4_RC		PORT1,26
 
 	//Entradas digitales:
 	#define		ED0		PORT1,26
