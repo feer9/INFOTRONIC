@@ -1,6 +1,18 @@
 #include <Aplicacion.h>
 
 
+void initTimer0(uint32_t presc)
+{
+	PCONP->TIM0 = 1; 		// Habilitar Timer 0
+	PCLKSEL->TIMER0 = 1; 	// Clock for timer PCLK = CCLK Selecciono clock
+	T0->PR = presc;			// Prescaler = 10ns * pr
+//	T0->PR = 100000;		// Prescaler para 1ms
+	T0->TCR = 2;			// Apago y reseteo el temporizador
+	T0->MR1 = 0xFFFFFFFF;	// Configuro match 1 para detectar overflow
+	T0->MCR_.MR1I = 1;		// Interrumpe si se produce overflow
+}
+
+
 void TIMER0_IRQHandler (void)
 {
 	if(T0->IR_.MR0)
@@ -17,6 +29,7 @@ void TIMER0_IRQHandler (void)
 		// do stuff
     }
 }
+
 
 int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 {

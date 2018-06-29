@@ -14,7 +14,7 @@ int main(void)
 	inicializarKit();
 	SetLED(0);
 	setearTimers();
-	displayLCD("AGUANTE EL PACO ", 0, 0);
+	displayLCD("--------", 0, 0);
 	while(1)
 	{
 		Teclado();
@@ -75,24 +75,24 @@ void pressedKey(uint8_t key)
 	{
 	case SW1:
 		SetLED(0);
-		displayLCD("uno dos uno dos ", 0, 0);
-		displayLCD("uno dos uno dos ", 1, 0);
+		displayLCD("uno dos  :-)    ", 0, 0);
+		displayLCD("uno dos     ;-P ", 1, 0);
 		break;
 
 	case SW2:
 		ledDOWN();
-		displayLCD("   TARA DOOOU!  ", 0, 0);
+		displayLCD("                ", 0, 0);
 		displayLCD("                ", 1, 0);
 		break;
 
 	case SW3:
 		ledUP();
-		displayLCD("AGUANTE EL PACO ", 0, 0);
+		displayLCD("msj3----", 0, 0);
 		break;
 
 	case SW4:
 		SetLED(3);
-		displayLCD("1234567890CaEeLi", 1, 0);
+		displayLCD("----msj4", 1, 0);
 		break;
 
 #if _5_ENTRADAS
