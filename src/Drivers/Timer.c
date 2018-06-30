@@ -3,29 +3,29 @@
 
 void initTimer0(uint32_t presc)
 {
-	PCONP->TIM0 = 1; 		// Habilitar Timer 0
-	PCLKSEL->TIMER0 = 1; 	// Clock for timer PCLK = CCLK Selecciono clock
+	PCONP _SET_BIT(1); 		// Habilitar Timer 0
+	PCLKSEL0 |= (0x01 << 2); // Clock for timer PCLK = CCLK Selecciono clock
 	T0->PR = presc;			// Prescaler = 10ns * pr
 //	T0->PR = 100000;		// Prescaler para 1ms
 	T0->TCR = 2;			// Apago y reseteo el temporizador
 	T0->MR1 = 0xFFFFFFFF;	// Configuro match 1 para detectar overflow
-	T0->MCR_.MR1I = 1;		// Interrumpe si se produce overflow
+	T0->MCR _SET_BIT(3);	// Interrumpe si se produce overflow
 }
 
 
 void TIMER0_IRQHandler (void)
 {
-	if(T0->IR_.MR0)
+	if(T0->IR & _BIT(0))
 	{
 		// Interrumpió match 0 -> terminó un timer
-		T0->IR_.MR0 = 1;		// Borro flag del Match 0
+		T0->IR _SET_BIT(0);		// Borro flag del Match 0
 		timerEnded();
 	}
 
-    if(T0->IR_.MR1)
+    if(T0->IR & _BIT(1))
     {
     	// Interrumpió match 1 -> overflow
-    	T0->IR_.MR1 = 1; 	// Borro flag del Match 1
+    	T0->IR _SET_BIT(1); 	// Borro flag del Match 1
 		// do stuff
     }
 }
@@ -48,7 +48,7 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 			if(!timersActivos) // apago t0do
 			{
 				ICER0 = (0x01 << 1);	// Deshabilito Interrupcion TIMER0
-				T0->MCR_.MR0I = 0;		// Desactivo interrupcion match 0
+				T0->MCR _RESET_BIT(0);		// Desactivo interrupcion match 0
 				T0->TCR = 2;			// Apago y reseteo el temporizador
 				T0->MR0 = 0;			// Restablezco el Match Register
 			}
@@ -73,7 +73,7 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 		if(!(timersActivos - 1)) // si no habia ninguno prendido
 		{
 			T0->MR0 = timerCount[n];// Seteo temporizacion
-			T0->MCR_.MR0I = 1;		// Interrumpe en match0
+			T0->MCR _SET_BIT(0);	// Interrumpe en match0
 			MR0isOnTimer = n;
 			T0->TCR = 1;			// Enciendo el temporizador
 			ISER0 = (0x01 << 1);	// Habilito Interrupcion TIMER0
@@ -96,7 +96,7 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 			timer(n, OFF, 0); // stopTimer(n);
 			timerEnd_Handler(n);
 		}
-		while (T0->TCR_.CE && T0->MR0 < T0->TC);
+		while ( (T0->TCR & _BIT(0)) && (T0->MR0 < T0->TC) );
 		break;
 
 	case IS_TIMER_END:

@@ -18,12 +18,16 @@ void Debounce_Teclado(void);
 uint8_t readSW(uint8_t);
 
 
-void ToggleLEDActual( void );
 void SetLEDActual	( void );
-void SetLED			( uint8_t );
+void SetLED			( int8_t );
 void ledUP			( void );
 void ledDOWN		( void );
 void pressedKey		( uint8_t );
 void releasedKey	( uint8_t );
+void ledON			( void );
+void ledOFF			( void );
+void ToggleLEDActual( void );
+void ToggleLED		( void );
+
 
 #endif /* TECLADO_H_ */

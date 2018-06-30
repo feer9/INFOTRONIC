@@ -4,18 +4,18 @@
 
 void initRTC()
 {
-	if(LPC_RTC->RTC_AUX.OSCF)			// RTC Oscillator Fail detect flag.
+	if(LPC_RTC->RTC_AUX & _BIT(4))		// RTC Oscillator Fail detect flag.
 	{
-		LPC_RTC->RTC_AUX.OSCF = 1;		// clear flag
-		PCONP->RTC = 1;					// power control periferic rtc
-//		LPC_RTC->CCR_.CLKEN = 0;		// The time counters are disabled so that they may be initialized.
-//		LPC_RTC->CCR_.CTCRST = 1;		// the elements in the internal oscillator divider are reset
-//		LPC_RTC->CCR_.CCALEN = 1;		// The calibration counter is disabled and reset to zero
+		LPC_RTC->RTC_AUX _SET_BIT(4);	// clear flag
+		PCONP _SET_BIT(9);				// power control periferic rtc
+//		LPC_RTC->CCR _RESET_BIT(0);		// The time counters are disabled so that they may be initialized.
+//		LPC_RTC->CCR _SET_BIT(1);		// the elements in the internal oscillator divider are reset
+//		LPC_RTC->CCR _SET_BIT(4);		// The calibration counter is disabled and reset to zero
 		LPC_RTC->CCR = 0b10010;
 		LPC_RTC->CALIBRATION = 0x0;
-		LPC_RTC->CCR_.CTCRST = 0;		// remain reset until CCR[1] is changed to zero -> lo pongo a 0
-		LPC_RTC->CCR_.CLKEN = 1;		// The time counters are enabled
-		LPC_RTC->RTC_AUXEN.OSCFEN = 1;	// the RTC Oscillator Fail detect interrupt is enabled
+		LPC_RTC->CCR _RESET_BIT(1);		// remain reset until CCR[1] is changed to zero -> lo pongo a 0
+		LPC_RTC->CCR _SET_BIT(1);		// The time counters are enabled
+		LPC_RTC->RTC_AUXEN _SET_BIT(4);	// the RTC Oscillator Fail detect interrupt is enabled
 	}
 #if RTC_SET_TIME
 

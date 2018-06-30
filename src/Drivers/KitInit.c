@@ -23,7 +23,7 @@ void inicializarKit ( void )
 
 void initPower()
 {
-	PConP =   0b00000000000000001000001000000000;
+	PCONP =   0b00000000000000001000001000000000;
 /*	solo dejo encendidos los perifericos:
 	bit	9	RTC
 	bit	15	GPIO  */

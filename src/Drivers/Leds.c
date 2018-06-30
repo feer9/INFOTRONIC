@@ -1,24 +1,45 @@
 #include <Aplicacion.h>
 
 __RW uint8_t ledActual = 0;
+__RW uint8_t ledStatus = ON;
+
+void ledOFF(void)
+{
+	ledStatus = OFF;
+	SetLED(-1);
+}
+
+void ledON(void)
+{
+	ledStatus = ON;
+	SetLED(ledActual);
+}
 
 void ledUP(void)
 {
-	if(ledActual == 3)
-		SetLED(0);
-	else
-		SetLED(ledActual + 1);
+	if(ledStatus)
+	{
+		if(ledActual == 3)
+			ledActual = -1;
+		ledActual++;
+
+		SetLED(ledActual);
+	}
 }
 
 void ledDOWN(void)
 {
-	if(!ledActual)
-		SetLED(3);
-	else
-		SetLED(ledActual - 1);
+	if(ledStatus)
+	{
+		if(!ledActual)
+			ledActual = 4;
+		ledActual--;
+
+		SetLED(ledActual);
+	}
 }
 
-void SetLED(uint8_t led)
+void SetLED(int8_t led)
 {
 	write_pin(LED1, OFF);
 	write_pin(LED2, OFF);
@@ -33,12 +54,19 @@ void SetLED(uint8_t led)
 	case 3: write_pin(LED4, ON); break;
 	default: break;
 	}
-	ledActual = led;
+
 }
 
 void SetLEDActual()
 {
-	SetLED(ledActual);
+	if(ledStatus)
+		SetLED(ledActual);
+}
+
+void ToggleLED()
+{
+	if(ledStatus)
+		ToggleLEDActual();
 }
 
 void ToggleLEDActual()
