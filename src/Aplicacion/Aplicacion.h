@@ -7,10 +7,14 @@
 #include <RegsLPC1769.h>
 #include <Timer.h>
 #include <LCD.h>
+#include <types.h>
+#include <string.h>
+#include <varios.h>
+#include <RTC.h>
 
 void inicializarKit	( void );
 void Teclado		( void );
-
+void setearTimers	( void );
 
 
 

@@ -1,15 +1,16 @@
 #include <Aplicacion.h>
 
-
-void initTimer0(uint32_t presc)
+// recibe el tiempo en milisegundos
+void initTimer0(float ms)
 {
 	PCONP _SET_BIT(1); 		// Habilitar Timer 0
-	PCLKSEL0 |= (0x01 << 2); // Clock for timer PCLK = CCLK Selecciono clock
-	T0->PR = presc;			// Prescaler = 10ns * pr
+	PCLKSEL0 |= (0x01 << 2);// Clock for timer PCLK = CCLK Selecciono clock
+	T0->PR = (100000 * ms) - 1;	// Prescaler = 10ns * PR
 //	T0->PR = 100000;		// Prescaler para 1ms
 	T0->TCR = 2;			// Apago y reseteo el temporizador
 	T0->MR1 = 0xFFFFFFFF;	// Configuro match 1 para detectar overflow
 	T0->MCR _SET_BIT(3);	// Interrumpe si se produce overflow
+	ISER0 _SET_BIT(1);
 }
 
 
@@ -48,7 +49,7 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 			if(!timersActivos) // apago t0do
 			{
 				ICER0 = (0x01 << 1);	// Deshabilito Interrupcion TIMER0
-				T0->MCR _RESET_BIT(0);		// Desactivo interrupcion match 0
+				T0->MCR _RESET_BIT(0);	// Desactivo interrupcion match 0
 				T0->TCR = 2;			// Apago y reseteo el temporizador
 				T0->MR0 = 0;			// Restablezco el Match Register
 			}

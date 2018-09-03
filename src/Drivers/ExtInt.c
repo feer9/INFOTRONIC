@@ -50,89 +50,89 @@ void initExtInt(void)
 	SetPINSEL(KEY2, PINSEL_GPIO);
 	SetPINSEL(KEY3, PINSEL_GPIO);
 
-	EXTMODE |= (0x0F << 0);					// Todas por flanco
+	EXTMODE  |=  (0x0F << 0);				// Todas por flanco
 	EXTPOLAR &= ~(0x0F << 0);				// Todas por flanco descendente
 
 	// Habilito interrupcion en GPIOs del kit
 	// Falling edge
-	IO2IntEnF |= (0x01 << 13);	// SW4
-	IO0IntEnF |= (0x01 << 11); 	// SW3
-	IO0IntEnF |= (0x01 << 18);	// SW2
-	IO2IntEnF |= (0x01 << 10);	// SW1
+	IO2IntEnF |= (0x01 << SW4_PIN);			// SW4
+	IO0IntEnF |= (0x01 << SW3_PIN); 		// SW3
+	IO0IntEnF |= (0x01 << SW2_PIN);			// SW2
+	IO2IntEnF |= (0x01 << SW1_PIN);			// SW1
 
 	// Rising edge
-	IO2IntEnR |= (0x01 << 13);	// SW4
-	IO0IntEnR |= (0x01 << 11); 	// SW3
-	IO0IntEnR |= (0x01 << 18);	// SW2
-	IO2IntEnR |= (0x01 << 10);	// SW1
+	IO2IntEnR |= (0x01 << SW4_PIN);			// SW4
+	IO0IntEnR |= (0x01 << SW3_PIN);			// SW3
+	IO0IntEnR |= (0x01 << SW2_PIN);			// SW2
+	IO2IntEnR |= (0x01 << SW1_PIN);			// SW1
 
-	ISER0 = (0x01 << 21);            		// Habilito Interrupcion externa 3
+	ISER0      = (0x01 << 21);				// Habilito Interrupcion externa 3
 
 	// Limpio flags de interrupciones
-	IO2IntClr |= (0x01 << 13);	// SW4
-	IO0IntClr |= (0x01 << 11);	// SW3
-	IO0IntClr |= (0x01 << 18);	// SW2
-	IO2IntClr |= (0x01 << 10);	// SW1
-	EXTINT |= (0x01 << EINT3);
+	IO2IntClr |= (0x01 << SW4_PIN);			// SW4
+	IO0IntClr |= (0x01 << SW3_PIN);			// SW3
+	IO0IntClr |= (0x01 << SW2_PIN);			// SW2
+	IO2IntClr |= (0x01 << SW1_PIN);			// SW1
+	EXTINT    |= (0x01 << EINT3);
 }
 
 
 void EINT3_IRQHandler (void)
 {
-	if(IOIntStatus == 0x01)			// interrupcion por puerto 0
+	if(IOIntStatus == IOInt_P0)					// interrupcion por puerto 0
 	{
-		if(IO0IntStatF & (0x01 << 18))		// en P0.18, SW2, presionado
+		if(IO0IntStatF & (0x01 << SW2_PIN))		// en P0.18, SW2, presionado
 		{
-			FlagTeclado = SW2;				// Seteo flag del SW2
-			IO0IntEnF &= ~(0x01 << 18);		// deshabilito interrupcion de SW2
-			IO0IntEnR &= ~(0x01 << 18);
-			IO0IntClr |= (0x01 << 18);		// Limpia flag de interrupcion
+			FlagTeclado = SW2;					// Seteo flag del SW2
+			IO0IntEnF &= ~(0x01 << SW2_PIN);	// deshabilito interrupcion de SW2
+			IO0IntEnR &= ~(0x01 << SW2_PIN);
+			IO0IntClr |=  (0x01 << SW2_PIN);	// Limpia flag de interrupcion
 		}
-		else if(IO0IntStatR & (0x01 << 18)) // en P0.18, SW2, soltado
+		else if(IO0IntStatR & (0x01 << SW2_PIN))// en P0.18, SW2, soltado
 		{
-			IO0IntEnF |= (0x01 << 18);		// habilito interrupcion de SW2
-			IO0IntClr |= (0x01 << 18);		// Limpia flag de interrupcion
+			IO0IntEnF |= (0x01 << SW2_PIN);		// habilito interrupcion de SW2
+			IO0IntClr |= (0x01 << SW2_PIN);		// Limpia flag de interrupcion
 		}
-		if(IO0IntStatF & (0x01 << 11))		// en P0.11, SW3, presionado
+		if(IO0IntStatF & (0x01 << SW3_PIN))		// en P0.11, SW3, presionado
 		{
-			FlagTeclado = SW3;				// Seteo flag del SW3
-			IO0IntEnF &= ~(0x01 << 11);		// deshabilito interrupcion de SW3
-			IO0IntEnR &= ~(0x01 << 11);
-			IO0IntClr |= (0x01 << 11);		// Limpia flag de interrupcion
+			FlagTeclado = SW3;					// Seteo flag del SW3
+			IO0IntEnF &= ~(0x01 << SW3_PIN);	// deshabilito interrupcion de SW3
+			IO0IntEnR &= ~(0x01 << SW3_PIN);
+			IO0IntClr |=  (0x01 << SW3_PIN);	// Limpia flag de interrupcion
 		}
-		else if(IO0IntStatR & (0x01 << 11)) // en P0.18, SW3, soltado
+		else if(IO0IntStatR & (0x01 << SW3_PIN))// en P0.18, SW3, soltado
 		{
-			IO0IntEnF |= (0x01 << 11);		// habilito interrupcion de SW3
-			IO0IntClr |= (0x01 << 11);		// Limpia flag de interrupcion
+			IO0IntEnF |= (0x01 << SW3_PIN);		// habilito interrupcion de SW3
+			IO0IntClr |= (0x01 << SW3_PIN);		// Limpia flag de interrupcion
 		}
 	}
-	if(IOIntStatus == 0x04)			// interrupcion por puerto 2
+	if(IOIntStatus == IOInt_P2)					// interrupcion por puerto 2
 	{
-		if(IO2IntStatF & (0x01 << 10))		// en P2.10, SW1, presionado
+		if(IO2IntStatF & (0x01 << SW1_PIN))		// en P2.10, SW1, presionado
 		{
-			FlagTeclado = SW1;				// Seteo flag del SW1
-			IO2IntEnF &= ~(0x01 << 10);		// deshabilito interrupcion de SW1
-			IO2IntEnR &= ~(0x01 << 10);
-			IO2IntClr |= (0x01 << 10);		// Limpia flag de interrupcion
+			FlagTeclado = SW1;					// Seteo flag del SW1
+			IO2IntEnF &= ~(0x01 << SW1_PIN);	// deshabilito interrupcion de SW1
+			IO2IntEnR &= ~(0x01 << SW1_PIN);
+			IO2IntClr |=  (0x01 << SW1_PIN);	// Limpia flag de interrupcion
 		}
-		else if(IO2IntStatR & (0x01 << 10)) // en P2.10, SW1, soltado
+		else if(IO2IntStatR & (0x01 << SW1_PIN))// en P2.10, SW1, soltado
 		{
-			IO2IntEnF |= (0x01 << 10);		// habilito interrupcion de SW1
-			IO2IntClr |= (0x01 << 10);		// Limpia flag de interrupcion
+			IO2IntEnF |= (0x01 << SW1_PIN);		// habilito interrupcion de SW1
+			IO2IntClr |= (0x01 << SW1_PIN);		// Limpia flag de interrupcion
 		}
-		if(IO2IntStatF & (0x01 << 13))		// en P2.13, SW4, presionado
+		if(IO2IntStatF & (0x01 << SW4_PIN))		// en P2.13, SW4, presionado
 		{
-			FlagTeclado = SW4;				// Seteo flag del SW4
-			IO2IntEnF &= ~(0x01 << 13);		// deshabilito interrupcion de SW4
-			IO2IntEnR &= ~(0x01 << 13);
-			IO2IntClr |= (0x01 << 13);		// Limpia flag de interrupcion
+			FlagTeclado = SW4;					// Seteo flag del SW4
+			IO2IntEnF &= ~(0x01 << SW4_PIN);	// deshabilito interrupcion de SW4
+			IO2IntEnR &= ~(0x01 << SW4_PIN);
+			IO2IntClr |=  (0x01 << SW4_PIN);	// Limpia flag de interrupcion
 		}
-		else if(IO2IntStatR & (0x01 << 13)) // en P2.13, SW4, soltado
+		else if(IO2IntStatR & (0x01 << SW4_PIN))// en P2.13, SW4, soltado
 		{
-			IO2IntEnF |= (0x01 << 13);		// habilito interrupcion de SW4
-			IO2IntClr |= (0x01 << 13);		// Limpia flag de interrupcion
+			IO2IntEnF |= (0x01 << SW4_PIN);		// habilito interrupcion de SW4
+			IO2IntClr |= (0x01 << SW4_PIN);		// Limpia flag de interrupcion
 		}
 	}
 
-	EXTINT |= (0x01 << EINT3);	// Limpia flag de interrupción
+	EXTINT |= (0x01 << EINT3);		// Limpia flag de interrupción
 }

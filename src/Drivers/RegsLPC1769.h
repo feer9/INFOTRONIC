@@ -59,50 +59,6 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 
-
-typedef struct {
-	__RW uint32_t PIN0:2;
-	__RW uint32_t PIN1:2;
-	__RW uint32_t PIN2:2;
-	__RW uint32_t PIN3:2;
-	__RW uint32_t PIN4:2;
-	__RW uint32_t PIN5:2;
-	__RW uint32_t PIN6:2;
-	__RW uint32_t PIN7:2;
-	__RW uint32_t PIN8:2;
-	__RW uint32_t PIN9:2;
-	__RW uint32_t PIN10:2;
-	__RW uint32_t PIN11:2;
-	__RW uint32_t PIN12:2;
-	__RW uint32_t PIN13:2;
-	__RW uint32_t PIN14:2;
-	__RW uint32_t PIN15:2;
-	__RW uint32_t PIN16:2;
-	__RW uint32_t PIN17:2;
-	__RW uint32_t PIN18:2;
-	__RW uint32_t PIN19:2;
-	__RW uint32_t PIN20:2;
-	__RW uint32_t PIN21:2;
-	__RW uint32_t PIN22:2;
-	__RW uint32_t PIN23:2;
-	__RW uint32_t PIN24:2;
-	__RW uint32_t PIN25:2;
-	__RW uint32_t PIN26:2;
-	__RW uint32_t PIN27:2;
-	__RW uint32_t PIN28:2;
-	__RW uint32_t PIN29:2;
-	__RW uint32_t PIN30:2;
-	__RW uint32_t PIN31:2;
-}PINs_2B_t;
-typedef struct {
-	PINs_2B_t P0;
-	PINs_2B_t P1;
-	PINs_2B_t P2;
-	PINs_2B_t P3;
-	PINs_2B_t P4;
-}PORTs_2B_t;
-
-
 //!< ////////////////Registros PINSEL//////////////////////////////
 //!< 0x4002C000UL : Direccion de inicio de los registros PINSEL
 #define		PINSEL		( (    PORTs_2B_t  * ) 0x4002C000UL )
@@ -226,198 +182,14 @@ typedef struct {
 #define 	SALIDA			1
 
 
-typedef struct{
-	union {
-		__RW uint32_t DIR;
-		struct {
-			__RW uint32_t DIR0:1;
-			__RW uint32_t DIR1:1;
-			__RW uint32_t DIR2:1;
-			__RW uint32_t DIR3:1;
-			__RW uint32_t DIR4:1;
-			__RW uint32_t DIR5:1;
-			__RW uint32_t DIR6:1;
-			__RW uint32_t DIR7:1;
-			__RW uint32_t DIR8:1;
-			__RW uint32_t DIR9:1;
-			__RW uint32_t DIR10:1;
-			__RW uint32_t DIR11:1;
-			__RW uint32_t DIR12:1;
-			__RW uint32_t DIR13:1;
-			__RW uint32_t DIR14:1;
-			__RW uint32_t DIR15:1;
-			__RW uint32_t DIR16:1;
-			__RW uint32_t DIR17:1;
-			__RW uint32_t DIR18:1;
-			__RW uint32_t DIR19:1;
-			__RW uint32_t DIR20:1;
-			__RW uint32_t DIR21:1;
-			__RW uint32_t DIR22:1;
-			__RW uint32_t DIR23:1;
-			__RW uint32_t DIR24:1;
-			__RW uint32_t DIR25:1;
-			__RW uint32_t DIR26:1;
-			__RW uint32_t DIR27:1;
-			__RW uint32_t DIR28:1;
-			__RW uint32_t DIR29:1;
-			__RW uint32_t DIR30:1;
-			__RW uint32_t DIR31:1;
-		};
-	};
-
+typedef struct
+{
+	__RW uint32_t DIR;
 	__R uint32_t reserved[3];
-
-	union {
-		__RW uint32_t MASK;
-		struct {
-			__RW uint32_t MASK0:1;
-			__RW uint32_t MASK1:1;
-			__RW uint32_t MASK2:1;
-			__RW uint32_t MASK3:1;
-			__RW uint32_t MASK4:1;
-			__RW uint32_t MASK5:1;
-			__RW uint32_t MASK6:1;
-			__RW uint32_t MASK7:1;
-			__RW uint32_t MASK8:1;
-			__RW uint32_t MASK9:1;
-			__RW uint32_t MASK10:1;
-			__RW uint32_t MASK11:1;
-			__RW uint32_t MASK12:1;
-			__RW uint32_t MASK13:1;
-			__RW uint32_t MASK14:1;
-			__RW uint32_t MASK15:1;
-			__RW uint32_t MASK16:1;
-			__RW uint32_t MASK17:1;
-			__RW uint32_t MASK18:1;
-			__RW uint32_t MASK19:1;
-			__RW uint32_t MASK20:1;
-			__RW uint32_t MASK21:1;
-			__RW uint32_t MASK22:1;
-			__RW uint32_t MASK23:1;
-			__RW uint32_t MASK24:1;
-			__RW uint32_t MASK25:1;
-			__RW uint32_t MASK26:1;
-			__RW uint32_t MASK27:1;
-			__RW uint32_t MASK28:1;
-			__RW uint32_t MASK29:1;
-			__RW uint32_t MASK30:1;
-			__RW uint32_t MASK31:1;
-		};
-	};
-
-	union {
-		__RW uint32_t PIN;
-		struct {
-			__RW uint32_t PIN0:1;
-			__RW uint32_t PIN1:1;
-			__RW uint32_t PIN2:1;
-			__RW uint32_t PIN3:1;
-			__RW uint32_t PIN4:1;
-			__RW uint32_t PIN5:1;
-			__RW uint32_t PIN6:1;
-			__RW uint32_t PIN7:1;
-			__RW uint32_t PIN8:1;
-			__RW uint32_t PIN9:1;
-			__RW uint32_t PIN10:1;
-			__RW uint32_t PIN11:1;
-			__RW uint32_t PIN12:1;
-			__RW uint32_t PIN13:1;
-			__RW uint32_t PIN14:1;
-			__RW uint32_t PIN15:1;
-			__RW uint32_t PIN16:1;
-			__RW uint32_t PIN17:1;
-			__RW uint32_t PIN18:1;
-			__RW uint32_t PIN19:1;
-			__RW uint32_t PIN20:1;
-			__RW uint32_t PIN21:1;
-			__RW uint32_t PIN22:1;
-			__RW uint32_t PIN23:1;
-			__RW uint32_t PIN24:1;
-			__RW uint32_t PIN25:1;
-			__RW uint32_t PIN26:1;
-			__RW uint32_t PIN27:1;
-			__RW uint32_t PIN28:1;
-			__RW uint32_t PIN29:1;
-			__RW uint32_t PIN30:1;
-			__RW uint32_t PIN31:1;
-		};
-	};
-
-	union {
-		__RW uint32_t SET;
-		struct {
-			__RW uint32_t SET0:1;
-			__RW uint32_t SET1:1;
-			__RW uint32_t SET2:1;
-			__RW uint32_t SET3:1;
-			__RW uint32_t SET4:1;
-			__RW uint32_t SET5:1;
-			__RW uint32_t SET6:1;
-			__RW uint32_t SET7:1;
-			__RW uint32_t SET8:1;
-			__RW uint32_t SET9:1;
-			__RW uint32_t SET10:1;
-			__RW uint32_t SET11:1;
-			__RW uint32_t SET12:1;
-			__RW uint32_t SET13:1;
-			__RW uint32_t SET14:1;
-			__RW uint32_t SET15:1;
-			__RW uint32_t SET16:1;
-			__RW uint32_t SET17:1;
-			__RW uint32_t SET18:1;
-			__RW uint32_t SET19:1;
-			__RW uint32_t SET20:1;
-			__RW uint32_t SET21:1;
-			__RW uint32_t SET22:1;
-			__RW uint32_t SET23:1;
-			__RW uint32_t SET24:1;
-			__RW uint32_t SET25:1;
-			__RW uint32_t SET26:1;
-			__RW uint32_t SET27:1;
-			__RW uint32_t SET28:1;
-			__RW uint32_t SET29:1;
-			__RW uint32_t SET30:1;
-			__RW uint32_t SET31:1;
-		};
-	};
-
-	union {
-		__RW uint32_t CLR;
-		struct {
-			__RW uint32_t CLR0:1;
-			__RW uint32_t CLR1:1;
-			__RW uint32_t CLR2:1;
-			__RW uint32_t CLR3:1;
-			__RW uint32_t CLR4:1;
-			__RW uint32_t CLR5:1;
-			__RW uint32_t CLR6:1;
-			__RW uint32_t CLR7:1;
-			__RW uint32_t CLR8:1;
-			__RW uint32_t CLR9:1;
-			__RW uint32_t CLR10:1;
-			__RW uint32_t CLR11:1;
-			__RW uint32_t CLR12:1;
-			__RW uint32_t CLR13:1;
-			__RW uint32_t CLR14:1;
-			__RW uint32_t CLR15:1;
-			__RW uint32_t CLR16:1;
-			__RW uint32_t CLR17:1;
-			__RW uint32_t CLR18:1;
-			__RW uint32_t CLR19:1;
-			__RW uint32_t CLR20:1;
-			__RW uint32_t CLR21:1;
-			__RW uint32_t CLR22:1;
-			__RW uint32_t CLR23:1;
-			__RW uint32_t CLR24:1;
-			__RW uint32_t CLR25:1;
-			__RW uint32_t CLR26:1;
-			__RW uint32_t CLR27:1;
-			__RW uint32_t CLR28:1;
-			__RW uint32_t CLR29:1;
-			__RW uint32_t CLR30:1;
-			__RW uint32_t CLR31:1;
-		};
-	};
+	__RW uint32_t MASK;
+	__RW uint32_t PIN;
+	__RW uint32_t SET;
+	__RW uint32_t CLR;
 }FIO_t ;
 
 #define		FIO0	( ( FIO_t * ) 0x2009C000UL )
@@ -490,6 +262,9 @@ typedef struct{
 #define		IOIntStatus_ 	( ( __RW uint32_t  * ) 0x40028080UL )
 #define		IOIntStatus		IOIntStatus_[0]
 
+#define		IOInt_P0		0x01
+#define		IOInt_P2		0x04
+
 // P0
 #define		IO0IntStatR_ 	( ( __RW uint32_t  * ) 0x40028084UL )
 #define		IO0IntStatR		IO0IntStatR_[0]
@@ -526,87 +301,49 @@ typedef struct{
 //!< ///////////////////   PCONP   //////////////////////////
 //!<  Power Control for Peripherals register (PCONP - 0x400F C0C4) [pag. 62 user manual LPC1769]
 //!< 0x400FC0C4UL : Direccion de inicio del registro de habilitación de dispositivos:
-#define 	PConP			( ( PCONP_t  * ) 0x400FC0C4UL )
 #define		PCONP 		( * ( ( __RW uint32_t * ) 0x400FC0C4UL ) )
 
 
-typedef struct {
-	__R  uint32_t reserved1:1;
-	__RW uint32_t TIM0:1;
-	__RW uint32_t TIM1:1;
-	__RW uint32_t UART0:1;
-	__RW uint32_t UART1:1;
-	__R  uint32_t reserved2:1;
-	__RW uint32_t PWM1:1;
-	__RW uint32_t I2C0:1;
-	__RW uint32_t SPI:1;
-	__RW uint32_t RTC:1;
-	__RW uint32_t SSP1:1;
-	__R  uint32_t reserved3:1;
-	__RW uint32_t ADC:1;
-	__RW uint32_t CAN1:1;
-	__RW uint32_t CAN2:1;
-	__RW uint32_t GPIO:1;
-	__RW uint32_t RIT:1;
-	__RW uint32_t MCPWM:1;
-	__RW uint32_t QEI:1;
-	__RW uint32_t I2C1:1;
-	__R  uint32_t reserved4:1;
-	__RW uint32_t SSP0:1;
-	__RW uint32_t TIM2:1;
-	__RW uint32_t TIM3:1;
-	__RW uint32_t UART2:1;
-	__RW uint32_t UART3:1;
-	__RW uint32_t I2C2:1;
-	__RW uint32_t I2S:1;
-	__R  uint32_t reserved5:1;
-	__RW uint32_t GPDMA:1;
-	__RW uint32_t ENET:1;
-	__RW uint32_t USB:1;
-}PCONP_t;
+#define 	PCONP_TIM0		1
+#define 	PCONP_TIM1		2
+#define 	PCONP_UART0		3
+#define 	PCONP_UART1		4
+
+#define 	PCONP_PWM1		6
+#define 	PCONP_I2C0		7
+#define 	PCONP_SPI		8
+#define 	PCONP_RTC		9
+#define 	PCONP_SSP1		10
+
+#define 	PCONP_ADC		12
+#define 	PCONP_CAN1		13
+#define 	PCONP_CAN2		14
+#define 	PCONP_GPIO		15
+#define 	PCONP_RIT		16
+#define 	PCONP_MCPWM		17
+#define 	PCONP_QEI		18
+#define 	PCONP_I2C1		19
+
+#define 	PCONP_SSP0		21
+#define 	PCONP_TIM2		22
+#define 	PCONP_TIM3		23
+#define 	PCONP_UART2		24
+#define 	PCONP_UART3		25
+#define 	PCONP_I2C2		26
+#define 	PCONP_I2S		27
+
+#define 	PCONP_GPDMA		29
+#define 	PCONP_ENET		30
+#define 	PCONP_USB		31
 
 
 //!< ///////////////////   PCLKSEL   //////////////////////////
 //!< Peripheral Clock Selection registers 0 and 1 (PCLKSEL0 -0x400F C1A8 and PCLKSEL1 - 0x400F C1AC) [pag. 56 user manual]
 //!< 0x400FC1A8UL : Direccion de inicio de los registros de seleccion de los CLKs de los dispositivos:
-#define		PCLKSEL			( (     PCLKSEL_t  * ) 0x400FC1A8UL )
-#define		PCLKSEL_		( ( __RW uint32_t  * ) 0x400FC1A8UL )
+#define		PCLKSEL		( ( __RW uint32_t  * ) 0x400FC1A8UL )
 //!< Registros PCLKSEL
-#define		PCLKSEL0		PCLKSEL_[0]
-#define		PCLKSEL1		PCLKSEL_[1]
-
-typedef struct {
-		__RW uint32_t WDT:2;
-		__RW uint32_t TIMER0:2;
-		__RW uint32_t TIMER1:2;
-		__RW uint32_t UART0:2;
-		__RW uint32_t UART1:2;
-		__R  uint32_t reserved1:2;
-		__RW uint32_t PWM1:2;
-		__RW uint32_t I2C0:2;
-		__RW uint32_t SPI:2;
-		__R  uint32_t reserved2:2;
-		__RW uint32_t SSP1:2;
-		__RW uint32_t DAC:2;
-		__RW uint32_t ADC:2;
-		__RW uint32_t CAN1:2;
-		__RW uint32_t ACF:2;
-		__RW uint32_t QEI:2;
-		__RW uint32_t GPIOINT:2;
-		__RW uint32_t PCB:2;
-		__RW uint32_t I2C1:2;
-		__RW uint32_t SSP0:2;
-		__RW uint32_t TIMER2:2;
-		__RW uint32_t TIMER3:2;
-		__RW uint32_t UART2:2;
-		__RW uint32_t UART3:2;
-		__RW uint32_t I2C2:2;
-		__RW uint32_t I2S:2;
-		__R  uint32_t reserved3:2;
-		__RW uint32_t RIT:2;
-		__RW uint32_t SYSCON:2;
-		__RW uint32_t MC:2;
-} PCLKSEL_t;
+#define		PCLKSEL0		PCLKSEL[0]
+#define		PCLKSEL1		PCLKSEL[1]
 
 
 //!< /////////////		SYSTICK		///////////////////////////
@@ -641,96 +378,27 @@ typedef struct
 #define		STCURR		DIR_SYSTICK->_STCURR
 #define		STCALIB		DIR_SYSTICK->_STCALIB
 
-#define 	N 		1	//Si N=1, Systick interrumpe cada 10ms.
-
 
 //!< /////////////		TIMERs		///////////////////////////
 typedef struct
 {
-	union {							/** IR - INTERRUPT REGISTER */
-		__RW uint32_t IR;
-		struct{
-			__RW uint32_t MR0:1;
-			__RW uint32_t MR1:1;
-			__RW uint32_t MR2:1;
-			__RW uint32_t MR3:1;
-			__RW uint32_t CR0:1;
-			__RW uint32_t CR1:1;
-			__R  uint32_t reserved:26;
-		} IR_;
-	};
-	union{							/** TCR - TIMER CONTROL REGISTER */
-		__RW uint32_t TCR;
-		struct{
-			__RW uint32_t CE:1;
-			__RW uint32_t CR:1;
-			__R uint32_t reserved:30;
-		} TCR_;
-	};
-	__RW uint32_t TC;				/** TC - TIMER COUNTER REGISTER */
-	__RW uint32_t PR;				/** PR - PRESCALE REGISTER */
-	__RW uint32_t PC;				/** PC - PRESCALE COUNTER REGISTER */
-	union{							/** MCR - MATCH CONTROL REGISTER */
-		uint32_t MCR;
-		struct{
-			__RW uint32_t MR0I:1;	/** interrupt enable/disable */
-			__RW uint32_t MR0R:1;	/** reset timer on match */
-			__RW uint32_t MR0S:1;	/** stop timer on match */
-			__RW uint32_t MR1I:1;
-			__RW uint32_t MR1R:1;
-			__RW uint32_t MR1S:1;
-			__RW uint32_t MR2I:1;
-			__RW uint32_t MR2R:1;
-			__RW uint32_t MR2S:1;
-			__RW uint32_t MR3I:1;
-			__RW uint32_t MR3R:1;
-			__RW uint32_t MR3S:1;
-			__R  uint32_t reserved:20;
-		} MCR_;
-	};
-	__RW uint32_t MR0;				/** MR - MATCH REGISTERS */
+	__RW uint32_t IR;			/** IR - INTERRUPT REGISTER */
+	__RW uint32_t TCR;			/** TCR - TIMER CONTROL REGISTER */
+	__RW uint32_t TC;			/** TC - TIMER COUNTER REGISTER */
+	__RW uint32_t PR;			/** PR - PRESCALE REGISTER */
+	__RW uint32_t PC;			/** PC - PRESCALE COUNTER REGISTER */
+	__RW uint32_t MCR;			/** MCR - MATCH CONTROL REGISTER */
+	__RW uint32_t MR0;			/** MR - MATCH REGISTERS */
 	__RW uint32_t MR1;
 	__RW uint32_t MR2;
 	__RW uint32_t MR3;
-	union{							/** CCR - CAPTURE CONTROL REGISTER */
-		__RW uint32_t CCR;
-		struct{
-			__RW uint32_t CAP0RE:1;
-			__RW uint32_t CAP0FE:1;
-			__RW uint32_t CAP0I:1;
-			__RW uint32_t CAP1RE:1;
-			__RW uint32_t CAP1FE:1;
-			__RW uint32_t CAP1I:1;
-			__R  uint32_t reserved:26;
-		} CCR_;
-	};
-		__RW uint32_t CR0;				/** CR - CAPTURE REGISTERS */
+	__RW uint32_t CCR;			/** CCR - CAPTURE CONTROL REGISTER */
+	__RW uint32_t CR0;			/** CR - CAPTURE REGISTERS */
 	__RW uint32_t CR1;
-	__R uint32_t dummy1[2];
-	union{							/** EMR - EXTERNAL MATCH REGISTER */
-		__RW uint32_t EMR;
-		struct{
-			__RW uint32_t EM0:1;
-			__RW uint32_t EM1:1;
-			__RW uint32_t EM2:1;
-			__RW uint32_t EM3:1;
-			__RW uint32_t EMC0:2;
-			__RW uint32_t EMC1:2;
-			__RW uint32_t EMC2:2;
-			__RW uint32_t EMC3:2;
-			__R  uint32_t reserved:20;
-		} EMR_;
-	};
-		__R uint32_t dummy2[12];
-	union{							/** CTCR - COUNT CONTROL REGISTER */
-		uint32_t CTCR;
-		struct{
-			__RW uint32_t TimerCounterMode:2;
-			__RW uint32_t CountInputSelect:2;
-			__R  uint32_t reserved:28;
-		} CTCR_;
-	};
-
+	__R  uint32_t dummy1[2];
+	__RW uint32_t EMR;			/** EMR - EXTERNAL MATCH REGISTER */
+	__R  uint32_t dummy2[12];
+	__RW uint32_t CTCR;			/** CTCR - COUNT CONTROL REGISTER */
 } TIMER_t;
 
 // Direcciones iniciales de cada Timer
@@ -771,59 +439,17 @@ typedef struct
 //!< ////////////		RTC		///////////////////
 
 typedef struct {
-		union {
-		__RW uint32_t ILR;
-		struct {
-			__RW uint32_t CIF:1;
-			__RW uint32_t ALF:1;
-			__R  uint32_t reserved:30;
-		} ILR_;
-	};
-		__R uint32_t dummy;
-		union {
-		__RW uint32_t CCR;
-		struct {
-			__RW uint32_t CLKEN:1;
-			__RW uint32_t CTCRST:1;
-			__RW uint32_t internal_test:2;
-			__RW uint32_t CCALEN:1;
-			__R  uint32_t reserved:27;
-		} CCR_;
-	};
-	union {
-			__RW uint32_t CIIR;
-		struct {
-			__RW uint32_t IMSEC:1;
-			__RW uint32_t IMMIN:1;
-			__RW uint32_t IMHOUR:1;
-			__RW uint32_t IMDOM:1;
-			__RW uint32_t IMDOW:1;
-			__RW uint32_t IMDOY:1;
-			__RW uint32_t IMMONTH:1;
-			__RW uint32_t IMYEAR:1;
-			__R  uint32_t reserved:24;
-		} CIIR_;
-	};
-	union {
-			__RW uint32_t AMR;
-		struct {
-			__RW uint32_t AMRSEC:1;
-			__RW uint32_t AMRMIN:1;
-			__RW uint32_t AMRHOUR:1;
-			__RW uint32_t AMRDOM:1;
-			__RW uint32_t AMRDOW:1;
-			__RW uint32_t AMRDOY:1;
-			__RW uint32_t AMRMONTH:1;
-			__RW uint32_t AMRYEAR:1;
-			__R  uint32_t reserved:24;
-		} AMR_;
-	};
-	union {
+	__RW uint32_t ILR;
+	__R uint32_t dummy;
+	__RW uint32_t CCR;
+	__RW uint32_t CIIR;
+	__RW uint32_t AMR;
+/*	union {
 		struct{
-		__RW uint32_t CTIME0;
-		__RW uint32_t CTIME1;
-		__RW uint32_t CTIME2;
-		};
+		__R uint32_t _0;
+		__R uint32_t _1;
+		__R uint32_t _2;
+		} ;
 		struct{
 			__R uint32_t Seconds:6;
 			__R uint32_t reserved1:2;
@@ -843,8 +469,12 @@ typedef struct {
 
 			__R uint32_t DayOfYear:12;
 			__R uint32_t reserved8:20;
-		} CTIME_;
-	};
+		} ;
+	} CTIME;
+*/
+	__R  uint32_t CTIME0;
+	__R  uint32_t CTIME1;
+	__R  uint32_t CTIME2;
 
 	__RW uint32_t SEC;
 	__RW uint32_t MIN;
@@ -855,7 +485,7 @@ typedef struct {
 	__RW uint32_t MONTH;
 	__RW uint32_t YEAR;
 
-	__RW uint32_t CALIBRATION; // faltan los campos de esto
+	__RW uint32_t CALIBRATION;
 
 	__RW uint32_t GPREG0;
 	__RW uint32_t GPREG1;
@@ -863,24 +493,8 @@ typedef struct {
 	__RW uint32_t GPREG3;
 	__RW uint32_t GPREG4;
 
-	union {
-		__RW uint32_t RTC_AUXEN;
-		struct{
-			__R  uint32_t reserved1:4;
-			__RW uint32_t OSCFEN:1;
-			__R  uint32_t reserved2:27;
-		}RTC_AUXEN_;
-	};
-
-	union {
-		__RW uint32_t RTC_AUX;
-		struct{
-			__R  uint32_t reserved1:4;
-			__RW uint32_t OSCF:1;
-			__R  uint32_t reserved2:27;
-		}RTC_AUX_;
-	};
-
+	__RW uint32_t RTC_AUXEN;
+	__RW uint32_t RTC_AUX;
 	__RW uint32_t ALSEC;
 	__RW uint32_t ALMIN;
 	__RW uint32_t ALHOUR;

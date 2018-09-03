@@ -3,12 +3,16 @@
 __RW uint8_t tick = 0;
 extern __RW uint8_t LCD_Delay;
 
-void initSysTick(void)
+// recibe el tiempo en milisegundos
+void initSysTick(float ms)
 {
 	// STCALIB valor por defecto para 10ms
 	// si divido x 4, interrumpe cada 2,5ms
 	// para temporizaciones repetitivas se resta 1
-	STRELOAD  = ( STCALIB / 4 ) - 1;
+//	STRELOAD  = ( STCALIB / 4 ) - 1;
+
+	// 100.000 para un clock de 100MHz, llama cada 1ms
+	STRELOAD = (100000 * ms) - 1;
 	STCURR = 0;
 
 	CLKSOURCE = 1;

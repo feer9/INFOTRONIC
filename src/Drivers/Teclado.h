@@ -4,7 +4,7 @@
 #include <RegsLPC1769.h>
 
 #define		T_DEBOUNCE		20
-#define		ACEPTAReSTADO	16		// arbitrario
+#define		ACEPTAReSTADO	((int) (0.7 * T_DEBOUNCE))	// arbitrario
 
 // configuro si quiero usar el SW5, el cual no se puede manejar por interrupcion
 #define _5_ENTRADAS 1
@@ -16,7 +16,7 @@
 
 void Debounce_Teclado(void);
 uint8_t readSW(uint8_t);
-
+void enableReleaseKeyInt(uint8_t);
 
 void SetLEDActual	( void );
 void SetLED			( int8_t );

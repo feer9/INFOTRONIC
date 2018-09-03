@@ -5,7 +5,6 @@ __RW uint8_t g_Teclado = 0;
 __RW uint8_t FlagTeclado = 0;
 extern __RW uint8_t LCD_Action;
 
-
 void Debounce_Teclado(void)
 {
 	static uint8_t t[N_ENTRADAS] = {0,0,0,0,0};
@@ -39,8 +38,7 @@ void Debounce_Teclado(void)
 					contador[i] = 0;
 					debounceActivo --;
 					// habilito interrupciones por soltar tecla
-					IO0IntEnR |= (0x01 << 18) | (0x01 << 11); 	// SW2 y SW3
-					IO2IntEnR |= (0x01 << 10) | (0x01 << 13);	// SW1 y SW4
+					enableReleaseKeyInt(i);
 				}
 			}
 		}
@@ -61,11 +59,23 @@ uint8_t readSW(uint8_t n)
 {
 	switch(n)
 	{
-	case 1: return read_pin(KEY0, ACTIVO_BAJO);		// SW1
-	case 2:	return read_pin(KEY1, ACTIVO_BAJO);		// SW2
-	case 3:	return read_pin(KEY2, ACTIVO_BAJO);		// SW3
-	case 4:	return read_pin(KEY3_RC, ACTIVO_BAJO);	// SW4
-	case 5: return read_pin(KEY4_RC, ACTIVO_BAJO);	// SW5
+	case 1: return read_pin(KEY0, ACTIVO_BAJO);	// SW1
+	case 2:	return read_pin(KEY1, ACTIVO_BAJO);	// SW2
+	case 3:	return read_pin(KEY2, ACTIVO_BAJO);	// SW3
+	case 4:	return read_pin(KEY3, ACTIVO_BAJO);	// SW4
+	case 5: return read_pin(KEY4, ACTIVO_BAJO);	// SW5
 	default: return 0;
+	}
+}
+
+void enableReleaseKeyInt(uint8_t i)
+{
+	switch (i)
+	{
+	case 0: IO2IntEnR |= (0x01 << SW1_PIN); break; // SW1
+	case 1: IO0IntEnR |= (0x01 << SW2_PIN); break; // SW2
+	case 2: IO0IntEnR |= (0x01 << SW3_PIN); break; // SW3
+	case 3: IO2IntEnR |= (0x01 << SW4_PIN); break; // SW4
+	default: break;
 	}
 }

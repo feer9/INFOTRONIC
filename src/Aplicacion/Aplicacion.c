@@ -7,22 +7,19 @@
 
 #include <Aplicacion.h>
 
-void setearTimers	( void );
 
-/* TODO: tengo q hacer un driver piola para el lcd, que le tire
- * un string largo y lo procese con desplazamiento, y si le meto
- * un string chico que complete con espacios en blanco, media pila!
- * deberia guardar en una variable lo que hay en pantalla,
- * asi si quiero cambiar una parte sola puedo mandar tod0 de nuevo
+
+/* TODO: mejorar el driver del LCD para que procese strings con desplazamiento
  **/
 
 int main(void)
 {
 	inicializarKit();
-	SetLED(0);
+	ledOFF();
 	setearTimers();
-	displayLCD("    WELCOME     ", 0, 0);
-	displayLCD("                ", 1, 0);
+	LCD_clear();
+	LCD_printCentered("WELCOME",0);
+	startTimer(1, 1000); // reloj en 1s
 	while(1)
 	{
 		Teclado();
@@ -32,6 +29,7 @@ int main(void)
 extern __RW uint8_t tick;
 extern __RW uint8_t g_Teclado;
 uint8_t blink = OFF;
+uint8_t displayClockStatus = OFF;
 
 void Teclado()
 {
@@ -46,8 +44,6 @@ void Teclado()
 		g_Teclado = 0;
 	}
 }
-
-
 
 //extern __RW uint8_t flagTimerLCD;
 
@@ -64,6 +60,13 @@ void timerEnd_Handler(uint8_t n)
 		write_pin(LEDXpresso, LEDLPC_ON);
 		break;
 
+	case 1:	// led apagado, encender display de reloj
+		if(displayClockStatus == OFF)
+		{
+			displayClockStatus = ON;
+			displayClock();
+		}
+		break;
 	default:
 		break;
 	}
@@ -76,44 +79,59 @@ void setearTimers()
 
 
 
-
 void pressedKey(uint8_t key)
 {
 	switch(key)
 	{
 	case SW1:
 		ledOFF();
-		displayLCD("LED:  OFF       ", 0, 0);
-		displayLCD("                ", 1, 0);
+		displayClockStatus = OFF;
+		LCD_print("LED:  OFF");
+		startTimer(1, 2000);
 		break;
 
 	case SW2:
 		ledON();
-		displayLCD("LED:  ON        ", 0, 0);
+		displayClockStatus = OFF;
+		LCD_printUP("LED:  ON");
+		if(blink)
+			LCD_printCentered("BLINK ON", RENGLON_2);
+		else
+			LCD_printCentered("BLINK OFF", RENGLON_2);
+		startTimer(1, 4000);
 		break;
 
 	case SW3:
 		ledUP();
-		displayLCD("LED:         UP ", 0, 0);
+		displayClockStatus = OFF;
+		LCD_printCentered("LED  UP", RENGLON_1);
+		LCD_printDOWN("");
+		startTimer(1, 4000);
 		break;
 
 	case SW4:
 		ledDOWN();
-		displayLCD("LED:        DOWN", 0, 0);
+		displayClockStatus = OFF;
+		LCD_printCentered("LED  DOWN", RENGLON_1);
+		LCD_printDOWN("");
+		startTimer(1, 4000);
 		break;
 
 #if _5_ENTRADAS
 	case SW5:
+		displayClockStatus = OFF;
 		if(!blink) {
 			blink = ON;
 			tick = 0;
-			displayLCD("    BLINK ON    ", 1, 0);
+			LCD_printCentered("BLINK ON", RENGLON_2);
 		}
 		else {
 			blink = OFF;
 			SetLEDActual();
-			displayLCD("    BLINK OFF   ", 1, 0);
+			LCD_printCentered("BLINK OFF", RENGLON_2);
 		}
+		LCD_printUP("");
+		startTimer(1, 1000);
 		break;
 #endif
 	default:

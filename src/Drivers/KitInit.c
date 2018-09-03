@@ -5,16 +5,16 @@ void initializarKit	( void );
 void initGPIOs		( void );
 void initExtInt		( void );
 void initPLL		( void );
-void initSysTick	( void );
-void initTimer0		( uint32_t ); // prescaler * 10ns
+void initSysTick	( float );
+void initTimer0		( float );
 void initRTC		( void );
 
 void inicializarKit ( void )
 {
 	initPLL();
 	initPower();
-	initTimer0(100000);
-	initSysTick();
+	initTimer0(1);
+	initSysTick(2.5);
 	initRTC();
 	initExtInt();
 	initGPIOs();
@@ -23,12 +23,12 @@ void inicializarKit ( void )
 
 void initPower()
 {
-	PCONP =   0b00000000000000001000001000000000;
+	PCONP = (0x01 << PCONP_RTC) | (0x01 << PCONP_GPIO);
+//	PCONP =   0b00000000000000001000001000000000;
 /*	solo dejo encendidos los perifericos:
 	bit	9	RTC
 	bit	15	GPIO  */
 }
-
 
 void initGPIOs ( void )
 {
