@@ -1,4 +1,21 @@
 #include <Aplicacion.h>
+/*
+#define		LCD_D4		PORT0,5			//GPIO0
+#define		LCD_D5		PORT0,10		//GPIO0
+#define		LCD_D6		PORT2,4			//GPIO2
+#define		LCD_D7		PORT2,5			//GPIO2
+
+#define		LCD_RS		PORT2,6			//GPIO2
+#define		LCD_BF		PORT0,28		//GPIO1
+#define		LCD_E		PORT0,4			//GPIO0
+
+	RS = 0: IR write as an internal operation (display clear, etc.)
+	RS = 1: Write data to DDRAM or CGRAM (DR to DDRAM or CGRAM)
+
+	RS: register selector			BF: busy flag		E: chip enable signal
+	IR: instruction register		DR: data register
+	DDRAM: display data ram			CGRAM: character generator ram
+*/
 
 __RW uint8_t LCD_Delay = 0;
 
@@ -30,10 +47,11 @@ void initLCD()
 	write_pin(LCD_RS, 0);
 	write_pin(LCD_E , 0);
 
-	configLCD();
+	LCD_init4Bits_IR(); // tendria q agregar una forma de si esto falla llamar a la vieja funcion
+	LCD_config();
 }
 
-void configLCD()
+void LCD_init4Bits()
 {
 	uint8_t i = 0;
 
@@ -43,32 +61,57 @@ void configLCD()
 
 	for(i=0; i<3; i++)
 	{
+		write_pin(LCD_E, 1);
+
 		write_pin(LCD_D4, 1);
 		write_pin(LCD_D5, 1);
 		write_pin(LCD_D6, 0);
 		write_pin(LCD_D7, 0);
-
 		write_pin(LCD_RS, 0);
-		write_pin(LCD_E, 1);
+
 		write_pin(LCD_E, 0);
 
 		LCD_Delay = 2;
 		while(LCD_Delay);
 	}
+
 	// Configuracion en 4 bits
+	write_pin(LCD_E,1);
+
 	write_pin(LCD_D4,0);
 	write_pin(LCD_D5,1);
 	write_pin(LCD_D6,0);
 	write_pin(LCD_D7,0);
-
 	write_pin(LCD_RS,0);
-	write_pin(LCD_E,1);
+
 	write_pin(LCD_E,0);
 
 	LCD_Delay = 1;
 	while(LCD_Delay);
+}
 
-	// lcd seteado en 4 bits
+void LCD_init4Bits_IR()
+{
+	LCD_Delay = 10;
+	while(LCD_Delay);
+
+	// Initialization by internal reset
+	// Sets to 4-bit operation
+	write_pin(LCD_E, 1);
+
+	write_pin(LCD_D4, 0);
+	write_pin(LCD_D5, 1);
+	write_pin(LCD_D6, 0);
+	write_pin(LCD_D7, 0);
+	write_pin(LCD_RS, 0);
+
+	write_pin(LCD_E, 0);
+}
+//	LCD_Delay = 2;
+//	while(LCD_Delay);
+
+void LCD_config()
+{
 	pushLCD( 0x28 , LCD_CONTROL );	// DL = 0: 4 bits de datos
 									// N = 1 : 2 lineas
 									// F = 0 : 5x7 puntos
@@ -86,7 +129,6 @@ void configLCD()
 	pushLCD( 0x0C , LCD_CONTROL);	// D = 1 : display ON
 									// C = 0 : Cursor OFF
 									// B = 0 : Blink OFF
-
 }
 
 void LCD_send()
@@ -96,17 +138,18 @@ void LCD_send()
 	if((dato = popLCD()) == -1)
 		return;
 
-	write_pin(LCD_D7, ((uint8_t) dato) >> 3 & 0x01);
-	write_pin(LCD_D6, ((uint8_t) dato) >> 2 & 0x01);
-	write_pin(LCD_D5, ((uint8_t) dato) >> 1 & 0x01);
-	write_pin(LCD_D4, ((uint8_t) dato) >> 0 & 0x01);
-
 	if( ((uint8_t) dato ) & 0x80 )
 		write_pin(LCD_RS, 0);
 	else
 		write_pin(LCD_RS, 1);
 
 	write_pin(LCD_E, 1);
+
+	write_pin(LCD_D7, ((uint8_t) dato) >> 3 & 0x01);
+	write_pin(LCD_D6, ((uint8_t) dato) >> 2 & 0x01);
+	write_pin(LCD_D5, ((uint8_t) dato) >> 1 & 0x01);
+	write_pin(LCD_D4, ((uint8_t) dato) >> 0 & 0x01);
+
 	write_pin(LCD_E, 0);
 }
 
@@ -148,149 +191,3 @@ int32_t popLCD()
 
 	return dato;
 }
-
-/*
-	#define		LCD_D4		PORT0,5			//GPIO0
-	#define		LCD_D5		PORT0,10		//GPIO0
-	#define		LCD_D6		PORT2,4			//GPIO2
-	#define		LCD_D7		PORT2,5			//GPIO2
-
-	#define		LCD_RS		PORT2,6			//GPIO2
-	#define		LCD_BF		PORT0,28		//GPIO1
-	#define		LCD_E		PORT0,4			//GPIO0
-
-	RS = 0: IR write as an internal operation (display clear, etc.)
-	RS = 1: Write data to DDRAM or CGRAM (DR to DDRAM or CGRAM)
-
-	RS: register selector			BF: busy flag		E: chip enable signal
-	IR: instruction register		DR: data register
-	DDRAM: display data ram			CGRAM: character generator ram
-*/
-
-
-
-
-/*
-
-__RW uint8_t LCD_Action = 0;
-void LCD()
-{
-	static uint8_t st = 0;
-	static uint8_t stInit = 0;
-
-	switch(st)
-	{
-	case INIT:
-		if(LCD_Action == 1 && stInit == 0)
-		{
-			LCD_Action = 0;
-			write_pin(LCD_RS, 0);
-			write_pin(LCD_D4, 0);
-			write_pin(LCD_D5, 1);
-			write_pin(LCD_D6, 1);
-			write_pin(LCD_D7, 0);
-
-			startTimer(0, 4000); // 40us
-			stInit++;
-		}
-		else if(flagTimerLCD && stInit == 1)
-		{
-			flagTimerLCD = 0;
-			write_pin(LCD_D5, 0);
-			write_pin(LCD_D6, 0);
-
-			write_pin(LCD_D4, 1);
-			write_pin(LCD_D5, 1);
-			write_pin(LCD_D6, 1);
-			write_pin(LCD_D7, 1);
-
-			startTimer(0, 4000); // 40us
-			stInit++;
-		}
-		else if(flagTimerLCD && stInit == 2)
-		{
-			write_pin(LCD_D4, 0);
-			write_pin(LCD_D5, 0);
-			write_pin(LCD_D6, 0);
-			write_pin(LCD_D7, 0);
-
-			write_pin(LCD_D4, 1);
-
-			startTimer(0, 200000); // 2ms
-			stInit++;
-		}
-		else if(flagTimerLCD && stInit == 3)
-		{
-			write_pin(LCD_D4, 0);
-
-			write_pin(LCD_D5, 1);
-			write_pin(LCD_D6, 1);
-		}
-		st = ST1;
-		break;
-
-	case ST1:
-		if(flagTimerLCD & 0x01)
-		{
-			flagTimerLCD &= ~0x01;
-			write_pin(LCD_E, 1);
-
-			st++;
-		}
-		break;
-
-	case ST2:
-		if(flagTimerLCD & 0x01)
-		{
-			flagTimerLCD &= ~0x01;
-			write_pin(LCD_E, 0);
-			st++;
-		}
-		break;
-
-	case ST3:
-		write_pin(LCD_RS, 0);
-		write_pin(LCD_D5, 0);
-		write_pin(LCD_D6, 0);
-		st++;
-		break;
-
-	case ST4:
-		if(flagTimerLCD & 0x02)
-		{
-			flagTimerLCD &= ~0x02;
-			write_pin(LCD_E, 1);
-			write_pin(LCD_D4, 1);
-			startTimer(0, 250);
-			startTimer(1, 500);
-			st++;
-		}
-		break;
-
-	case ST5:
-		if(flagTimerLCD & 0x01)
-		{
-			flagTimerLCD &= ~0x01;
-			write_pin(LCD_E, 0);
-			st++;
-		}
-		break;
-
-	case ST6:
-		write_pin(LCD_D4, 0);
-		st++;
-		break;
-
-	case ST7:
-		if(flagTimerLCD & 0x02)
-		{
-			flagTimerLCD &= ~0x02;
-			st=0;
-		}
-
-	default:
-		break;
-	}
-}
-*/
-

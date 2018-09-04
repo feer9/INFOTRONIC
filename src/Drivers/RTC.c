@@ -16,7 +16,7 @@ void initRTC()
 //		LPC_RTC->CCR _SET_BIT(1);		// the elements in the internal oscillator divider are reset
 //		LPC_RTC->CCR _SET_BIT(4);		// The calibration counter is disabled and reset to zero
 		LPC_RTC->CCR = 0b10010;
-	//	LPC_RTC->CALIBRATION = 0x0;
+	//	LPC_RTC->CALIBRATION = 0x0; 	//!< parece que adelanta ~1seg / dia
 
 #if _RTC_SET_TIME
 		LPC_RTC->YEAR  = 2018;
@@ -53,7 +53,7 @@ void RTC_IRQHandler(void)
 	{
 		LPC_RTC->ILR _SET_BIT(0);
 		if(displayClockStatus == ON)
-			displayClock();
+			LCD_updateClock();
 	}
 
 	// RTCALF (alarma)

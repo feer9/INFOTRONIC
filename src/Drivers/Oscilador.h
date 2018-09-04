@@ -4,8 +4,8 @@
  *  Created on: 17/04/2012 -   Author: Mica y Chor
  */
 
-#ifndef OSCILADOR_H_
-#define OSCILADOR_H_
+#ifndef _OSCILADOR_H
+#define _OSCILADOR_H
 
 	//////////////Registros del CLOCK y de sistema/////////////////
 	//0x400FC1A0UL: Registro de control de sistema y registro de status:
@@ -77,4 +77,4 @@
 	//Prototipos de función:
 	void InicPLL ( void );
 
-#endif /* OSCILADOR_H_ */
+#endif /* _OSCILADOR_H */

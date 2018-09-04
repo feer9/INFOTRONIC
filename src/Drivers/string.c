@@ -109,31 +109,33 @@ char *rindex(const char *s, int c)
 
 // Stores s[from..to) in sub.
 // The caller is responsible for memory allocation.
-void extract_substr(char const *s, char *sub, size_t from, size_t to)
+char* extract_substr(char const *s, char *sub, size_t from, size_t to)
 {
     size_t sublen = to - from;
     strncpy(sub, s + from, sublen);
     sub[sublen] = '\0';
+    return sub;
 }
 
 
 // reverses a string 'str' of length 'len'
-void reverse(char *str, int len)
+char* reverse(char *str, int len)
 {
     int i=0, j=len-1, temp;
     while (i<j)
     {
-        temp = str[i];
+        temp = (int) str[i];
         str[i] = str[j];
-        str[j] = temp;
+        str[j] = (char) temp;
         i++; j--;
     }
+    return str;
 }
 
  // Converts a given integer x to string str[].  d is the number
  // of digits required in output. If d is more than the number
  // of digits in x, then 0s are added at the beginning.
-int intToStr(int x, char str[], int d)
+char* intToStr(int x, char str[], int d)
 {
     int i = 0;
     while (x)
@@ -149,9 +151,10 @@ int intToStr(int x, char str[], int d)
 
     reverse(str, i);
     str[i] = '\0';
-    return i;
+//	return i;
+    return str;
 }
-
+/*
 // Converts a floating point number to string.
 void ftoa(float n, char *res, int afterpoint)
 {
@@ -177,3 +180,4 @@ void ftoa(float n, char *res, int afterpoint)
         intToStr((int)fpart, res + i + 1, afterpoint);
     }
 }
+*/

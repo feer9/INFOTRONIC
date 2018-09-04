@@ -14,9 +14,9 @@ char *strcpy(char *dest, const char *src);
 char *strncpy(char *dest, const char *src, size_t n);
 char *index(const char *s, int c);
 char *rindex(const char *s, int c);
-void extract_substr(char const *s, char *sub, size_t from, size_t to);
-void reverse(char *str, int len);
-int intToStr(int x, char str[], int d);
-void ftoa(float n, char *res, int afterpoint);
+char* extract_substr(char const *s, char *sub, size_t from, size_t to);
+char* reverse(char *str, int len);
+char* intToStr(int x, char str[], int d);
+//void ftoa(float n, char *res, int afterpoint);
 
 #endif

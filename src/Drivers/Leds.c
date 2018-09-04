@@ -1,7 +1,7 @@
 #include <Aplicacion.h>
 
 __RW uint8_t ledActual = 0;
-__RW uint8_t ledStatus = ON;
+__RW uint8_t ledStatus = OFF;
 
 void ledOFF(void)
 {

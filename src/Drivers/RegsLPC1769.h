@@ -47,6 +47,8 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
 
 #define _RESET_BIT(n) &= ~ _BIT(n)
 #define _SET_BIT(n)   |=   _BIT(n)
+#define clearBIT(n)   &= ~ _BIT(n)
+#define setBIT(n)     |=   _BIT(n)
 
 /* NULL pointer */
 #ifndef NULL
@@ -61,19 +63,18 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
 
 //!< ////////////////Registros PINSEL//////////////////////////////
 //!< 0x4002C000UL : Direccion de inicio de los registros PINSEL
-#define		PINSEL		( (    PORTs_2B_t  * ) 0x4002C000UL )
-#define		PINSEL_		( ( __RW uint32_t  * ) 0x4002C000UL )
+#define		PINSEL		( ( __RW uint32_t  * ) 0x4002C000UL )
 
-#define		PINSEL0		PINSEL_[0]	//!< PINSEL0--->P0[15:0] (0x4002C000)
-#define		PINSEL1		PINSEL_[1]	//!< PINSEL1--->P0[31:16](0x4002C004)
-#define		PINSEL2		PINSEL_[2]	//!< PINSEL2--->P1[15:0] (0x4002C008)
-#define		PINSEL3		PINSEL_[3]	//!< PINSEL3--->P1[31:16](0x4002C00C)
-#define		PINSEL4		PINSEL_[4]	//!< PINSEL4--->P2[15:0] (0x4002C010)
-#define		PINSEL5		PINSEL_[5]	//!< PINSEL5--->P2[31:16] NOT USED
-#define		PINSEL6		PINSEL_[6]	//!< PINSEL6--->P3[15:0] NOT USED
-#define		PINSEL7		PINSEL_[7]	//!< PINSEL7--->P3[31:16] 0x4002C01C)
-#define		PINSEL8		PINSEL_[8]	//!< PINSEL8--->P4[15:0]  NOT USED
-#define		PINSEL9		PINSEL_[9]	//!< PINSEL9--->P4[31:16](0x4002C024)
+#define		PINSEL0		PINSEL[0]	//!< PINSEL0--->P0[15:0] (0x4002C000)
+#define		PINSEL1		PINSEL[1]	//!< PINSEL1--->P0[31:16](0x4002C004)
+#define		PINSEL2		PINSEL[2]	//!< PINSEL2--->P1[15:0] (0x4002C008)
+#define		PINSEL3		PINSEL[3]	//!< PINSEL3--->P1[31:16](0x4002C00C)
+#define		PINSEL4		PINSEL[4]	//!< PINSEL4--->P2[15:0] (0x4002C010)
+#define		PINSEL5		PINSEL[5]	//!< PINSEL5--->P2[31:16] NOT USED
+#define		PINSEL6		PINSEL[6]	//!< PINSEL6--->P3[15:0] NOT USED
+#define		PINSEL7		PINSEL[7]	//!< PINSEL7--->P3[31:16] 0x4002C01C)
+#define		PINSEL8		PINSEL[8]	//!< PINSEL8--->P4[15:0]  NOT USED
+#define		PINSEL9		PINSEL[9]	//!< PINSEL9--->P4[31:16](0x4002C024)
 
 //!< ----------- Estados de PINSEL:
 #define		PINSEL_GPIO			0
@@ -83,18 +84,17 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
 
 //!< //////////////////Registros PINMODE ///////////////////////////
 //!< 0x4002C040UL : Direccion de inicio de los registros de modo de los pines del GPIO
-#define		PINMODE		( (    PORTs_2B_t  * ) 0x4002C040UL )
-#define		PINMODE_	( ( __RW uint32_t  * ) 0x4002C040UL )
+#define		PINMODE	( ( __RW uint32_t  * ) 0x4002C040UL )
 
-#define		PINMODE0	PINMODE_[0]		//!< 0x4002C040
-#define		PINMODE1	PINMODE_[1]		//!< 0x4002C044
-#define		PINMODE2	PINMODE_[2]		//!< 0x4002C048
-#define		PINMODE3	PINMODE_[3]		//!< 0x4002C04C
-#define		PINMODE4	PINMODE_[4]		//!< 0x4002C050
-#define		PINMODE5	PINMODE_[5]		//!< 0x4002C054
-#define		PINMODE6	PINMODE_[6]		//!< 0x4002C058
-#define		PINMODE7	PINMODE_[7]		//!< 0x4002C05C
-#define		PINMODE9	PINMODE_[9]		//!< 0x4002C064
+#define		PINMODE0	PINMODE[0]		//!< 0x4002C040
+#define		PINMODE1	PINMODE[1]		//!< 0x4002C044
+#define		PINMODE2	PINMODE[2]		//!< 0x4002C048
+#define		PINMODE3	PINMODE[3]		//!< 0x4002C04C
+#define		PINMODE4	PINMODE[4]		//!< 0x4002C050
+#define		PINMODE5	PINMODE[5]		//!< 0x4002C054
+#define		PINMODE6	PINMODE[6]		//!< 0x4002C058
+#define		PINMODE7	PINMODE[7]		//!< 0x4002C05C
+#define		PINMODE9	PINMODE[9]		//!< 0x4002C064
 
 
 
@@ -238,6 +238,45 @@ typedef struct
 #define		STIR 		STIR_[0]
 
 
+//	Bits relativos a ISER0, ICER0, ISPR0, ICPR0, IABR0
+//	los registros IPR y STIR son aparte
+#define		NVIC_WDT		0
+#define		NVIC_TIMER0		1
+#define		NVIC_TIMER1		2
+#define		NVIC_TIMER2		3
+#define		NVIC_TIMER3		4
+#define		NVIC_UART0		5
+#define		NVIC_UART1		6
+#define		NVIC_UART2		7
+#define		NVIC_UART3		8
+#define		NVIC_PWM		9
+#define		NVIC_I2C0		10
+#define		NVIC_I2C1		11
+#define		NVIC_I2C2		12
+#define		NVIC_SPI		13
+#define		NVIC_SSP0		14
+#define		NVIC_SSP1		15
+#define		NVIC_PLL0		16
+#define		NVIC_RTC		17
+#define		NVIC_EINT0		18
+#define		NVIC_EINT1		19
+#define		NVIC_EINT2		20
+#define		NVIC_EINT3		21
+#define		NVIC_ADC		22
+#define		NVIC_BOD		23
+#define		NVIC_USB		24
+#define		NVIC_CAN		25
+#define		NVIC_DMA		26
+#define		NVIC_I2S		27
+#define		NVIC_ENET		28
+#define		NVIC_RIT		29
+#define		NVIC_MCPWM		30
+#define		NVIC_QEI		31
+#define		NVIC_PLL1		32
+#define		NVIC_USBACT		33
+#define		NVIC_CANACT		34
+
+
 //-----------------------------------------------------------------------------
 // Interrupciones Externas
 //-----------------------------------------------------------------------------
@@ -304,8 +343,8 @@ typedef struct
 #define		PCONP 		( * ( ( __RW uint32_t * ) 0x400FC0C4UL ) )
 
 
-#define 	PCONP_TIM0		1
-#define 	PCONP_TIM1		2
+#define 	PCONP_TIMER0	1
+#define 	PCONP_TIMER1	2
 #define 	PCONP_UART0		3
 #define 	PCONP_UART1		4
 
@@ -344,6 +383,46 @@ typedef struct
 //!< Registros PCLKSEL
 #define		PCLKSEL0		PCLKSEL[0]
 #define		PCLKSEL1		PCLKSEL[1]
+
+
+#define		PCLK_CCLK_4		0
+#define		PCLK_CCLK		1
+#define		PCLK_CCLK_2		2
+#define		PCLK_CCLK_8		3
+
+
+#define		PCLKSEL_WDT		0
+#define		PCLKSEL_TIMER0	2
+#define		PCLKSEL_TIMER1	4
+#define		PCLKSEL_UART0	6
+#define		PCLKSEL_UART1	8
+
+#define		PCLKSEL_PWM1	12
+#define		PCLKSEL_I2C0	14
+#define		PCLKSEL_SPI		16
+
+#define		PCLKSEL_SSP1	20
+#define		PCLKSEL_DAC		22
+#define		PCLKSEL_ADC		24
+#define		PCLKSEL_CAN1	26
+#define		PCLKSEL_CAN2	28
+#define		PCLKSEL_ACF		30
+#define		PCLKSEL_QEI		32
+#define		PCLKSEL_GPIOINT	34
+#define		PCLKSEL_PCB		36
+#define		PCLKSEL_I2C1	38
+
+#define		PCLKSEL_SSP0	42
+#define		PCLKSEL_TIMER2	44
+#define		PCLKSEL_TIMER3	46
+#define		PCLKSEL_UART2	48
+#define		PCLKSEL_UART3	50
+#define		PCLKSEL_I2C2	52
+#define		PCLKSEL_I2S		54
+
+#define		PCLKSEL_RIT		58
+#define		PCLKSEL_SYSCON	60
+#define		PCLKSEL_MC		62
 
 
 //!< /////////////		SYSTICK		///////////////////////////
@@ -406,6 +485,20 @@ typedef struct
 #define		T1				( ( TIMER_t *) 0x40008000UL )
 #define		T2				( ( TIMER_t *) 0x40090000UL )
 #define		T3				( ( TIMER_t *) 0x40094000UL )
+
+#define		MR0I	0
+#define		MR0R	1
+#define		MR0S	2
+#define		MR1I	3
+#define		MR1R	4
+#define		MR1S	5
+#define		MR2I	6
+#define		MR2R	7
+#define		MR2S	8
+#define		MR3I	9
+#define		MR3R	10
+#define		MR3S	11
+
 //!< /////////////		FIN TIMERs		///////////////////////////
 
 

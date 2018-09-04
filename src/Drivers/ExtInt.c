@@ -50,29 +50,29 @@ void initExtInt(void)
 	SetPINSEL(KEY2, PINSEL_GPIO);
 	SetPINSEL(KEY3, PINSEL_GPIO);
 
-	EXTMODE  |=  (0x0F << 0);				// Todas por flanco
-	EXTPOLAR &= ~(0x0F << 0);				// Todas por flanco descendente
+	EXTMODE  |=  (0x0F << 0);			// Todas por flanco
+	EXTPOLAR &= ~(0x0F << 0);			// Todas por flanco descendente
 
 	// Habilito interrupcion en GPIOs del kit
 	// Falling edge
-	IO2IntEnF |= (0x01 << SW4_PIN);			// SW4
-	IO0IntEnF |= (0x01 << SW3_PIN); 		// SW3
-	IO0IntEnF |= (0x01 << SW2_PIN);			// SW2
-	IO2IntEnF |= (0x01 << SW1_PIN);			// SW1
+	IO2IntEnF |= (0x01 << SW4_PIN);		// SW4
+	IO0IntEnF |= (0x01 << SW3_PIN); 	// SW3
+	IO0IntEnF |= (0x01 << SW2_PIN);		// SW2
+	IO2IntEnF |= (0x01 << SW1_PIN);		// SW1
 
 	// Rising edge
-	IO2IntEnR |= (0x01 << SW4_PIN);			// SW4
-	IO0IntEnR |= (0x01 << SW3_PIN);			// SW3
-	IO0IntEnR |= (0x01 << SW2_PIN);			// SW2
-	IO2IntEnR |= (0x01 << SW1_PIN);			// SW1
+	IO2IntEnR |= (0x01 << SW4_PIN);		// SW4
+	IO0IntEnR |= (0x01 << SW3_PIN);		// SW3
+	IO0IntEnR |= (0x01 << SW2_PIN);		// SW2
+	IO2IntEnR |= (0x01 << SW1_PIN);		// SW1
 
-	ISER0      = (0x01 << 21);				// Habilito Interrupcion externa 3
+	ISER0     |= (0x01 << NVIC_EINT3);	// Habilito Interrupcion externa 3
 
 	// Limpio flags de interrupciones
-	IO2IntClr |= (0x01 << SW4_PIN);			// SW4
-	IO0IntClr |= (0x01 << SW3_PIN);			// SW3
-	IO0IntClr |= (0x01 << SW2_PIN);			// SW2
-	IO2IntClr |= (0x01 << SW1_PIN);			// SW1
+	IO2IntClr |= (0x01 << SW4_PIN);		// SW4
+	IO0IntClr |= (0x01 << SW3_PIN);		// SW3
+	IO0IntClr |= (0x01 << SW2_PIN);		// SW2
+	IO2IntClr |= (0x01 << SW1_PIN);		// SW1
 	EXTINT    |= (0x01 << EINT3);
 }
 

@@ -1,16 +1,16 @@
 #include <Aplicacion.h>
 
-// recibe el tiempo en milisegundos
+// recibe el tiempo en milisegundos del prescaler
 void initTimer0(float ms)
 {
-	PCONP _SET_BIT(1); 		// Habilitar Timer 0
-	PCLKSEL0 |= (0x01 << 2);// Clock for timer PCLK = CCLK Selecciono clock
-	T0->PR = (100000 * ms) - 1;	// Prescaler = 10ns * PR
-//	T0->PR = 100000;		// Prescaler para 1ms
-	T0->TCR = 2;			// Apago y reseteo el temporizador
-	T0->MR1 = 0xFFFFFFFF;	// Configuro match 1 para detectar overflow
-	T0->MCR _SET_BIT(3);	// Interrumpe si se produce overflow
-	ISER0 _SET_BIT(1);
+	PCONP _SET_BIT(PCONP_TIMER0);				// Enciendo Timer 0
+	PCLKSEL0 |= (PCLK_CCLK << PCLKSEL_TIMER0);	// Clock for timer PCLK = CCLK Selecciono clock
+	T0->PR = (100000 * ms) - 1;					// Prescaler = 10ns * PR
+//	T0->PR = 99999;								// Prescaler para 1ms
+	T0->TCR = 2;								// Apago y reseteo el temporizador
+	T0->MR1 = 0xFFFFFFFF;						// Configuro match 1 para detectar overflow
+	T0->MCR _SET_BIT(MR1I);						// Interrumpe si se produce overflow
+	ISER0 _SET_BIT(NVIC_TIMER0);				// Habilito interrupcion en el NVIC
 }
 
 
@@ -64,25 +64,26 @@ int32_t timer(int8_t n, uint8_t action, uint32_t time) // time [ms]
 		if(timersActivos == N_TIMERS)
 			return -1;
 
-		if(!timerState[n]) // si estaba apagado
+		if(!timerState[n])				// si estaba apagado
 		{
 			timerState[n] = ON;
 			timersActivos++;
 		}
 		timerCount[n] = T0->TC + time;
 
-		if(!(timersActivos - 1)) // si no habia ninguno prendido
+		if(!(timersActivos - 1))		// si no habia ninguno prendido
 		{
-			T0->MR0 = timerCount[n];// Seteo temporizacion
-			T0->MCR _SET_BIT(0);	// Interrumpe en match0
+			T0->MR0 = timerCount[n];	// Seteo temporizacion
+			T0->MCR _SET_BIT(0);		// Interrumpe en match0
 			MR0isOnTimer = n;
-			T0->TCR = 1;			// Enciendo el temporizador
-			ISER0 = (0x01 << 1);	// Habilito Interrupcion TIMER0
+			T0->TCR = 1;				// Enciendo el temporizador
+			ISER0 _SET_BIT(NVIC_TIMER0);// Habilito Interrupcion TIMER0
 		}
 		else
 		{
-			// si el timer actual termina antes que el seteado en Match Register, actualizo el MR.
-			if(T0->MR0 > timerCount[n])
+			// si el timer actual termina antes que el seteado en Match Register
+			// o si volvi a encender el mismo timer, actualizo  MR0
+			if(T0->MR0 > timerCount[n] || MR0isOnTimer == n)
 			{
 				T0->MR0 = timerCount[n];
 				MR0isOnTimer = n;

@@ -7,11 +7,16 @@ extern __RW uint8_t LCD_Action;
 
 void Debounce_Teclado(void)
 {
-	static uint8_t t[N_ENTRADAS] = {0,0,0,0,0};
-	static uint8_t contador[N_ENTRADAS] = {0,0,0,0,0};
-	static uint8_t debounceActivo = 0;
+#if _5_ENTRADAS
 	static uint8_t sw5ant = 0;
 	uint8_t sw5 = 0;
+	static uint8_t t[N_ENTRADAS] = {0,0,0,0,0};
+	static uint8_t contador[N_ENTRADAS] = {0,0,0,0,0};
+#else
+	static uint8_t t[N_ENTRADAS] = {0,0,0,0};
+	static uint8_t contador[N_ENTRADAS] = {0,0,0,0};
+#endif
+	static uint8_t debounceActivo = 0;
 
 	if(FlagTeclado)							// si se genero interrupcion por teclado
 	{
