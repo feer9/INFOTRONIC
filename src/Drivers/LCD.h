@@ -38,9 +38,10 @@ void		LCD_updateClock(void);
 void		LCD_send(void);
 uint8_t		pushLCD(uint8_t dato, uint8_t control);
 int32_t		popLCD(void);
-void		initLCD(void);
+void		initLCD(uint8_t);
 void		LCD_config(void);
 void		LCD_init4Bits(void);
 void		LCD_init4Bits_IR(void);
+void		LCD_restart(void);
 
 #endif //_LCD_H

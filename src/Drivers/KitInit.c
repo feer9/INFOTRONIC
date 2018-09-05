@@ -18,7 +18,7 @@ void inicializarKit ( void )
 	initRTC();
 	initExtInt();
 	initGPIOs();
-	initLCD();
+	initLCD(0);
 }
 
 void initPower()

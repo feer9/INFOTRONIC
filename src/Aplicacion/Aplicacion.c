@@ -20,12 +20,11 @@ int main(void)
 	startTimer(1, 1000); // reloj en 1s
 	while(1)
 	{
-		Teclado();
+
 	}
 }
 
 extern __RW uint8_t tick;
-extern __RW uint8_t g_Teclado;
 extern __RW uint8_t ledStatus;
 uint8_t blink = OFF;
 uint8_t displayClockStatus = OFF;
@@ -33,16 +32,7 @@ uint8_t LCD_status = ON;
 
 void Teclado()
 {
-	if(tick && blink)
-	{
-		tick = 0;
-		ToggleLED();
-	}
-	if(g_Teclado)
-	{
-		pressedKey(g_Teclado);
-		g_Teclado = 0;
-	}
+
 }
 
 void timerEnd_Handler(uint8_t n)
@@ -65,7 +55,6 @@ void timerEnd_Handler(uint8_t n)
 		}
 		break;
 	case 0:
-		LCD_clear();
 		break;
 	default:
 		break;
@@ -78,13 +67,12 @@ void setearTimers()
 	startTimer(7, 4900);
 }
 
-
 void pressedKey(uint8_t key)
 {
-	displayClockStatus = OFF;
 	switch(key)
 	{
 	case SW1:
+		displayClockStatus = OFF;
 		ledON();
 		if(LCD_status)
 		{
@@ -95,6 +83,7 @@ void pressedKey(uint8_t key)
 		break;
 
 	case SW2:
+		displayClockStatus = OFF;
 		ledOFF();
 		if(LCD_status)
 		{
@@ -105,6 +94,7 @@ void pressedKey(uint8_t key)
 		break;
 
 	case SW3:
+		displayClockStatus = OFF;
 		if(ledStatus)
 		{
 			ledUP();
@@ -118,19 +108,7 @@ void pressedKey(uint8_t key)
 		break;
 
 	case SW4:
-		if(LCD_status)
-		{
-			LCD_OFF();
-			LCD_status = OFF;
-		}
-		else
-		{
-			LCD_clear();
-			LCD_ON();
-			LCD_status = ON;
-			displayClockStatus = ON;
-			LCD_displayClock();
-		}
+//		startTimer(0,5000);
 		break;
 
 #if _5_ENTRADAS
@@ -156,5 +134,21 @@ void pressedKey(uint8_t key)
 
 void releasedKey(uint8_t key)
 {
-
+	if(key == SW4)
+	{
+//		stopTimer(0);
+		if(LCD_status)
+		{
+			LCD_OFF();
+			LCD_status = OFF;
+		}
+		else
+		{
+			LCD_clear();
+			LCD_ON();
+			LCD_status = ON;
+			displayClockStatus = ON;
+			LCD_displayClock();
+		}
+	}
 }

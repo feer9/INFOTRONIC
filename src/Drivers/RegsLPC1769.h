@@ -427,36 +427,37 @@ typedef struct
 
 //!< /////////////		SYSTICK		///////////////////////////
 //!< Tipo de dato específico para manejar el SYSTICK
-typedef struct
-{
-	union{
-		__RW uint32_t _STCTRL;
-		struct{
-			__RW uint32_t _ENABLE:1;
-			__RW uint32_t _TICKINT:1;
-			__RW uint32_t _CLKSOURCE:1;
-			__R  uint32_t _RESERVED0:13;
-			__RW uint32_t _COUNTFLAG:1;
-			__R  uint32_t _RESERVED1:15;
-		}bits;
-	};
-	__RW uint32_t _STRELOAD;
-	__RW uint32_t _STCURR;
-	__R uint32_t  _STCALIB;
-}systick_t;
+typedef struct {
+	union {
+		__RW uint32_t STCTRL;
+		struct {
+			__RW uint32_t ENABLE:1;
+			__RW uint32_t TICKINT:1;
+			__RW uint32_t CLKSOURCE:1;
+			__R  uint32_t RESERVED0:13;
+			__RW uint32_t COUNTFLAG:1;
+			__R  uint32_t RESERVED1:15;
+		} ;
+	} ;
+	__RW uint32_t STRELOAD;
+	__RW uint32_t STCURR;
+	__R uint32_t  STCALIB;
+} systick_t;
 
 //!< 0xE000E010UL: Registro de control del SysTick:
-#define 	DIR_SYSTICK		( (systick_t *) 0xE000E010UL )
+#define 	SYSTICK		( (systick_t *) 0xE000E010UL )
 
+#define		SYSTICK_COUNTFLAG	16
+/*
 #define		STCTRL		DIR_SYSTICK->_STCTRL
-	#define	ENABLE			DIR_SYSTICK->bits._ENABLE
-	#define	TICKINT			DIR_SYSTICK->bits._TICKINT
-	#define	CLKSOURCE		DIR_SYSTICK->bits._CLKSOURCE
-	#define	COUNTFLAG		DIR_SYSTICK->bits._COUNTFLAG
+	#define	ENABLE			DIR_SYSTICK->_ENABLE
+	#define	TICKINT			DIR_SYSTICK->_TICKINT
+	#define	CLKSOURCE		DIR_SYSTICK->_CLKSOURCE
+	#define	COUNTFLAG		DIR_SYSTICK->_COUNTFLAG
 #define		STRELOAD	DIR_SYSTICK->_STRELOAD
 #define		STCURR		DIR_SYSTICK->_STCURR
 #define		STCALIB		DIR_SYSTICK->_STCALIB
-
+*/
 
 //!< /////////////		TIMERs		///////////////////////////
 typedef struct

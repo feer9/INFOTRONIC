@@ -24,7 +24,7 @@ __RW uint32_t LCD_indexIn = 0;
 __RW uint32_t LCD_indexOut = 0;
 __RW uint32_t LCD_queueSize = 0;
 
-void initLCD()
+void initLCD(uint8_t IR)
 {
 	SetPINSEL(LCD_D4, PINSEL_GPIO);
 	SetPINSEL(LCD_D4, PINSEL_GPIO);
@@ -47,7 +47,11 @@ void initLCD()
 	write_pin(LCD_RS, 0);
 	write_pin(LCD_E , 0);
 
-	LCD_init4Bits_IR(); // tendria q agregar una forma de si esto falla llamar a la vieja funcion
+	if(IR)
+		LCD_init4Bits_IR();
+	else
+		LCD_init4Bits();
+
 	LCD_config();
 }
 
@@ -106,9 +110,10 @@ void LCD_init4Bits_IR()
 	write_pin(LCD_RS, 0);
 
 	write_pin(LCD_E, 0);
+
+	LCD_Delay = 1;
+	while(LCD_Delay);
 }
-//	LCD_Delay = 2;
-//	while(LCD_Delay);
 
 void LCD_config()
 {
@@ -131,6 +136,11 @@ void LCD_config()
 									// B = 0 : Blink OFF
 }
 
+void LCD_restart()
+{
+//	initLCD(0);
+}
+/*
 void LCD_send()
 {
 	int dato;
@@ -151,6 +161,31 @@ void LCD_send()
 	write_pin(LCD_D4, ((uint8_t) dato) >> 0 & 0x01);
 
 	write_pin(LCD_E, 0);
+}*/
+void LCD_send()
+{
+	int dato;
+	uint8_t i;
+
+	for(i=0; i<2; i++)
+	{
+		if((dato = popLCD()) == -1)
+			return;
+
+		if( ((uint8_t) dato ) & 0x80 )
+			write_pin(LCD_RS, 0);
+		else
+			write_pin(LCD_RS, 1);
+
+		write_pin(LCD_E, 1);
+
+		write_pin(LCD_D7, ((uint8_t) dato) >> 3 & 0x01);
+		write_pin(LCD_D6, ((uint8_t) dato) >> 2 & 0x01);
+		write_pin(LCD_D5, ((uint8_t) dato) >> 1 & 0x01);
+		write_pin(LCD_D4, ((uint8_t) dato) >> 0 & 0x01);
+
+		write_pin(LCD_E, 0);
+	}
 }
 
 uint8_t pushLCD(uint8_t dato, uint8_t control)

@@ -20,13 +20,13 @@ void initPLL ( void )
 	PLL0FEED  = 0xAA;
 	PLL0FEED  = 0x55;
 
-	PLL0CON   = 0x01;             /* PLL0 Enable                        */
+	PLL0CON   = 0x01;               /* PLL0 Enable                        */
 	PLL0FEED  = 0xAA;
 	PLL0FEED  = 0x55;
 
-	while (!(PLL0STAT & (1<<26)));/* Wait for PLOCK0                    */
+	while (!(PLL0STAT & (1<<26)));  /* Wait for PLOCK0                    */
 
-	PLL0CON   = 0x03;             /* PLL0 Enable & Connect              */
+	PLL0CON   = 0x03;               /* PLL0 Enable & Connect              */
 	PLL0FEED  = 0xAA;
 	PLL0FEED  = 0x55;
 
@@ -36,19 +36,19 @@ void initPLL ( void )
 	PLL1FEED  = 0xAA;
 	PLL1FEED  = 0x55;
 
-	PLL1CON   = 0x01;             /* PLL1 Enable                        */
+	PLL1CON   = 0x01;               /* PLL1 Enable                        */
 	PLL1FEED  = 0xAA;
 	PLL1FEED  = 0x55;
 
-	while (!(PLL1STAT & (1<<10)));/* Wait for PLOCK1                    */
+	while (!(PLL1STAT & (1<<10)));  /* Wait for PLOCK1                    */
 
-	PLL1CON   = 0x03;             /* PLL1 Enable & Connect              */
+	PLL1CON   = 0x03;               /* PLL1 Enable & Connect              */
 	PLL1FEED  = 0xAA;
 	PLL1FEED  = 0x55;
 
 	while (!(PLL1STAT & ((1<< 9) | (1<< 8))));/* Wait for PLLC1_STAT & PLLE1_STAT */
 
-	PCONP   = PCONP_Value;		/* Power Control for Peripherals      */
+	PCONP   = PCONP_Value;          /* Power Control for Peripherals      */
 
 	CLKOUTCFG = CLKOUTCFG_Value;    /* Clock Output Configuration         */
 

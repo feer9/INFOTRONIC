@@ -14,6 +14,11 @@
 	#define		N_ENTRADAS		4		// SW1, SW2, SW3 y SW4
 #endif /* _5_ENTRADAS */
 
+extern __RW uint8_t key_change;
+
+#define enableDebounce( n, flag )	(flag |= (0x1 << (n-1)))
+#define acceptKeyChange(n, ant  )	(((ant>>n)& 0x1) ? pressedKey(n+1) : releasedKey(n+1) )
+
 void Debounce_Teclado(void);
 uint8_t readSW(uint8_t);
 void enableReleaseKeyInt(uint8_t);
@@ -22,12 +27,13 @@ void SetLEDActual	( void );
 void SetLED			( int8_t );
 void ledUP			( void );
 void ledDOWN		( void );
-void pressedKey		( uint8_t );
-void releasedKey	( uint8_t );
 void ledON			( void );
 void ledOFF			( void );
 void ToggleLEDActual( void );
 void ToggleLED		( void );
 
+// post-debounce
+void pressedKey		( uint8_t );
+void releasedKey	( uint8_t );
 
 #endif /* TECLADO_H_ */

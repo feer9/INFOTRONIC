@@ -1,7 +1,6 @@
 #include <Aplicacion.h>
 
-extern __RW uint8_t FlagTeclado;
-
+__RW uint8_t key_change = 0;
 
 /*		DEFINES Y REGISTROS USADOS
 
@@ -79,58 +78,62 @@ void initExtInt(void)
 
 void EINT3_IRQHandler (void)
 {
-	if(IOIntStatus == IOInt_P0)					// interrupcion por puerto 0
+	if(IOIntStatus & IOInt_P0)					// interrupcion por puerto 0
 	{
 		if(IO0IntStatF & (0x01 << SW2_PIN))		// en P0.18, SW2, presionado
 		{
-			FlagTeclado = SW2;					// Seteo flag del SW2
 			IO0IntEnF &= ~(0x01 << SW2_PIN);	// deshabilito interrupcion de SW2
 			IO0IntEnR &= ~(0x01 << SW2_PIN);
 			IO0IntClr |=  (0x01 << SW2_PIN);	// Limpia flag de interrupcion
+			enableDebounce(SW2, key_change);				// Seteo flag del SW2
 		}
 		else if(IO0IntStatR & (0x01 << SW2_PIN))// en P0.18, SW2, soltado
 		{
 			IO0IntEnF |= (0x01 << SW2_PIN);		// habilito interrupcion de SW2
 			IO0IntClr |= (0x01 << SW2_PIN);		// Limpia flag de interrupcion
+			enableDebounce(SW2, key_change);
 		}
 		if(IO0IntStatF & (0x01 << SW3_PIN))		// en P0.11, SW3, presionado
 		{
-			FlagTeclado = SW3;					// Seteo flag del SW3
 			IO0IntEnF &= ~(0x01 << SW3_PIN);	// deshabilito interrupcion de SW3
 			IO0IntEnR &= ~(0x01 << SW3_PIN);
 			IO0IntClr |=  (0x01 << SW3_PIN);	// Limpia flag de interrupcion
+			enableDebounce(SW3, key_change);				// Seteo flag del SW3
 		}
 		else if(IO0IntStatR & (0x01 << SW3_PIN))// en P0.18, SW3, soltado
 		{
 			IO0IntEnF |= (0x01 << SW3_PIN);		// habilito interrupcion de SW3
 			IO0IntClr |= (0x01 << SW3_PIN);		// Limpia flag de interrupcion
+			enableDebounce(SW3, key_change);
 		}
 	}
-	if(IOIntStatus == IOInt_P2)					// interrupcion por puerto 2
+	if(IOIntStatus & IOInt_P2)					// interrupcion por puerto 2
 	{
 		if(IO2IntStatF & (0x01 << SW1_PIN))		// en P2.10, SW1, presionado
 		{
-			FlagTeclado = SW1;					// Seteo flag del SW1
 			IO2IntEnF &= ~(0x01 << SW1_PIN);	// deshabilito interrupcion de SW1
 			IO2IntEnR &= ~(0x01 << SW1_PIN);
 			IO2IntClr |=  (0x01 << SW1_PIN);	// Limpia flag de interrupcion
+			enableDebounce(SW1, key_change);				// Seteo flag del SW1
 		}
 		else if(IO2IntStatR & (0x01 << SW1_PIN))// en P2.10, SW1, soltado
 		{
 			IO2IntEnF |= (0x01 << SW1_PIN);		// habilito interrupcion de SW1
 			IO2IntClr |= (0x01 << SW1_PIN);		// Limpia flag de interrupcion
+			enableDebounce(SW1, key_change);
 		}
 		if(IO2IntStatF & (0x01 << SW4_PIN))		// en P2.13, SW4, presionado
 		{
-			FlagTeclado = SW4;					// Seteo flag del SW4
 			IO2IntEnF &= ~(0x01 << SW4_PIN);	// deshabilito interrupcion de SW4
 			IO2IntEnR &= ~(0x01 << SW4_PIN);
 			IO2IntClr |=  (0x01 << SW4_PIN);	// Limpia flag de interrupcion
+			enableDebounce(SW4, key_change);				// Seteo flag del SW4
 		}
 		else if(IO2IntStatR & (0x01 << SW4_PIN))// en P2.13, SW4, soltado
 		{
 			IO2IntEnF |= (0x01 << SW4_PIN);		// habilito interrupcion de SW4
 			IO2IntClr |= (0x01 << SW4_PIN);		// Limpia flag de interrupcion
+			enableDebounce(SW4, key_change);
 		}
 	}
 

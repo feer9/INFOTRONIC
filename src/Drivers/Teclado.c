@@ -1,10 +1,6 @@
 #include <Aplicacion.h>
 
 
-__RW uint8_t g_Teclado = 0;
-__RW uint8_t FlagTeclado = 0;
-extern __RW uint8_t LCD_Action;
-
 void Debounce_Teclado(void)
 {
 #if _5_ENTRADAS
@@ -17,28 +13,36 @@ void Debounce_Teclado(void)
 	static uint8_t contador[N_ENTRADAS] = {0,0,0,0};
 #endif
 	static uint8_t debounceActivo = 0;
+	static uint8_t stAnt = 0;
+	uint8_t i;
 
-	if(FlagTeclado)							// si se genero interrupcion por teclado
+	if(key_change)							// si se genero interrupcion por teclado
 	{
-		t[FlagTeclado - 1] = T_DEBOUNCE;	// seteo temporizacion T_DEBOUNCE * 2,5ms (=50ms)
-		FlagTeclado = 0;					// limpio flag
-		debounceActivo ++;					// seteo flag de que estoy haciendo el debounce
+		for(i=0; i<N_ENTRADAS; i++)
+		{
+			if(key_change & _BIT(i))
+			{
+				t[i] = T_DEBOUNCE;			// seteo temporizacion T_DEBOUNCE * 2,5ms (=50ms)
+				key_change _RESET_BIT(i);	// limpio flag
+				debounceActivo ++;			// seteo flag de que estoy haciendo el debounce
+			}
+		}
 	}
 	if(debounceActivo)
 	{
-		uint8_t i;
 		for(i=0; i<N_ENTRADAS; i++)
 		{
 			if(t[i])
 			{
 				t[i] --;
-				contador[i] += readSW(i+1);
+				contador[i] += (readSW(i+1) ^ ((stAnt >> i) & 0x1));
 				if(!t[i])
 				{
 					if(contador[i] > ACEPTAReSTADO)
 					{
-						g_Teclado = i+1;
-//						LCD_Action = g_Teclado;
+						stAnt ^= (0x1 << i);
+						acceptKeyChange(i,stAnt);
+						// LCD_Action = g_Teclado;
 					}
 					contador[i] = 0;
 					debounceActivo --;
@@ -53,7 +57,7 @@ void Debounce_Teclado(void)
 	{
 		sw5 = read_pin(KEY4_RC, ACTIVO_BAJO);
 		if(!sw5ant && sw5)
-			FlagTeclado = 5;
+			key_change = 5;
 		sw5ant = sw5;
 	}
 #endif
