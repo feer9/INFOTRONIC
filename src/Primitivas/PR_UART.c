@@ -15,6 +15,14 @@ extern __RW uint8_t bufferTxEmpty;
 
 extern __RW uint8_t TxStart;
 
+uint8_t UART0_sendChar(char c)
+{
+	if( pushTx(c) )
+		return 1;
+
+	return 0;
+}
+
 uint8_t UART0_sendString(char *msg)
 {
 	uint32_t i;
@@ -29,18 +37,31 @@ uint8_t UART0_sendString(char *msg)
 
 void UART0_receive(void)
 {
-	uint32_t i=0;
 	int16_t data;
-	char msg[33];
+	static uint32_t i=0;
+	static char msg[33];
 	while((data = popRx()) != -1)
 	{
-		msg[i] = (char) data;
-		i++;
-		if(i>32)
+		if(data == '\r')
+		{
+			msg[i] = '\0';
+			LCD_clear();
+			LCD_print(msg);
+			i=0;
 			break;
+		}
+		msg[i] = (char) data;
+		if(i > 30)
+		{
+			msg[32] = '\0';
+			LCD_clear();
+			LCD_print(msg);
+			i=0;
+			break;
+		}
+		// lo hice como el orto pero weno tengo sueño
+		i++;
 	}
-	if(i)
-		LCD_print(msg);
 }
 
 int16_t popRx(void)

@@ -1,25 +1,8 @@
 #include <Aplicacion.h>
-/*
-#define		LCD_D4		PORT0,5			//GPIO0
-#define		LCD_D5		PORT0,10		//GPIO0
-#define		LCD_D6		PORT2,4			//GPIO2
-#define		LCD_D7		PORT2,5			//GPIO2
-
-#define		LCD_RS		PORT2,6			//GPIO2
-#define		LCD_BF		PORT0,28		//GPIO1
-#define		LCD_E		PORT0,4			//GPIO0
-
-	RS = 0: IR write as an internal operation (display clear, etc.)
-	RS = 1: Write data to DDRAM or CGRAM (DR to DDRAM or CGRAM)
-
-	RS: register selector			BF: busy flag		E: chip enable signal
-	IR: instruction register		DR: data register
-	DDRAM: display data ram			CGRAM: character generator ram
-*/
 
 __RW uint8_t LCD_Delay = 0;
 
-__RW uint8_t Buffer_LCD[LCD_BUFFER_SIZE];
+__RW uint8_t buffer_LCD[LCD_BUFFER_SIZE];
 __RW uint32_t LCD_indexIn = 0;
 __RW uint32_t LCD_indexOut = 0;
 __RW uint32_t LCD_queueSize = 0;
@@ -111,7 +94,7 @@ void LCD_init4Bits_IR()
 
 	write_pin(LCD_E, 0);
 
-	LCD_Delay = 1;
+	LCD_Delay = 2;
 	while(LCD_Delay);
 }
 
@@ -136,32 +119,6 @@ void LCD_config()
 									// B = 0 : Blink OFF
 }
 
-void LCD_restart()
-{
-//	initLCD(0);
-}
-/*
-void LCD_send()
-{
-	int dato;
-
-	if((dato = popLCD()) == -1)
-		return;
-
-	if( ((uint8_t) dato ) & 0x80 )
-		write_pin(LCD_RS, 0);
-	else
-		write_pin(LCD_RS, 1);
-
-	write_pin(LCD_E, 1);
-
-	write_pin(LCD_D7, ((uint8_t) dato) >> 3 & 0x01);
-	write_pin(LCD_D6, ((uint8_t) dato) >> 2 & 0x01);
-	write_pin(LCD_D5, ((uint8_t) dato) >> 1 & 0x01);
-	write_pin(LCD_D4, ((uint8_t) dato) >> 0 & 0x01);
-
-	write_pin(LCD_E, 0);
-}*/
 void LCD_send()
 {
 	int dato;
@@ -193,15 +150,15 @@ uint8_t pushLCD(uint8_t dato, uint8_t control)
 	if(LCD_queueSize >= LCD_BUFFER_SIZE)
 		return -1;
 
-	Buffer_LCD [ LCD_indexIn ] = ( dato >> 4 ) & 0x0F;
+	buffer_LCD [ LCD_indexIn ] = ( dato >> 4 ) & 0x0F;
 	if ( control == LCD_CONTROL )
-		Buffer_LCD [ LCD_indexIn ] |= 0x80;
+		buffer_LCD [ LCD_indexIn ] |= 0x80;
 
 	LCD_indexIn ++;
 
-	Buffer_LCD [ LCD_indexIn ] = dato & 0x0F;
+	buffer_LCD [ LCD_indexIn ] = dato & 0x0F;
 	if ( control == LCD_CONTROL )
-		Buffer_LCD [ LCD_indexIn ] |= 0x80;
+		buffer_LCD [ LCD_indexIn ] |= 0x80;
 
 	LCD_queueSize += 2;
 
@@ -218,7 +175,7 @@ int32_t popLCD()
 	if ( LCD_queueSize == 0 )
 		return -1;
 
-	dato = Buffer_LCD [LCD_indexOut];
+	dato = buffer_LCD [LCD_indexOut];
 	LCD_queueSize --;
 
 	LCD_indexOut ++;
@@ -226,3 +183,9 @@ int32_t popLCD()
 
 	return dato;
 }
+
+//uint8_t LCD_getIndex()
+
+
+
+

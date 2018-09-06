@@ -111,7 +111,7 @@ char *rindex(const char *s, int c)
 // The caller is responsible for memory allocation.
 char* extract_substr(char const *s, char *sub, size_t from, size_t to)
 {
-    size_t sublen = to - from;
+    size_t sublen = to - from + 1;
     strncpy(sub, s + from, sublen);
     sub[sublen] = '\0';
     return sub;

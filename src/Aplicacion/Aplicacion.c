@@ -79,7 +79,7 @@ void pressedKey(uint8_t key)
 		}
 		break;
 
-	case SW3:
+	case SW4:
 		if(ledStatus)
 		{
 			ledUP();
@@ -92,10 +92,26 @@ void pressedKey(uint8_t key)
 			}
 		}
 		else
-			UART0_sendString("caca pepe");
+		{
+			int err = 0, msjs=0;
+			char str[17] = "err: ";
+			char aux[4];
+			for(int i=0; i < BUFFER_TX_SIZE/2 + 1; i++) {
+				err += UART0_sendChar(0x55);
+				err += UART0_sendChar(0xAA);
+				msjs += 2;
+			}
+			LCD_clear();
+			LCD_printUP(strcat(str, intToStr(err, aux, 1)));
+			strcpy(str,"buf:");
+			strcat(str, intToStr(BUFFER_TX_SIZE, aux, 1));
+			strcat(str," msjs:");
+			strcat(str, intToStr(msjs, aux, 1));
+			LCD_printDOWN(str);
+		}
 		break;
 
-	case SW4:
+	case SW3:
 		break;
 
 #if _5_ENTRADAS
@@ -110,18 +126,19 @@ void pressedKey(uint8_t key)
 
 void releasedKey(uint8_t key)
 {
-	if(key == SW4)
+	if(key == SW3)
 	{
 //		stopTimer(0);
-		if(LCD_status)
+		if(displayClockStatus)
 		{
-			LCD_OFF();
+			//LCD_OFF();
 			LCD_status = OFF;
+			displayClockStatus = OFF;
+			LCD_clear();
 		}
 		else
 		{
-			LCD_clear();
-			LCD_ON();
+		//	LCD_ON();
 			LCD_status = ON;
 			displayClockStatus = ON;
 			LCD_displayClock();

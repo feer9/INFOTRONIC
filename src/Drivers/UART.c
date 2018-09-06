@@ -17,13 +17,14 @@ __RW uint8_t TxStart = 0;
 
 void UART0_IRQHandler()
 {
-	uint8_t iir;
+	uint8_t iir, int_id;
 	int16_t data;
 
-	do{
-		iir = U0IIR;
+	do {
+		iir = (uint8_t) U0IIR;
+		int_id = (iir & 0x06);
 
-		if(iir & 0x02) // TX
+		if(int_id == 0x02) // TX
 		{
 			data = popTx();
 			if(data != -1)
@@ -31,10 +32,15 @@ void UART0_IRQHandler()
 			else
 				TxStart = 0;
 		}
-		if(iir & 0x04) // RX
+		if(int_id == 0x04) // RX
 		{
 			data = U0RBR;
 			pushRx((uint8_t) data);
+		}
+		if(int_id == 0x06) // error: analizar LSR
+		{
+			int_id = (uint8_t) U0LSR;
+			// do stuff
 		}
 	}
 	while(!(iir & 0x01));
