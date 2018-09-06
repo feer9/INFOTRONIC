@@ -44,10 +44,10 @@ void initExtInt(void)
 	set_dir(KEY1, ENTRADA);
 	set_dir(KEY2, ENTRADA);
 	set_dir(KEY3, ENTRADA);
-	SetPINSEL(KEY0, PINSEL_GPIO);
-	SetPINSEL(KEY1, PINSEL_GPIO);
-	SetPINSEL(KEY2, PINSEL_GPIO);
-	SetPINSEL(KEY3, PINSEL_GPIO);
+	setPINSEL(KEY0, PINSEL_GPIO);
+	setPINSEL(KEY1, PINSEL_GPIO);
+	setPINSEL(KEY2, PINSEL_GPIO);
+	setPINSEL(KEY3, PINSEL_GPIO);
 
 	EXTMODE  |=  (0x0F << 0);			// Todas por flanco
 	EXTPOLAR &= ~(0x0F << 0);			// Todas por flanco descendente

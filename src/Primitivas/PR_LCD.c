@@ -19,7 +19,7 @@ void LCD_print(char* msg)
 		else
 			extract_substr(msg, line2, 16, 32);
 
-		LCD(line1, LCD_ROW_1, 0 );
+		LCD(line1, LCD_ROW_1, 0);
 		LCD(line2, LCD_ROW_2, 0);
 	}
 }

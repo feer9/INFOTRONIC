@@ -16,7 +16,7 @@ void initRTC()
 //		LPC_RTC->CCR _SET_BIT(1);		// the elements in the internal oscillator divider are reset
 //		LPC_RTC->CCR _SET_BIT(4);		// The calibration counter is disabled and reset to zero
 		LPC_RTC->CCR = 0b10010;
-	//	LPC_RTC->CALIBRATION = 0x0; 	//!< parece que adelanta ~1seg / dia
+		LPC_RTC->CALIBRATION = 0x0; 	//!< parece que adelanta ~1seg / dia
 
 #if _RTC_SET_TIME
 		LPC_RTC->YEAR  = 2018;
@@ -41,7 +41,7 @@ void initRTC()
 	}
 
 	LPC_RTC->CIIR = 0x01;		// interrupcion cada: bit0->seg bit1->min bit2->hora...
-	LPC_RTC->AMR = 0x00;		// when 1, the * value is not compared for the alarm
+	LPC_RTC->AMR = 0xFF;		// when 1, the * value is not compared for the alarm
 	ICPR0 _SET_BIT(17);				// limpio interrupcion
 	ISER0 _SET_BIT(17);				// habilito interrupcion en el NVIC
 }
@@ -61,5 +61,11 @@ void RTC_IRQHandler(void)
 	{
 		LPC_RTC->ILR _SET_BIT(1);
 	}
+
+}
+
+void RTC_setTime (uint16_t Y, uint16_t M, uint16_t D, \
+		uint8_t h, uint8_t m, uint8_t s)
+{
 
 }

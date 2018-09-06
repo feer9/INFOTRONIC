@@ -3,8 +3,8 @@
 __RW uint8_t tick = 0;
 extern __RW uint8_t LCD_Delay;
 
-// recibe el tiempo en milisegundos
-void initSysTick(float ms)
+// recibe el tiempo en microsegundos
+void initSysTick(uint32_t us)
 {
 	// STCALIB valor por defecto para 10ms
 	// si divido x 4, interrumpe cada 2,5ms
@@ -12,7 +12,7 @@ void initSysTick(float ms)
 
 	// 100.000 para un clock de 100MHz, llama cada 1ms
 	// para temporizaciones repetitivas se resta 1
-	SYSTICK->STRELOAD = (100000 * ms) - 1;
+	SYSTICK->STRELOAD = (100 * us) - 1;
 	SYSTICK->STCURR = 0;
 
 	SYSTICK->CLKSOURCE = 1;
@@ -28,7 +28,9 @@ void SysTick_Handler(void)		// systick cada 2,5ms
 		i = 0;
 	}*/
 
+	UART0_receive();
 	LCD_send();
+
 	if(LCD_Delay)
 		LCD_Delay--;
 

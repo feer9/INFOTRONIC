@@ -1,11 +1,11 @@
 #include <Aplicacion.h>
 
-// recibe el tiempo en milisegundos del prescaler
-void initTimer0(float ms)
+// recibe el tiempo del prescaler en microsegundos
+void initTimer0(uint32_t us)
 {
 	PCONP _SET_BIT(PCONP_TIMER0);				// Enciendo Timer 0
 	PCLKSEL0 |= (PCLK_CCLK << PCLKSEL_TIMER0);	// Clock for timer PCLK = CCLK Selecciono clock
-	T0->PR = (100000 * ms) - 1;					// Prescaler = 10ns * PR
+	T0->PR = (100 * us) - 1;					// Prescaler = 10ns * PR
 //	T0->PR = 99999;								// Prescaler para 1ms
 	T0->TCR = 2;								// Apago y reseteo el temporizador
 	T0->MR1 = 0xFFFFFFFF;						// Configuro match 1 para detectar overflow

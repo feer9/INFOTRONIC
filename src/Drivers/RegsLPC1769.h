@@ -13,16 +13,16 @@ typedef 	unsigned int 	uint32_t;
 typedef 	unsigned short 	uint16_t;
 typedef 	unsigned char 	uint8_t;
 
-typedef enum {FALSE = 0, TRUE = !FALSE} Bool;
-typedef enum {RESET = 0, SET = !RESET} FlagStatus, IntStatus, SetState;
-typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
+typedef enum {FALSE = 0, TRUE = !FALSE} bool;
+typedef enum {RESET = 0, SET = !RESET} flagStatus, intStatus, setState;
+typedef enum {ERROR = 0, SUCCESS = !ERROR} status;
 
 
 /* _BIT(n) sets the bit at position "n"
  * _BIT(n) is intended to be used in "OR" and "AND" expressions:
  * e.g., "(_BIT(3) | _BIT(7))".
  */
-#define _BIT(n) (1 << (n))
+#define _BIT(n) (0x01 << (n))
 
 /* _SBF(f,v) sets the bit field starting at position "f" to value "v".
  * _SBF(f,v) is intended to be used in "OR" and "AND" expressions:
@@ -101,10 +101,10 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
 //!< ----------- Estados de PINMODE
 //!< 00	Pull Up resistor enable (reset value)		01	repeated mode enable
 //!< 11	Pull Down resistor enable					10	ni Pull Up ni Pull DOwn
-#define		PINMODE_PULLUP 		0
-#define		PINMODE_REPEAT 		1
-#define		PINMODE_NONE 		2
-#define		PINMODE_PULLDOWN 	3
+#define		PINMODE_PULLUP 		0x00
+#define		PINMODE_REPEAT 		0x01
+#define		PINMODE_NONE 		0x02
+#define		PINMODE_PULLDOWN 	0x03
 
 //!< ///////////////// REGISTROS PINMODE_OD ///////////////////////////
 //!< 0x4002C068UL : Direccion de inicio de los registros de control del modo OPEN DRAIN
@@ -385,10 +385,10 @@ typedef struct
 #define		PCLKSEL1		PCLKSEL[1]
 
 
-#define		PCLK_CCLK_4		0
-#define		PCLK_CCLK		1
-#define		PCLK_CCLK_2		2
-#define		PCLK_CCLK_8		3
+#define		PCLK_CCLK_4		0x00
+#define		PCLK_CCLK		0x01
+#define		PCLK_CCLK_2		0x02
+#define		PCLK_CCLK_8		0x03
 
 
 #define		PCLKSEL_WDT		0
@@ -508,14 +508,20 @@ typedef struct
 //0x40010000UL : Registro de recepcion de la UART0:
 #define		DIR_UART0		( ( __RW uint32_t  * ) 0x4000C000UL )
 
-#define		U0RBR		DIR_UART0[0]
-#define		U0THR		DIR_UART0[0]
-#define		U0DLL		DIR_UART0[0]
-#define		U0IER		DIR_UART0[1]
-#define		U0DLM		DIR_UART0[1]
+#define		U0RBR		DIR_UART0[0]	// DLAB = 0
+#define		U0THR		DIR_UART0[0]	// DLAB = 0
+#define		U0DLL		DIR_UART0[0]	// DLAB = 1
+#define		U0DLM		DIR_UART0[1]	// DLAB = 1
+#define		U0IER		DIR_UART0[1]	// DLAB = 0
 #define		U0IIR		DIR_UART0[2]
+#define		U0FCR		DIR_UART0[2]
 #define		U0LCR		DIR_UART0[3]
 #define		U0LSR		DIR_UART0[5]
+#define		U0SCR		DIR_UART0[7]
+#define		U0ACR		DIR_UART0[8]
+#define		U0ICR		DIR_UART0[9]
+#define		U0FDR		DIR_UART0[10]
+#define		U0TER		DIR_UART0[12]
 
 //0x40010000UL : Registro de recepcion de la UART1:
 #define		DIR_UART1		( ( __RW uint32_t  * ) 0x40010000UL )
@@ -538,34 +544,7 @@ typedef struct {
 	__RW uint32_t CCR;
 	__RW uint32_t CIIR;
 	__RW uint32_t AMR;
-/*	union {
-		struct{
-		__R uint32_t _0;
-		__R uint32_t _1;
-		__R uint32_t _2;
-		} ;
-		struct{
-			__R uint32_t Seconds:6;
-			__R uint32_t reserved1:2;
-			__R uint32_t Minutes:6;
-			__R uint32_t reserved2:2;
-			__R uint32_t Hours:5;
-			__R uint32_t reserved3:3;
-			__R uint32_t DayOfWeek:3;
-			__R uint32_t reserved4:5;
 
-			__R uint32_t DayOfMonth:5;
-			__R uint32_t reserved5:3;
-			__R uint32_t Month:4;
-			__R uint32_t reserved6:4;
-			__R uint32_t Year:12;
-			__R uint32_t reserved7:4;
-
-			__R uint32_t DayOfYear:12;
-			__R uint32_t reserved8:20;
-		} ;
-	} CTIME;
-*/
 	__R  uint32_t CTIME0;
 	__R  uint32_t CTIME1;
 	__R  uint32_t CTIME2;
@@ -600,6 +579,80 @@ typedef struct {
 } RTC_t;
 
 #define	LPC_RTC		( (RTC_t *) 0x40024000UL )
+
+//!< //////////////// END RTC ///////////////////
+
+
+//!< ////////////////  USB  /////////////////////
+
+typedef struct {
+	__R  uint32_t DevIntSt;		// 0x5000 C200
+	__RW uint32_t DevIntEn;		// 0x5000 C204
+	__W  uint32_t DevIntClr;	// 0x5000 C208
+	__W  uint32_t DevIntSet;	// 0x5000 C20C
+
+	__W  uint32_t CmdCode;		// 0x5000 C210
+	__R  uint32_t CmdData;		// 0x5000 C214
+
+	__R  uint32_t RxData;		// 0x5000 C218
+	__W  uint32_t TxData;		// 0x5000 C21C
+	__R  uint32_t RxPLen;		// 0x5000 C220
+	__W  uint32_t TxPLen;		// 0x5000 C224
+	__RW uint32_t Ctrl;			// 0x5000 C228
+
+	__W  uint32_t DevIntPri;	// 0x5000 C22C
+
+	__R  uint32_t EpIntSt;		// 0x5000 C230
+	__RW uint32_t EpIntEn;		// 0x5000 C234
+	__W  uint32_t EpIntClr;		// 0x5000 C238
+	__W  uint32_t EpIntSet;		// 0x5000 C23C
+	__W  uint32_t EpIntPri;		// 0x5000 C240
+
+	__RW uint32_t ReEp;			// 0x5000 C244
+	__W  uint32_t EpIn;			// 0x5000 C248
+	__RW uint32_t MaxPSize;		// 0x5000 C24C
+
+	__R  uint32_t DMARSt;		// 0x5000 C250
+	__W  uint32_t DMARClr;		// 0x5000 C254
+	__W  uint32_t DMARSet;		// 0x5000 C258
+
+	__R  uint32_t dummy1[9];	// C25C ~ C27C
+
+	__RW uint32_t UDCAH;		// 0x5000 C280
+	__R  uint32_t EpDMASt;		// 0x5000 C284
+	__W  uint32_t EpDMAEn;		// 0x5000 C288
+	__W  uint32_t EpDMADis;		// 0x5000 C28C
+
+	__R  uint32_t DMAIntSt;		// 0x5000 C290
+	__RW uint32_t DMAIntEn;		// 0x5000 C294
+
+	__R  uint32_t dummy2[2];	// C298 y C29C
+
+	__R  uint32_t EoTIntSt;		// 0x5000 C2A0
+	__W  uint32_t EOTIntClr;	// 0x5000 C2A4
+	__W  uint32_t EoTIntSet;	// 0x5000 C2A8
+	__R  uint32_t NDDRIntSt;	// 0x5000 C2AC
+	__W  uint32_t NDDRIntClr;	// 0x5000 C2B0
+	__W  uint32_t NDDRIntSet;	// 0x5000 C2B4
+	__R  uint32_t SysErrIntSt;	// 0x5000 C2B8
+	__W  uint32_t SysErrIntClr;	// 0x5000 C2BC
+	__W  uint32_t SysErrIntSet;	// 0x5000 C2C0
+
+} USB_t;
+
+#define		USB				( (USB_t *) 0x5000C200UL )
+
+#define		USBIntSt_		( (__RW uint32_t*) 0x400FC1C0UL )
+#define		USBIntSt		USBIntSt_[0]
+
+#define		USBClkCtrl_		( (__RW uint32_t*) 0x5000CFF4UL )
+#define		USBClkCtrl		USBClkCtrl_[0]
+
+#define		USBClkSt_		( (__R  uint32_t*) 0x5000CFF8UL )
+#define		USBClkSt		USBClkSt_[0]
+
+//!< ////////////////  END USB  /////////////////////
+
 
 
 

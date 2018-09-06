@@ -1,5 +1,5 @@
-#ifndef APLICACION_H_
-#define APLICACION_H_
+#ifndef _APLICACION_H
+#define _APLICACION_H
 
 #include <Teclado.h>
 #include <GPIO.h>
@@ -10,12 +10,10 @@
 #include <types.h>
 #include <string.h>
 #include <varios.h>
+#include <UART.h>
 
 void inicializarKit	( void );
-void Teclado		( void );
-void setearTimers	( void );
+void setBlinkTimers	( void );
 
 
-
-
-#endif /* APLICACION_H_ */
+#endif /* _APLICACION_H */
