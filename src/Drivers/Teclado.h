@@ -1,7 +1,7 @@
 #ifndef TECLADO_H_
 #define TECLADO_H_
 
-#include <RegsLPC1769.h>
+#include <regsLPC1769.h>
 
 #define		T_DEBOUNCE		20
 #define		ACEPTAReSTADO	((int) (0.7 * T_DEBOUNCE))	// arbitrario

@@ -2,55 +2,51 @@
 #include <Aplicacion.h>
 
 /* TODO: mejorar el driver del LCD para que procese strings con desplazamiento
- * quiero configurar la uart para usarla con la interfaz usb
- * y poder mandar cosas a la pc con qt serial esa wea
  **/
+
+void showClock();
 
 extern __RW uint8_t ledStatus;
 uint8_t displayClockStatus = OFF;
 uint8_t LCD_status = ON;
 
+void dummy(void){}
 
 int main(void)
 {
 	inicializarKit();
 	ledOFF();
 	LCD_printCentered("WELCOME", LCD_ROW_1);
-	setBlinkTimers();
-	startTimer(1, 1000); // reloj en 1s
-	while(1) {}
-}
-
-void timerEnd_Handler(uint8_t n)
-{
-	switch (n)
-	{
-	case 6:
-		write_pin(LEDXpresso, LEDLPC_OFF);
-		setBlinkTimers();
-		break;
-	case 7:
-		write_pin(LEDXpresso, LEDLPC_ON);
-		break;
-
-	case 1:	// led apagado, encender display de reloj
-		if(displayClockStatus == OFF)
-		{
-			LCD_displayClock();
-			displayClockStatus = ON;
-		}
-		break;
-	case 0:
-		break;
-	default:
-		break;
+	ledBlink();
+	startnTimer(7, 1000, showClock); // reloj en 1s
+	while(1) {
+		dummy();
 	}
 }
 
-void setBlinkTimers()
+void showClock()
 {
-	startTimer(6, 5000);
-	startTimer(7, 4900);
+	if(displayClockStatus == OFF)
+	{
+		LCD_displayClock();
+		displayClockStatus = ON;
+	}
+}
+
+void ledBlink()
+{
+	static bool st = TRUE;
+	if(st)
+	{
+		write_pin(LEDXpresso, LEDLPC_OFF);
+		startTimer(4900, ledBlink);
+	}
+	else
+	{
+		startTimer(100, ledBlink);
+		write_pin(LEDXpresso, LEDLPC_ON);
+	}
+	st = !st;
 }
 
 void pressedKey(uint8_t key)
@@ -64,7 +60,7 @@ void pressedKey(uint8_t key)
 			displayClockStatus = OFF;
 			LCD_clear();
 			LCD_print("Led ON");
-			startTimer(1, 1000);
+			startnTimer(7, 1000, showClock);
 		}
 		break;
 
@@ -75,7 +71,7 @@ void pressedKey(uint8_t key)
 			displayClockStatus = OFF;
 			LCD_clear();
 			LCD_print("Led OFF");
-			startTimer(1, 1000);
+			startnTimer(7, 1000, showClock);
 		}
 		break;
 
@@ -88,7 +84,7 @@ void pressedKey(uint8_t key)
 				displayClockStatus = OFF;
 				LCD_clear();
 				LCD_printCentered("Swap", LCD_ROW_1);
-				startTimer(1, 2000);
+				startnTimer(7, 2000, showClock);
 			}
 		}
 		else
@@ -128,7 +124,6 @@ void releasedKey(uint8_t key)
 {
 	if(key == SW3)
 	{
-//		stopTimer(0);
 		if(displayClockStatus)
 		{
 			//LCD_OFF();

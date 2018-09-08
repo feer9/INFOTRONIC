@@ -1,5 +1,5 @@
 #include <Oscilador.h>
-#include <RegsLPC1769.h>
+#include <regsLPC1769.h>
 
 
 void initPLL ( void )

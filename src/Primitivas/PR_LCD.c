@@ -46,19 +46,21 @@ void LCD_printCentered(char* msg, uint8_t row)
 	LCD(line, row, 0);
 }
 
-void LCD(char* msg, uint8_t row, uint8_t pos)
+uint8_t LCD(char* msg, uint8_t row, uint8_t pos)
 {
-	uint8_t i ;
+	uint8_t i , err=0;
 
 	if (row == LCD_ROW_1)
-		pushLCD( pos + 0x80 , LCD_CONTROL );
+		err += pushLCD( pos + 0x80 , LCD_CONTROL );
 
 	else
-		pushLCD( pos + 0xC0 , LCD_CONTROL );
+		err += pushLCD( pos + 0xC0 , LCD_CONTROL );
 
 
 	for( i = 0 ; msg[ i ] != '\0' ; i++ )
-		pushLCD( msg [ i ] , LCD_DATA );
+		err += pushLCD( msg [ i ] , LCD_DATA );
+
+	return err;
 }
 
 // copia src en dest, empezando en start, y llenando con espacios

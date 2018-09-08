@@ -64,8 +64,26 @@ void RTC_IRQHandler(void)
 
 }
 
-void RTC_setTime (uint16_t Y, uint16_t M, uint16_t D, \
-		uint8_t h, uint8_t m, uint8_t s)
+void RTC_setTime (rtc_t *rtc)
 {
+	LPC_RTC->SEC   = rtc->sec;
+	LPC_RTC->MIN   = rtc->min;
+	LPC_RTC->HOUR  = rtc->hour;
+	LPC_RTC->DOM   = rtc->dom;
+	LPC_RTC->DOW   = rtc->dow;
+	LPC_RTC->DOY   = rtc->doy;
+	LPC_RTC->MONTH = rtc->month;
+	LPC_RTC->YEAR  = rtc->year;
+}
 
+void RTC_getTime(rtc_t *rtc)
+{
+	rtc->sec   = LPC_RTC->SEC;
+	rtc->min   = LPC_RTC->MIN;
+	rtc->hour  = LPC_RTC->HOUR;
+	rtc->dom   = LPC_RTC->DOM;
+	rtc->dow   = LPC_RTC->DOW;
+	rtc->doy   = LPC_RTC->DOY;
+	rtc->month = LPC_RTC->MONTH;
+	rtc->year  = LPC_RTC->YEAR;
 }

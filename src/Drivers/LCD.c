@@ -7,6 +7,9 @@ __RW uint32_t LCD_indexIn = 0;
 __RW uint32_t LCD_indexOut = 0;
 __RW uint32_t LCD_queueSize = 0;
 
+//char LCD_currentLine[70];
+//uint8_t LCD_currentLineIndex = 0;
+
 void initLCD(uint8_t IR)
 {
 	setPINSEL(LCD_D4, PINSEL_GPIO);
@@ -146,9 +149,9 @@ void LCD_send()
 }
 
 uint8_t pushLCD(uint8_t dato, uint8_t control)
-{
+{ static uint32_t max_buffer_size = 0;
 	if(LCD_queueSize >= LCD_BUFFER_SIZE)
-		return -1;
+		return 1;
 
 	buffer_LCD [ LCD_indexIn ] = ( dato >> 4 ) & 0x0F;
 	if ( control == LCD_CONTROL )
@@ -164,7 +167,8 @@ uint8_t pushLCD(uint8_t dato, uint8_t control)
 
 	LCD_indexIn ++;
 	LCD_indexIn %= LCD_BUFFER_SIZE;
-
+	if(LCD_queueSize > max_buffer_size)
+		max_buffer_size = LCD_queueSize;
 	return 0;
 }
 
@@ -183,8 +187,11 @@ int32_t popLCD()
 
 	return dato;
 }
+/*
+uint8_t LCD_getIndex()
+{
 
-//uint8_t LCD_getIndex()
+}*/
 
 
 
