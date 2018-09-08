@@ -1,7 +1,9 @@
 #ifndef DRIVERS_UART_H_
 #define DRIVERS_UART_H_
 
-#include <Aplicacion.h>
+#include "regsLPC1769.h"
+#include "KitInfo2_BaseBoard.h"
+
 
 
 #define UART0_CLK		(CORE_CLK / 4)

@@ -75,6 +75,7 @@
 	#define FLASHCFG_Value			0x00004000
 
 	//Prototipos de función:
-
+	void PLL_init		( void );
+	void power_init		( void );
 
 #endif /* _OSCILADOR_H */

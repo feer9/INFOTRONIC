@@ -1,4 +1,5 @@
 #include <UART.h>
+#include "LCD.h"
 
 extern __RW uint8_t bufferRx[BUFFER_RX_SIZE];
 extern __RW uint8_t bufferTx[BUFFER_TX_SIZE];

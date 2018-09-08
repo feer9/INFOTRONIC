@@ -1,4 +1,6 @@
-#include <Aplicacion.h>
+#include <LCD.h>
+#include <types.h>
+#include <string.h>
 
 void LCD_print(char* msg)
 {

@@ -1,7 +1,8 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include <regsLPC1769.h>
+#include "regsLPC1769.h"
+#include "KitInfo2_BaseBoard.h"
 
 #define _ANY_TIMER -1
 
@@ -24,6 +25,7 @@ typedef struct
 } m_timers_t;
 
 
+void TIMER0_init(uint32_t us);
 int8_t nextTimer(m_timers_t* t);
 uint8_t timerOn (uint32_t time, int8_t n, m_timers_t* t, void (*handler)());
 void timerOff(uint8_t n, m_timers_t *t);

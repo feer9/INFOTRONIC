@@ -1,10 +1,11 @@
-#include <Aplicacion.h>
+#include "RTC.h"
+#include "LCD.h"
 
 #define _RTC_SET_TIME 0
 
 extern uint8_t displayClockStatus;
 
-void initRTC()
+void RTC_init()
 {
 	PCONP _SET_BIT(9);				// power control periferic rtc
 	LPC_RTC->RTC_AUXEN _SET_BIT(4);		// the RTC Oscillator Fail detect interrupt is enabled

@@ -1,4 +1,7 @@
-#include <Aplicacion.h>
+#include "string.h"
+#include "regsLPC1769.h"
+#include "KitInfo2_BaseBoard.h"
+#include "varios.h"
 
 size_t strlen(const char *s)
 {

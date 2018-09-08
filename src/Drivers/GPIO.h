@@ -1,7 +1,7 @@
 #ifndef FW_GPIO_H_
 #define FW_GPIO_H_
 
-#include <regsLPC1769.h>
+#include "regsLPC1769.h"
 
 void 		setPINSEL 	( uint8_t, uint8_t, uint8_t );
 void 		setPINMODE	( uint8_t, uint8_t, uint8_t );

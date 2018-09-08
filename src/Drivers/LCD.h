@@ -1,6 +1,9 @@
 #ifndef _LCD_H
 #define _LCD_H
 
+#include "regsLPC1769.h"
+#include "KitInfo2_BaseBoard.h"
+
 #define		LCD_BUFFER_SIZE	160
 
 #define 	LCD_ROW_1		0
@@ -38,7 +41,7 @@ void		LCD_updateClock(void);
 void		LCD_send(void);
 uint8_t		pushLCD(uint8_t dato, uint8_t control);
 int32_t		popLCD(void);
-void		initLCD(uint8_t);
+void		LCD_init(uint8_t);
 void		LCD_config(void);
 void		LCD_init4Bits(void);
 void		LCD_init4Bits_IR(void);

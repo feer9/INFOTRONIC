@@ -1,10 +1,14 @@
-#include <Aplicacion.h>
+#include "regsLPC1769.h"
+#include "KitInfo2_BaseBoard.h"
+#include "UART.h"
+#include "LCD.h"
+#include "Teclado.h"
 
 __RW uint8_t tick = 0;
 extern __RW uint8_t LCD_Delay;
 
 // recibe el tiempo en microsegundos
-void initSysTick(uint32_t us)
+void SysTick_init(uint32_t us)
 {
 	// STCALIB valor por defecto para 10ms
 	// si divido x 4, interrumpe cada 2,5ms

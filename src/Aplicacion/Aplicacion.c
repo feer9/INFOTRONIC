@@ -1,10 +1,11 @@
 #include <cr_section_macros.h>
-#include <Aplicacion.h>
+#include "Aplicacion.h"
 
 /* TODO: mejorar el driver del LCD para que procese strings con desplazamiento
  **/
 
-void showClock();
+void showClock(void);
+void ledBlink(void);
 
 extern __RW uint8_t ledStatus;
 uint8_t displayClockStatus = OFF;
@@ -14,7 +15,7 @@ void dummy(void){}
 
 int main(void)
 {
-	inicializarKit();
+	kit_init();
 	ledOFF();
 	LCD_printCentered("WELCOME", LCD_ROW_1);
 	ledBlink();

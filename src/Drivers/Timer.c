@@ -1,11 +1,9 @@
-#include <Aplicacion.h>
+#include "Timer.h"
 
 #define	timerEnded() timers(TIMER_FINISHED,0,0, NULL)
 
-
-
 // recibe el tiempo del prescaler en microsegundos
-void initTimer0(uint32_t us)
+void TIMER0_init(uint32_t us)
 {
 	PCONP _SET_BIT(PCONP_TIMER0);				// Enciendo Timer 0
 	PCLKSEL0 |= (PCLK_CCLK << PCLKSEL_TIMER0);	// Clock for timer PCLK = CCLK Selecciono clock

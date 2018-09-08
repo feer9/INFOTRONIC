@@ -1,4 +1,5 @@
-#include <Aplicacion.h>
+#include "LCD.h"
+#include "GPIO.h"
 
 __RW uint8_t LCD_Delay = 0;
 
@@ -10,7 +11,7 @@ __RW uint32_t LCD_queueSize = 0;
 //char LCD_currentLine[70];
 //uint8_t LCD_currentLineIndex = 0;
 
-void initLCD(uint8_t IR)
+void LCD_init(uint8_t IR)
 {
 	setPINSEL(LCD_D4, PINSEL_GPIO);
 	setPINSEL(LCD_D4, PINSEL_GPIO);
