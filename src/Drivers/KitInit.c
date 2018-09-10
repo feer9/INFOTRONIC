@@ -1,5 +1,10 @@
-#include <Aplicacion.h>
+#include "regsLPC1769.h"
+#include "KitInfo2_BaseBoard.h"
 #include "PLL.h"
+#include "Timer.h"
+#include "RTC.h"
+#include "LCD.h"
+#include "UART.h"
 
 
 void kit_init		( void );

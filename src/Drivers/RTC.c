@@ -1,25 +1,23 @@
 #include "RTC.h"
 #include "LCD.h"
 
-#define _RTC_SET_TIME 0
 
-extern uint8_t displayClockStatus;
+extern LCD_t LCD;
 
 void RTC_init()
 {
 	PCONP _SET_BIT(9);				// power control periferic rtc
 	LPC_RTC->RTC_AUXEN _SET_BIT(4);		// the RTC Oscillator Fail detect interrupt is enabled
-//	LPC_RTC->RTC_AUXEN = 0;
 
 	if(LPC_RTC->RTC_AUX & _BIT(4))		// RTC Oscillator Fail detect flag.
 	{
-//		LPC_RTC->CCR _RESET_BIT(0);		// The time counters are disabled so that they may be initialized.
-//		LPC_RTC->CCR _SET_BIT(1);		// the elements in the internal oscillator divider are reset
-//		LPC_RTC->CCR _SET_BIT(4);		// The calibration counter is disabled and reset to zero
-		LPC_RTC->CCR = 0b10010;
-		LPC_RTC->CALIBRATION = 0x0; 	//!< parece que adelanta ~1seg / dia
+//		CCR->CLKEN  = 0 : The time counters are disabled so that they may be initialized.
+//		CCR->CTCRST = 1 : The elements in the internal oscillator divider are reset
+//		CCR->CCALEN = 1 : The calibration counter is disabled and reset to zero
+		LPC_RTC->CCR = 0x12;
 
-#if _RTC_SET_TIME
+		LPC_RTC->CALIBRATION = 86400 | (0x01 << 17); 	// adelantaba ~1seg / dia
+
 		LPC_RTC->YEAR  = 2018;
 		LPC_RTC->MONTH = 9;
 		LPC_RTC->DOY   = 246;
@@ -34,11 +32,13 @@ void RTC_init()
 		LPC_RTC->GPREG2 = 0;
 		LPC_RTC->GPREG3 = 0;
 		LPC_RTC->GPREG4 = 0;
-#endif
+
 		LPC_RTC->RTC_AUX _SET_BIT(4);	// clear flag
-//		LPC_RTC->CCR _RESET_BIT(1);		// remain reset until CCR[1] is changed to zero -> lo pongo a 0
-//		LPC_RTC->CCR _SET_BIT(0);		// The time counters are enabled
-		LPC_RTC->CCR = 0b10001;
+
+//		CCR->CLKEN  = 1: The time counters are enabled
+//		CCR->CTCRST = 0: Remain reset until CCR[1] is changed to zero -> lo pongo a 0
+//		CCR->CCALEN = 0 : The calibration counter is enabled and counting
+		LPC_RTC->CCR = 0x01;
 	}
 
 	LPC_RTC->CIIR = 0x01;		// interrupcion cada: bit0->seg bit1->min bit2->hora...
@@ -53,7 +53,7 @@ void RTC_IRQHandler(void)
 	if(LPC_RTC->ILR & _BIT(0))
 	{
 		LPC_RTC->ILR _SET_BIT(0);
-		if(displayClockStatus == ON)
+		if(LCD.isInClock && LCD.isOn)
 			LCD_updateClock();
 	}
 

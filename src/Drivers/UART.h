@@ -5,11 +5,27 @@
 #include "KitInfo2_BaseBoard.h"
 
 
-
 #define UART0_CLK		(CORE_CLK / 4)
 
 #define BUFFER_RX_SIZE	256
 #define BUFFER_TX_SIZE	256
+
+typedef struct {
+	__RW uint8_t bufferRx[BUFFER_RX_SIZE];
+	__RW uint8_t bufferTx[BUFFER_TX_SIZE];
+
+	__RW uint8_t indexRxIn;
+	__RW uint8_t indexRxOut;
+	__RW uint8_t indexTxIn;
+	__RW uint8_t indexTxOut;
+
+	__RW uint8_t bufferRxFull;
+	__RW uint8_t bufferRxEmpty;
+	__RW uint8_t bufferTxFull;
+	__RW uint8_t bufferTxEmpty;
+
+	__RW uint8_t TxStart;
+} uart_t;
 
 void	UART0_init();
 uint8_t	pushRx(uint8_t data);

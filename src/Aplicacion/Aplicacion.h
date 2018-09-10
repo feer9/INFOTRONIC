@@ -1,20 +1,11 @@
-#ifndef _APLICACION_H
-#define _APLICACION_H
+#ifndef APLICACION_APLICACION_H_
+#define APLICACION_APLICACION_H_
 
 
-#include <regsLPC1769.h>
-#include <KitInfo2_BaseBoard.h>
-#include <Teclado.h>
-#include <GPIO.h>
-#include <Timer.h>
-#include <LCD.h>
-#include <RTC.h>
-#include <types.h>
-#include <string.h>
-#include <varios.h>
-#include <UART.h>
-
-void kit_init	( void );
+void showClock(void);
+void ledBlink(void);
+void restoreScreen(void);
 
 
-#endif /* _APLICACION_H */
+
+#endif /* APLICACION_APLICACION_H_ */

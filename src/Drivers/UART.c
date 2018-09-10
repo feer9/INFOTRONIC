@@ -1,19 +1,16 @@
 #include "UART.h"
 
-__RW uint8_t bufferRx[BUFFER_RX_SIZE];
-__RW uint8_t bufferTx[BUFFER_TX_SIZE];
-
-__RW uint8_t indexRxIn  = 0;
-__RW uint8_t indexRxOut = 0;
-__RW uint8_t indexTxIn  = 0;
-__RW uint8_t indexTxOut = 0;
-
-__RW uint8_t bufferRxFull  = 0;
-__RW uint8_t bufferRxEmpty = 1;
-__RW uint8_t bufferTxFull  = 0;
-__RW uint8_t bufferTxEmpty = 1;
-
-__RW uint8_t TxStart = 0;
+uart_t uart0 = {
+		.indexRxIn  = 0,
+		.indexRxOut = 0,
+		.indexTxIn  = 0,
+		.indexTxOut = 0,
+		.bufferRxFull = 0,
+		.bufferRxEmpty = 1,
+		.bufferTxFull  = 0,
+		.bufferTxEmpty = 1,
+		.TxStart = 0
+};
 
 void UART0_IRQHandler()
 {
@@ -30,7 +27,7 @@ void UART0_IRQHandler()
 			if(data != -1)
 				U0THR = (uint8_t) data;
 			else
-				TxStart = 0;
+				uart0.TxStart = 0;
 		}
 		if(int_id == 0x04) // RX
 		{
@@ -84,17 +81,17 @@ void UART0_init()//uint32_t baudrate)
 
 uint8_t pushRx(uint8_t data)
 {
-	if(bufferRxFull)
+	if(uart0.bufferRxFull)
 		return 1;
 
-	bufferRx[indexRxIn] = data;
+	uart0.bufferRx[uart0.indexRxIn] = data;
 
-	indexRxIn++;
-	indexRxIn %= BUFFER_RX_SIZE;
+	uart0.indexRxIn++;
+	uart0.indexRxIn %= BUFFER_RX_SIZE;
 
-	bufferRxEmpty = 0;
-	if(indexRxIn == indexRxOut)
-		bufferRxFull = 1;
+	uart0.bufferRxEmpty = 0;
+	if(uart0.indexRxIn == uart0.indexRxOut)
+		uart0.bufferRxFull = 1;
 
 	return 0;
 }
@@ -103,23 +100,17 @@ int16_t popTx(void)
 {
 	int16_t data = -1;
 
-	if(!bufferTxEmpty)
+	if(!uart0.bufferTxEmpty)
 	{
-		data = bufferTx[indexTxOut];
+		data = uart0.bufferTx[uart0.indexTxOut];
 
-		indexTxOut++;
-		indexTxOut %= BUFFER_TX_SIZE;
+		uart0.indexTxOut++;
+		uart0.indexTxOut %= BUFFER_TX_SIZE;
 
-		bufferTxFull = 0;
-		if(indexTxIn == indexTxOut)
-			bufferTxEmpty = 1;
+		uart0.bufferTxFull = 0;
+		if(uart0.indexTxIn == uart0.indexTxOut)
+			uart0.bufferTxEmpty = 1;
 	}
 
 	return data;
 }
-//  drivers:
-// void pushRx(uint8_t dato) y int32_t popTx(void)
-
-//  primitivas:
-// int32_t popRx(void) y void pushTx(uint32_t dato)
-// void transmitir(char *p)

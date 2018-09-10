@@ -1,15 +1,53 @@
 #include "LCD.h"
 #include "GPIO.h"
+#include "Timer.h"
+
 
 __RW uint8_t LCD_Delay = 0;
 
-__RW uint8_t buffer_LCD[LCD_BUFFER_SIZE];
-__RW uint32_t LCD_indexIn = 0;
-__RW uint32_t LCD_indexOut = 0;
-__RW uint32_t LCD_queueSize = 0;
+LCD_t LCD = {
+		.isOn = TRUE,
+		.isInClock = FALSE,
 
-//char LCD_currentLine[70];
-//uint8_t LCD_currentLineIndex = 0;
+		.send.indexIn = 0,
+		.send.indexOut = 0,
+		.send.queueSize = 0,
+
+		.scroll.len = 0,
+		.scroll.index = 0,
+		.scroll.isScrolling = FALSE,
+		.scroll.line = LCD_ROW_1
+};
+
+void LCD_scroll(void)
+{
+	if(LCD.scroll.isScrolling)
+	{
+		LCD_pushLine(LCD.scroll.string + LCD.scroll.index, LCD.scroll.line);
+
+		// cuando empieza
+		if(LCD.scroll.index == 0)
+		{
+			LCD.scroll.index++;
+			startTimer(1500, LCD_scroll);
+		}
+
+		// fin de scrolleo
+		else if(LCD.scroll.index + 16 >= LCD.scroll.len)
+		{
+			LCD.scroll.index = 0;
+			startTimer(1500, LCD_scroll);
+		}
+
+		// desplazamiento
+		else
+		{
+			LCD.scroll.index++;
+			startTimer(200, LCD_scroll);
+		}
+	}
+}
+
 
 void LCD_init(uint8_t IR)
 {
@@ -34,7 +72,7 @@ void LCD_init(uint8_t IR)
 	write_pin(LCD_RS, 0);
 	write_pin(LCD_E , 0);
 
-	if(IR)
+	if(IR) // internal reset
 		LCD_init4Bits_IR();
 	else
 		LCD_init4Bits();
@@ -150,26 +188,25 @@ void LCD_send()
 }
 
 uint8_t pushLCD(uint8_t dato, uint8_t control)
-{ static uint32_t max_buffer_size = 0;
-	if(LCD_queueSize >= LCD_BUFFER_SIZE)
+{
+	if(LCD.send.queueSize >= LCD_BUFFER_SIZE)
 		return 1;
 
-	buffer_LCD [ LCD_indexIn ] = ( dato >> 4 ) & 0x0F;
+	LCD.send.buffer [ LCD.send.indexIn ] = ( dato >> 4 ) & 0x0F;
 	if ( control == LCD_CONTROL )
-		buffer_LCD [ LCD_indexIn ] |= 0x80;
+		LCD.send.buffer [ LCD.send.indexIn ] |= 0x80;
 
-	LCD_indexIn ++;
+	LCD.send.indexIn ++;
 
-	buffer_LCD [ LCD_indexIn ] = dato & 0x0F;
+	LCD.send.buffer [ LCD.send.indexIn ] = dato & 0x0F;
 	if ( control == LCD_CONTROL )
-		buffer_LCD [ LCD_indexIn ] |= 0x80;
+		LCD.send.buffer [ LCD.send.indexIn ] |= 0x80;
 
-	LCD_queueSize += 2;
+	LCD.send.queueSize += 2;
 
-	LCD_indexIn ++;
-	LCD_indexIn %= LCD_BUFFER_SIZE;
-	if(LCD_queueSize > max_buffer_size)
-		max_buffer_size = LCD_queueSize;
+	LCD.send.indexIn ++;
+	LCD.send.indexIn %= LCD_BUFFER_SIZE;
+
 	return 0;
 }
 
@@ -177,22 +214,17 @@ int32_t popLCD()
 {
 	uint8_t dato;
 
-	if ( LCD_queueSize == 0 )
+	if ( LCD.send.queueSize == 0 )
 		return -1;
 
-	dato = buffer_LCD [LCD_indexOut];
-	LCD_queueSize --;
+	dato = LCD.send.buffer [LCD.send.indexOut];
+	LCD.send.queueSize --;
 
-	LCD_indexOut ++;
-	LCD_indexOut %= LCD_BUFFER_SIZE;
+	LCD.send.indexOut ++;
+	LCD.send.indexOut %= LCD_BUFFER_SIZE;
 
 	return dato;
 }
-/*
-uint8_t LCD_getIndex()
-{
-
-}*/
 
 
 

@@ -10,4 +10,6 @@ typedef unsigned int size_t;
 #define NULL ((void *)0)
 #endif
 
+typedef void (*callback_t)(void);
+
 #endif /* _TYPES_H_ */

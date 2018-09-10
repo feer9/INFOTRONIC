@@ -1,20 +1,8 @@
-#include <UART.h>
-#include "LCD.h"
+#include "../Drivers/UART.h"
+#include "../Drivers/LCD.h"
 
-extern __RW uint8_t bufferRx[BUFFER_RX_SIZE];
-extern __RW uint8_t bufferTx[BUFFER_TX_SIZE];
 
-extern __RW uint8_t indexRxIn;
-extern __RW uint8_t indexRxOut;
-extern __RW uint8_t indexTxIn;
-extern __RW uint8_t indexTxOut;
-
-extern __RW uint8_t bufferRxFull;
-extern __RW uint8_t bufferRxEmpty;
-extern __RW uint8_t bufferTxFull;
-extern __RW uint8_t bufferTxEmpty;
-
-extern __RW uint8_t TxStart;
+extern uart_t uart0;
 
 uint8_t UART0_sendChar(char c)
 {
@@ -36,31 +24,33 @@ uint8_t UART0_sendString(char *msg)
 	return 0;
 }
 
+
+
 void UART0_receive(void)
 {
 	int16_t data;
 	static uint32_t i=0;
-	static char msg[33];
+	static char msg[LCD_MAX_MSG_SIZE];
 	while((data = popRx()) != -1)
 	{
 		if(data == '\r')
 		{
-			msg[i] = '\0';
-			LCD_clear();
-			LCD_print(msg);
-			i=0;
-			break;
+			if(i)
+			{
+				msg[i] = '\0';
+				LCD_printReceived(msg);
+				i=0;
+			}
+			continue;
 		}
 		msg[i] = (char) data;
-		if(i > 30)
+/*		if(i+1 >= LCD_MAX_MSG_SIZE)
 		{
-			msg[32] = '\0';
-			LCD_clear();
-			LCD_print(msg);
+			msg[i+1] = '\0';
+			LCD_printReceived(msg);
 			i=0;
-			break;
-		}
-		// lo hice como el orto pero weno tengo sueño
+			continue;
+		}*/
 		i++;
 	}
 }
@@ -69,16 +59,16 @@ int16_t popRx(void)
 {
 	int16_t data = -1;
 
-	if(!bufferRxEmpty)
+	if(!uart0.bufferRxEmpty)
 	{
-		data = bufferRx[indexRxOut];
+		data = uart0.bufferRx[uart0.indexRxOut];
 
-		indexRxOut++;
-		indexRxOut %= BUFFER_RX_SIZE;
+		uart0.indexRxOut++;
+		uart0.indexRxOut %= BUFFER_RX_SIZE;
 
-		bufferRxFull = 0;
-		if(indexRxIn == indexRxOut)
-			bufferRxEmpty = 1;
+		uart0.bufferRxFull = 0;
+		if(uart0.indexRxIn == uart0.indexRxOut)
+			uart0.bufferRxEmpty = 1;
 	}
 
 	return data;
@@ -86,22 +76,22 @@ int16_t popRx(void)
 
 uint8_t pushTx(uint8_t data)
 {
-	if(bufferTxFull)
+	if(uart0.bufferTxFull)
 		return 1;
 
-	bufferTx[indexTxIn] = data;
+	uart0.bufferTx[uart0.indexTxIn] = data;
 
-	indexTxIn++;
-	indexTxIn %= BUFFER_TX_SIZE;
+	uart0.indexTxIn++;
+	uart0.indexTxIn %= BUFFER_TX_SIZE;
 
-	bufferTxEmpty = 0;
-	if(indexTxIn == indexTxOut)
-		bufferTxFull = 1;
+	uart0.bufferTxEmpty = 0;
+	if(uart0.indexTxIn == uart0.indexTxOut)
+		uart0.bufferTxFull = 1;
 
-	if(!TxStart)
+	if(!uart0.TxStart)
 	{
 		U0THR = popTx();
-		TxStart = 1;
+		uart0.TxStart = 1;
 	}
 
 	return 0;

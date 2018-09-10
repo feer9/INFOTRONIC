@@ -1,6 +1,5 @@
 #include <Timer.h>
 
-
 /**  FUNCIONES DE USUARIO */
 
 // devuelve 1 si el timer "n" NO está activo
@@ -10,13 +9,13 @@ uint8_t isTimerEnd(uint8_t n)
 }
 
 // time: tiempo en ms , handler: funcion de callback
-uint8_t startTimer(uint32_t time, void (*handler)())
+uint8_t startTimer(uint32_t time, callback_t handler)
 {
 	return timers(ON, _ANY_TIMER, time, handler);
 }
 
 // time: tiempo en ms , n: numero de timer , handler: funcion de callback
-uint8_t startnTimer(uint8_t n, uint32_t time, void (*handler)())
+uint8_t startnTimer(uint8_t n, uint32_t time, callback_t handler)
 {
 	return timers(ON, n, time, handler);
 }
@@ -31,12 +30,13 @@ void stopTimer(uint8_t n)
 
 
 // accion, numero de timer, tiempo y funcion de callback
-uint8_t timers(uint8_t act, int8_t n, uint32_t time, void (*handler)())
+uint8_t timers(uint8_t act, int8_t n, uint32_t time, callback_t handler)
 {
 	static bool initialized = FALSE;
 	static m_timers_t t;
+	static uint8_t reserved = 0;
 	int8_t err=0;
-	void (*callback)();
+	callback_t callback;
 
 	if (!initialized)
 	{
@@ -46,10 +46,17 @@ uint8_t timers(uint8_t act, int8_t n, uint32_t time, void (*handler)())
 
 	// si no me piden ningun timer en especifico
 	if(n == _ANY_TIMER)
-		// busco un timer que no este en uso
-		for(n=0; n<N_TIMERS; n++)
-			if(!t.timer[n].state)
+	{	// busco un timer que no este en uso
+		for(n=0 ; n<N_TIMERS ; n++)
+			if( !t.timer[n].state && !((reserved>>n)&0x01) )
 				break;
+		if(n == N_TIMERS)
+			return 1;
+	}
+	// reservo los que vaya usando a peticion
+	else if(act == ON)
+		reserved |= (0x01 << n);
+
 
 	switch (act)
 	{
@@ -68,7 +75,7 @@ uint8_t timers(uint8_t act, int8_t n, uint32_t time, void (*handler)())
 			callback = t.timer[n].handler;
 			timerOff(n, &t);
 			if(callback != NULL)
-				(*callback)();
+				callback();
 		}
 		while ( (T0->TCR & _BIT(0)) && (T0->MR0 < T0->TC) );
 		break;
@@ -98,7 +105,7 @@ void timer_init(m_timers_t* t)
 	t->MR0isOn = 0;
 }
 
-uint8_t timerOn (uint32_t time, int8_t n, m_timers_t* t, void (*handler)())
+uint8_t timerOn (uint32_t time, int8_t n, m_timers_t* t, callback_t handler)
 {
 	if(t->active >= N_TIMERS)
 		return 1;
