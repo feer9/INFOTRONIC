@@ -39,6 +39,7 @@ typedef struct {
 typedef struct {
 	__RW bool		isOn;
 	__RW bool		isInClock;
+	__RW bool		isInMenu;
 
 	LCD_send_t		send;
 
@@ -62,7 +63,7 @@ void		makeLine(const char* src, char* dest, \
 void 		LCD_printReceived(char *msg);
 void		LCD_displayClock(void);
 void		LCD_updateClock(void);
-
+void		LCD_scrollMessage(char* msg, uint8_t line);
 
 void		LCD_send(void);
 uint8_t		pushLCD(uint8_t dato, uint8_t control);

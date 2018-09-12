@@ -13,7 +13,6 @@ void dummy(void){}
 int main(void)
 {
 	kit_init();
-	ledOFF();
 	LCD_printCentered("WELCOME", LCD_ROW_1);
 	ledBlink();
 	startnTimer(7, 1000, showClock); // reloj en 1s

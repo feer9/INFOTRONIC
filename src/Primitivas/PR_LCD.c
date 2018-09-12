@@ -19,12 +19,12 @@ void LCD_scrollMessage(char* msg, uint8_t line)
 		LCD.scroll.isScrolling = TRUE;
 
 		LCD_scroll();
-		startnTimer(6, 6000 + 2 * 200 * (len-16), restoreScreen);
+//		startnTimer(6, 6000 + 2 * 200 * (len-16), restoreScreen);
 	}
 	else
 	{
 		LCD_pushString(msg, line, 0);
-		startnTimer(6, 6000, restoreScreen);
+//		startnTimer(6, 5000, restoreScreen);
 	}
 }
 

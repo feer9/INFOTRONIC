@@ -8,6 +8,7 @@ __RW uint8_t LCD_Delay = 0;
 LCD_t LCD = {
 		.isOn = TRUE,
 		.isInClock = FALSE,
+		.isInMenu = FALSE,
 
 		.send.indexIn = 0,
 		.send.indexOut = 0,
@@ -16,8 +17,7 @@ LCD_t LCD = {
 		.scroll.len = 0,
 		.scroll.index = 0,
 		.scroll.isScrolling = FALSE,
-		.scroll.line = LCD_ROW_1
-};
+		.scroll.line = LCD_ROW_1 };
 
 void LCD_scroll(void)
 {
@@ -29,21 +29,21 @@ void LCD_scroll(void)
 		if(LCD.scroll.index == 0)
 		{
 			LCD.scroll.index++;
-			startTimer(1500, LCD_scroll);
+			startnTimer(8,1500, LCD_scroll);
 		}
 
 		// fin de scrolleo
 		else if(LCD.scroll.index + 16 >= LCD.scroll.len)
 		{
 			LCD.scroll.index = 0;
-			startTimer(1500, LCD_scroll);
+			startnTimer(8,1500, LCD_scroll);
 		}
 
 		// desplazamiento
 		else
 		{
 			LCD.scroll.index++;
-			startTimer(200, LCD_scroll);
+			startnTimer(8,200, LCD_scroll);
 		}
 	}
 }

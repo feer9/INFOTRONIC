@@ -1,24 +1,29 @@
 #include "Teclado.h"
 #include "GPIO.h"
 
-void Debounce_Teclado(void)
+void debounceTeclado(void)
 {
-#if _5_ENTRADAS
+	uint8_t i;
+#if _5_TECLAS
 	static uint8_t sw5ant = 0;
 	uint8_t sw5 = 0;
-	static uint8_t t[N_ENTRADAS] = {0,0,0,0,0};
-	static uint8_t contador[N_ENTRADAS] = {0,0,0,0,0};
+	static uint8_t t[N_TECLAS] = {0,0,0,0,0};
+	static uint8_t contador[N_TECLAS] = {0,0,0,0,0};
 #else
-	static uint8_t t[N_ENTRADAS] = {0,0,0,0};
-	static uint8_t contador[N_ENTRADAS] = {0,0,0,0};
+	static uint8_t t[N_TECLAS] = {0,0,0,0};
+	static uint8_t contador[N_TECLAS] = {0,0,0,0};
 #endif
 	static uint8_t debounceActivo = 0;
 	static uint8_t stAnt = 0;
-	uint8_t i;
+	static void (*keyHandler[N_TECLAS])(uint8_t) = {
+			SW1_handler,
+			SW2_handler,
+			SW3_handler,
+			SW4_handler };
 
 	if(key_change)							// si se genero interrupcion por teclado
 	{
-		for(i=0; i<N_ENTRADAS; i++)
+		for(i=0; i<N_TECLAS; i++)
 		{
 			if(key_change & _BIT(i))
 			{
@@ -30,7 +35,7 @@ void Debounce_Teclado(void)
 	}
 	if(debounceActivo)
 	{
-		for(i=0; i<N_ENTRADAS; i++)
+		for(i=0; i<N_TECLAS; i++)
 		{
 			if(t[i])
 			{
@@ -41,8 +46,7 @@ void Debounce_Teclado(void)
 					if(contador[i] > ACEPTAReSTADO)
 					{
 						stAnt ^= (0x1 << i);
-						acceptKeyChange(i,stAnt);
-						// LCD_Action = g_Teclado;
+						keyHandler[i]((stAnt >> i) & 0x1);
 					}
 					contador[i] = 0;
 					debounceActivo --;
@@ -52,7 +56,7 @@ void Debounce_Teclado(void)
 			}
 		}
 	}
-#if _5_ENTRADAS
+#if _5_TECLAS
 	if(!debounceActivo)
 	{
 		sw5 = read_pin(KEY4_RC, ACTIVO_BAJO);

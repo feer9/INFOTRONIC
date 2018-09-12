@@ -15,6 +15,22 @@
 extern uint8_t ledStatus;
 extern LCD_t LCD;
 
+menu_t menu = {
+		.level = 0,
+		.pos = {0,0},
+		.op[0].msg = "CHANGE OUTPUT",
+		.op[0].desc = "Turn the state of an output. Hold to enter.",
+		.op[0].sub_op[0].msg = "switch LED0",
+		.op[0].sub_op[1].msg = "switch LED1",
+		.op[0].sub_op[2].msg = "switch LED2",
+		.op[0].sub_op[3].msg = "switch LED3",
+		.op[1].msg = "opt1",
+		.op[1].desc = "opt1 desc. Hold to enter.",
+		.op[2].msg = "opt2",
+		.op[2].desc = "opt2 desc. Hold to enter."
+
+};
+
 void showClock()
 {
 	if(LCD.isInClock == FALSE && LCD.isOn == TRUE)
@@ -28,11 +44,14 @@ void showClock()
 void restoreScreen()
 {
 	LCD.scroll.isScrolling = FALSE;
-	if(LCD.isInClock == TRUE)
+	LCD.isInMenu = FALSE;
+//	if(LCD.isInClock == TRUE)
 		LCD_displayClock();
-	else
-		LCD_clear();
+//	else
+//		LCD_clear();
 	LCD.isOn = TRUE;
+	menu.pos[0] = 0;
+	menu.pos[1] = 0;
 }
 
 void ledBlink()
@@ -51,12 +70,47 @@ void ledBlink()
 	st = !st;
 }
 
-void pressedKey(uint8_t key)
+
+void showMenu()
 {
-	switch(key)
+
+
+
+	if(menu.level == 0)
 	{
-	case SW1:
-		if(ledStatus)
+		LCD_printCentered(menu.op[menu.pos[0]].msg , LCD_ROW_1);
+		LCD_scrollMessage(menu.op[menu.pos[0]].desc, LCD_ROW_2);
+	}
+	else if(menu.level == 1)
+	{
+		LCD.scroll.isScrolling = FALSE;
+		LCD_clear();
+		LCD_printCentered(menu.op[menu.pos[0]].sub_op[menu.pos[1]].msg , LCD_ROW_1);
+	}
+
+	startnTimer(6, 20000, restoreScreen);
+}
+
+void enterMenu()
+{
+	if(menu.level == 0)
+	{
+		menu.level++;
+	}
+	else if(menu.level == 1)
+	{
+		switch(menu.pos[0])
+		{
+		case 0:
+			toggleLed(menu.pos[1]);
+			break;
+		}
+	}
+	showMenu();
+}
+
+
+/*		if(ledStatus)
 		{
 			ledOFF();
 			if(LCD.isOn)
@@ -77,14 +131,77 @@ void pressedKey(uint8_t key)
 				LCD_print("Led ON");
 				startnTimer(7, 1000, showClock);
 			}
+		}*/
+void SW1_handler(uint8_t st)
+{
+	if(st)
+	{
+		startnTimer(5, 600, enterMenu);
+	}
+	else
+	{
+		if(!isTimerEnd(5))
+		{
+			if(LCD.isInMenu)
+			{
+				menu.pos[menu.level]++;
+				if(menu.level == 0)
+					menu.pos[menu.level] %= 3;
+				else if(menu.level == 1)
+					menu.pos[menu.level] %= 4;
+			}
+			stopTimer(5);
+			showMenu();
 		}
+		LCD.isInMenu = TRUE;
+		LCD.isInClock = FALSE;
+	}
+}
 
-		break;
+void SW2_handler(uint8_t st)
+{
+	if(st)
+	{
+		if(LCD.isInMenu)
+		{
+			if(menu.level>0)
+			{
+				menu.level--;
+				showMenu();
+			}
+			else
+			{
+				restoreScreen();
+			}
+		}
+	}
+}
 
-	case SW2:
-		break;
-
-	case SW3:
+void SW3_handler(uint8_t st)
+{
+	if(st)
+	{
+		if(LCD.isInClock)
+		{
+			//LCD_OFF();
+			LCD.isOn = FALSE;
+			LCD.isInClock = FALSE;
+			LCD_clear();
+		}
+		else
+		{
+		//	LCD_ON();
+			LCD.isOn = TRUE;
+			LCD.isInClock = TRUE;
+			LCD_displayClock();
+		}
+	}
+}
+/*
+void SW3_handler(uint8_t st)
+{
+	if(st)
+	{
 		if(ledStatus)
 		{
 			ledUP();
@@ -118,38 +235,17 @@ void pressedKey(uint8_t key)
 
 			startTimer(8000, restoreScreen);
 		}
-		break;
-
-	case SW4:
-		break;
+	}
+}
+*/
+void SW4_handler(uint8_t st) {}
 
 #if _5_ENTRADAS
-	case SW5:
-
-		break;
+void SW5_handler(uint8_t st) {}
 #endif
-	}
-}
 
-void releasedKey(uint8_t key)
-{
-	switch(key)
-	{
-	case SW2:
-		if(LCD.isInClock)
-		{
-			//LCD_OFF();
-			LCD.isOn = FALSE;
-			LCD.isInClock = FALSE;
-			LCD_clear();
-		}
-		else
-		{
-		//	LCD_ON();
-			LCD.isOn = TRUE;
-			LCD.isInClock = TRUE;
-			LCD_displayClock();
-		}
-		break;
-	}
-}
+
+
+
+
+

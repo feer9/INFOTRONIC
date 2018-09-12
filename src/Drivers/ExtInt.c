@@ -107,4 +107,5 @@ void EINT3_IRQHandler (void)
 	}
 
 	EXTINT |= (0x01 << EINT3);		// Limpia flag de interrupción
+	debounceTeclado();				// Comienzo el debounce
 }

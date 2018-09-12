@@ -3,8 +3,9 @@
 #include "GPIO.h"
 #include "Teclado.h"
 
+/*
 __RW uint8_t ledActual = 0;
-__RW uint8_t ledStatus = OFF;
+__RW uint8_t ledStatus = OFF;*/
 
 void LEDs_init( void )
 {
@@ -33,6 +34,19 @@ void LEDs_init( void )
 	write_pin(LED4, BUZZER_OFF);
 }
 
+void toggleLed(uint8_t n)
+{
+	switch (n)
+	{
+	case 0: toggle_pin(LED0); break;
+	case 1: toggle_pin(LED1); break;
+	case 2: toggle_pin(LED2); break;
+	case 3: toggle_pin(LED3); break;
+	case 4: toggle_pin(LED4); break;
+	default: break;
+	}
+}
+/*
 void ledOFF(void)
 {
 	ledStatus = OFF;
@@ -68,45 +82,4 @@ void ledDOWN(void)
 		SetLED(ledActual);
 	}
 }
-
-void SetLED(int8_t led)
-{
-	write_pin(LED0, OFF);
-	write_pin(LED1, OFF);
-	write_pin(LED2, OFF);
-	write_pin(LED3, OFF);
-
-	switch(led)
-	{
-	case 0: write_pin(LED0, ON); break;
-	case 1: write_pin(LED1, ON); break;
-	case 2: write_pin(LED2, ON); break;
-	case 3: write_pin(LED3, ON); break;
-	default: break;
-	}
-
-}
-
-void SetLEDActual()
-{
-	if(ledStatus)
-		SetLED(ledActual);
-}
-
-void ToggleLED()
-{
-	if(ledStatus)
-		ToggleLEDActual();
-}
-
-void ToggleLEDActual()
-{
-	switch(ledActual)
-	{
-	case 0: toggle_pin(LED0); break;
-	case 1: toggle_pin(LED1); break;
-	case 2: toggle_pin(LED2); break;
-	case 3: toggle_pin(LED3); break;
-	default: break;
-	}
-}
+*/

@@ -18,7 +18,7 @@ uint8_t startTimer(uint32_t time, callback_t handler)
 uint8_t startnTimer(uint8_t n, uint32_t time, callback_t handler)
 {
 	return timers(ON, n, time, handler);
-}
+} // en uso: 7(showClock), 6(restoreScreen)
 
 // detiene el timer "n"
 void stopTimer(uint8_t n)

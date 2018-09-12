@@ -7,7 +7,7 @@
 
 #define _ANY_TIMER -1
 
-#define N_TIMERS 8
+#define N_TIMERS 10
 #define TIMER_FINISHED 2
 #define IS_TIMER_END 3
 

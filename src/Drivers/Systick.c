@@ -25,18 +25,17 @@ void SysTick_init(uint32_t us)
 }
 
 void SysTick_Handler(void)		// systick cada 2,5ms
-{/*
-	static uint16_t i = 0;
+{
+/*	static uint16_t i = 0;
 	if(++i == 200) {
 		tick = 1;   // tick cada 500ms
 		i = 0;
-	}*/
+	} */
 
-	UART0_receive();
+//	UART0_receive();
 	LCD_send();
+	debounceTeclado();
 
 	if(LCD_Delay)
 		LCD_Delay--;
-
-	Debounce_Teclado();
 }

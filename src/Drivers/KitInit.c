@@ -23,7 +23,7 @@ void kit_init ( void )
 	ExtInt_init();
 	LEDs_init();
 	LCD_init(0);
-	UART0_init();
+//	UART0_init();
 }
 
 
