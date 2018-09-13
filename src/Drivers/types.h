@@ -6,8 +6,9 @@
 typedef unsigned int size_t;
 #endif
 
+/* NULL pointer */
 #ifndef NULL
-#define NULL ((void *)0)
+#define NULL ((void *) 0)
 #endif
 
 typedef void (*callback_t)(void);

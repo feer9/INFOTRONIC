@@ -27,13 +27,10 @@ typedef struct {
 	__RW uint8_t TxStart;
 } uart_t;
 
-void	UART0_init();
-uint8_t	pushRx(uint8_t data);
-int16_t	popRx(void);
-uint8_t	pushTx(uint8_t data);
-int16_t	popTx(void);
-uint8_t	UART0_sendString(char *msg);
-uint8_t UART0_sendChar(char c);
-void	UART0_receive(void);
+void		UART0_init(void);
+uint8_t		UART0_sendString(char *msg);
+uint8_t 	UART0_sendChar(char c);
+void		UART0_receive(void);
+extern void	UART0_startTx(void);
 
 #endif /* DRIVERS_UART_H_ */

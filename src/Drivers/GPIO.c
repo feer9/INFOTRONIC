@@ -17,27 +17,27 @@ void setPINMODE(uint8_t port, uint8_t pin, uint8_t modo)
 	PINMODE[ port ] |= ( modo << pin );		//!< Set de bits en campo
 }
 
-void setMODE_OD (uint8_t port, uint8_t pin, uint8_t mode)
+inline void setMODE_OD (uint8_t port, uint8_t pin, uint8_t mode)
 {
 	mode ?	(PINMODE_OD[port] |=  (0x01 << pin)) : (PINMODE_OD[port] &= ~(0x01 << pin));
 }
 
-void setDIR (uint8_t port, uint8_t pin, uint8_t dir)
+inline void setDIR (uint8_t port, uint8_t pin, uint8_t dir)
 {
 	dir	?	(FIODIR[8*port] |=  (0x01 << pin)) : (FIODIR[8*port] &= ~(0x01 << pin)) ;
 }
 
-void setPIN (uint8_t port, uint8_t pin, uint8_t state)
+inline void setPIN (uint8_t port, uint8_t pin, uint8_t state)
 {
 	state ? (FIOSET[8*port] |= (0x01 << pin)) : (FIOCLR[8*port] |= (0x01 << pin)) ;
 }
 
-uint8_t getPIN (uint8_t port, uint8_t pin, uint8_t activ)
+inline uint8_t getPIN (uint8_t port, uint8_t pin, uint8_t activ)
 {
 	return (((FIOPIN[8*port] >> pin) & 0x01) == activ) ? 1 : 0 ;
 }
 
-void tooglePIN(uint8_t port, uint8_t pin)
+inline void tooglePIN(uint8_t port, uint8_t pin)
 {
 	FIOPIN[8*port] ^= (0x01 << pin) ;
 }

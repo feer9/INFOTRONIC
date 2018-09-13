@@ -1,5 +1,13 @@
 #include <Timer.h>
 
+
+static void		timer_init	(m_timers_t* t);
+static int8_t	nextTimer	(m_timers_t* t);
+static uint8_t	timers		(uint8_t act, int8_t n, uint32_t time, callback_t handler);
+static uint8_t	timerOn		(uint32_t time, int8_t n, m_timers_t* t, callback_t handler);
+static void		timerOff	(uint8_t n, m_timers_t *t);
+
+
 /**  FUNCIONES DE USUARIO */
 
 // devuelve 1 si el timer "n" NO está activo
@@ -30,7 +38,7 @@ void stopTimer(uint8_t n)
 
 
 // accion, numero de timer, tiempo y funcion de callback
-uint8_t timers(uint8_t act, int8_t n, uint32_t time, callback_t handler)
+static uint8_t timers(uint8_t act, int8_t n, uint32_t time, callback_t handler)
 {
 	static bool initialized = FALSE;
 	static m_timers_t t;
@@ -92,7 +100,7 @@ uint8_t timers(uint8_t act, int8_t n, uint32_t time, callback_t handler)
 	return err;
 }
 
-void timer_init(m_timers_t* t)
+static void timer_init(m_timers_t* t)
 {
 	int i;
 	for(i=0; i<N_TIMERS; i++)
@@ -105,7 +113,7 @@ void timer_init(m_timers_t* t)
 	t->MR0isOn = 0;
 }
 
-uint8_t timerOn (uint32_t time, int8_t n, m_timers_t* t, callback_t handler)
+static uint8_t timerOn (uint32_t time, int8_t n, m_timers_t* t, callback_t handler)
 {
 	if(t->active >= N_TIMERS)
 		return 1;
@@ -140,7 +148,7 @@ uint8_t timerOn (uint32_t time, int8_t n, m_timers_t* t, callback_t handler)
 	return 0;
 }
 
-void timerOff(uint8_t n, m_timers_t *t)
+static void timerOff(uint8_t n, m_timers_t *t)
 {
 	if(t->timer[n].state) // si esta encendido
 	{
@@ -163,7 +171,7 @@ void timerOff(uint8_t n, m_timers_t *t)
 	}
 }
 
-int8_t nextTimer(m_timers_t* t)
+static int8_t nextTimer(m_timers_t* t)
 {
 	uint32_t nextNum;
 	uint8_t nextPos;
@@ -186,4 +194,9 @@ int8_t nextTimer(m_timers_t* t)
 		}
 	}
 	return nextPos;
+}
+
+inline void timerEnded()
+{
+	timers(TIMER_FINISHED,0,0, NULL);
 }

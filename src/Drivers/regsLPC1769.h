@@ -50,10 +50,6 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} status;
 #define clearBIT(n)   &= ~ _BIT(n)
 #define setBIT(n)     |=   _BIT(n)
 
-/* NULL pointer */
-#ifndef NULL
-#define NULL ((void *) 0)
-#endif
 
 /* Number of elements in an array */
 #define NELEMENTS(array)  (sizeof(array) / sizeof(array[0]))

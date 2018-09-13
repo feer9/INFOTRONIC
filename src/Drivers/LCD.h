@@ -48,31 +48,24 @@ typedef struct {
 
 #define		LCD_printClockTemplate() LCD_print(" Hour:   :  :   Date:     /  /  ")
 
-#define		LCD_clear()	pushLCD( 0x01 , LCD_CONTROL )
-#define		LCD_OFF()	pushLCD( 0x08 , LCD_CONTROL )
-#define		LCD_ON()	pushLCD( 0x0C , LCD_CONTROL )
+#define		LCD_clear()		pushLCD( 0x01 , LCD_CONTROL )
+#define		LCD_OFF()		pushLCD( 0x08 , LCD_CONTROL )
+#define		LCD_ON()		pushLCD( 0x0C , LCD_CONTROL )
 
-uint8_t		LCD_pushString(char* msg, uint8_t row, uint8_t pos);
-uint8_t		LCD_pushLine(__RW char* msg, uint8_t row);
-void		LCD_printCentered(char* msg, uint8_t row);
-void		LCD_printDOWN(char* msg);
-void		LCD_printUP(char* msg);
-void		LCD_print(char* msg);
-void		makeLine(const char* src, char* dest, \
-					 uint8_t start, uint8_t len);
-void 		LCD_printReceived(char *msg);
-void		LCD_displayClock(void);
-void		LCD_updateClock(void);
-void		LCD_scrollMessage(char* msg, uint8_t line);
+uint8_t		LCD_pushString		(const char* msg, uint8_t row, uint8_t pos);
+uint8_t		LCD_pushLine		(const char* msg, uint8_t row);
+void		LCD_printDOWN		(const char* msg);
+void		LCD_printUP			(const char* msg);
+void		LCD_printCentered	(const char* msg, uint8_t row);
+void		LCD_print			(const char* msg);
+void 		LCD_printReceived	(const char* msg);
+void		LCD_displayClock	(void);
+void		LCD_updateClock		(void);
+void		LCD_scrollMessage	(const char* msg, uint8_t line);
 
-void		LCD_send(void);
-uint8_t		pushLCD(uint8_t dato, uint8_t control);
-int32_t		popLCD(void);
-void		LCD_init(uint8_t);
-void		LCD_config(void);
-void		LCD_init4Bits(void);
-void		LCD_init4Bits_IR(void);
-void		LCD_restart(void);
-void		LCD_scroll(void);
+void		LCD_send			(void);
+uint8_t		pushLCD				(uint8_t dato, uint8_t control);
+void		LCD_init			(uint8_t);
+void		LCD_scroll			(void);
 
 #endif //_LCD_H

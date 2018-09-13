@@ -1,6 +1,5 @@
 #include "Timer.h"
 
-#define	timerEnded() timers(TIMER_FINISHED,0,0, NULL)
 
 // recibe el tiempo del prescaler en microsegundos
 void TIMER0_init(uint32_t us)

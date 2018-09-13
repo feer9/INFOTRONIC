@@ -11,6 +11,10 @@
 #include "../Drivers/UART.h"
 #include "Aplicacion.h"
 
+/* TODO: añadir, opcion 1 del teclado: enviar por la uart0
+ *       Al recibir, imprimir en pantalla "mensaje entrante uart0" o algo asi
+ *       y abajo con desplazamiento imprimir el mensaje
+ * */
 
 extern uint8_t ledStatus;
 extern LCD_t LCD;
@@ -45,10 +49,10 @@ void restoreScreen()
 {
 	LCD.scroll.isScrolling = FALSE;
 	LCD.isInMenu = FALSE;
-//	if(LCD.isInClock == TRUE)
+	if(LCD.isInClock == TRUE)
 		LCD_displayClock();
-//	else
-//		LCD_clear();
+	else
+		LCD_clear();
 	LCD.isOn = TRUE;
 	menu.pos[0] = 0;
 	menu.pos[1] = 0;
@@ -73,9 +77,6 @@ void ledBlink()
 
 void showMenu()
 {
-
-
-
 	if(menu.level == 0)
 	{
 		LCD_printCentered(menu.op[menu.pos[0]].msg , LCD_ROW_1);

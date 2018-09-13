@@ -27,18 +27,12 @@ typedef struct
 
 
 void TIMER0_init(uint32_t us);
-int8_t nextTimer(m_timers_t* t);
-uint8_t timerOn (uint32_t time, int8_t n, m_timers_t* t, callback_t handler);
-void timerOff(uint8_t n, m_timers_t *t);
-void timer_init(m_timers_t* t);
-uint8_t timers(uint8_t act, int8_t n, uint32_t time, callback_t handler);
-
+extern void timerEnded();
 
 /** funciones de usuario */
-void timerEnd_Handler(uint8_t);
-uint8_t isTimerEnd(uint8_t);
-void stopTimer(uint8_t);
-uint8_t startTimer(uint32_t time, callback_t handler);
-uint8_t startnTimer(uint8_t n, uint32_t time, callback_t handler);
+uint8_t	isTimerEnd	(uint8_t);
+void	stopTimer	(uint8_t);
+uint8_t	startTimer	(           uint32_t time, callback_t handler);
+uint8_t	startnTimer	(uint8_t n, uint32_t time, callback_t handler);
 
 #endif // _TIMER_H

@@ -15,14 +15,12 @@
 	#define		N_TECLAS		4		// SW1, SW2, SW3 y SW4
 #endif /* _5_TECLAS */
 
-extern __RW uint8_t key_change;
 
-#define enableDebounce( n, flag )	(flag |= (0x1 << (n-1)))
+#define enableDebounce( n, flag )	((flag) |= (0x1 << ((n)-1)))
 //#define acceptKeyChange(n, ant  )	(((ant>>n)& 0x1) ? pressedKey(n+1) : releasedKey(n+1) )
 
 void debounceTeclado(void);
-uint8_t readSW(uint8_t);
-void enableReleaseKeyInt(uint8_t);
+
 
 void toggleLed(uint8_t n);
 /*

@@ -32,7 +32,7 @@ void SysTick_Handler(void)		// systick cada 2,5ms
 		i = 0;
 	} */
 
-//	UART0_receive();
+	UART0_receive();
 	LCD_send();
 	debounceTeclado();
 

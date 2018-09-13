@@ -3,6 +3,13 @@
 #include "Timer.h"
 
 
+static void		LCD_init4Bits(void);
+static void		LCD_init4Bits_IR(void);
+static void		LCD_config(void);
+static int16_t	popLCD(void);
+
+extern uint8_t	LCD_pushLine	(const char* msg, uint8_t row);
+
 __RW uint8_t LCD_Delay = 0;
 
 LCD_t LCD = {
@@ -23,7 +30,8 @@ void LCD_scroll(void)
 {
 	if(LCD.scroll.isScrolling)
 	{
-		LCD_pushLine(LCD.scroll.string + LCD.scroll.index, LCD.scroll.line);
+		const char * line = (char *) (LCD.scroll.string + LCD.scroll.index);
+		LCD_pushLine(line , LCD.scroll.line);
 
 		// cuando empieza
 		if(LCD.scroll.index == 0)
@@ -80,7 +88,7 @@ void LCD_init(uint8_t IR)
 	LCD_config();
 }
 
-void LCD_init4Bits()
+static void LCD_init4Bits()
 {
 	uint8_t i = 0;
 
@@ -119,7 +127,7 @@ void LCD_init4Bits()
 	while(LCD_Delay);
 }
 
-void LCD_init4Bits_IR()
+static void LCD_init4Bits_IR()
 {
 	LCD_Delay = 10;
 	while(LCD_Delay);
@@ -140,7 +148,7 @@ void LCD_init4Bits_IR()
 	while(LCD_Delay);
 }
 
-void LCD_config()
+static void LCD_config()
 {
 	pushLCD( 0x28 , LCD_CONTROL );	// DL = 0: 4 bits de datos
 									// N = 1 : 2 lineas
@@ -210,7 +218,7 @@ uint8_t pushLCD(uint8_t dato, uint8_t control)
 	return 0;
 }
 
-int32_t popLCD()
+static int16_t popLCD()
 {
 	uint8_t dato;
 

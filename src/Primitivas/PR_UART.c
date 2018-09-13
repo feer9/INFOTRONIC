@@ -1,6 +1,8 @@
 #include "../Drivers/UART.h"
 #include "../Drivers/LCD.h"
 
+static int16_t	popRx(void);
+static uint8_t	pushTx(uint8_t data);
 
 extern uart_t uart0;
 
@@ -23,8 +25,6 @@ uint8_t UART0_sendString(char *msg)
 	}
 	return 0;
 }
-
-
 
 void UART0_receive(void)
 {
@@ -55,7 +55,7 @@ void UART0_receive(void)
 	}
 }
 
-int16_t popRx(void)
+static int16_t popRx(void)
 {
 	int16_t data = -1;
 
@@ -74,7 +74,7 @@ int16_t popRx(void)
 	return data;
 }
 
-uint8_t pushTx(uint8_t data)
+static uint8_t pushTx(uint8_t data)
 {
 	if(uart0.bufferTxFull)
 		return 1;
@@ -88,11 +88,7 @@ uint8_t pushTx(uint8_t data)
 	if(uart0.indexTxIn == uart0.indexTxOut)
 		uart0.bufferTxFull = 1;
 
-	if(!uart0.TxStart)
-	{
-		U0THR = popTx();
-		uart0.TxStart = 1;
-	}
+	UART0_startTx();
 
 	return 0;
 }

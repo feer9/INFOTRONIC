@@ -4,9 +4,12 @@
 #include "../Drivers/Timer.h"
 #include "../Aplicacion/Aplicacion.h"
 
+static void makeLine (const char* src, char* dest, \
+						uint8_t start, uint8_t len);
+
 extern LCD_t LCD;
 
-void LCD_scrollMessage(char* msg, uint8_t line)
+void LCD_scrollMessage(const char* msg, uint8_t line)
 {
 	size_t len = strlen(msg);
 
@@ -28,7 +31,7 @@ void LCD_scrollMessage(char* msg, uint8_t line)
 	}
 }
 
-void LCD_print(char* msg)
+void LCD_print(const char* msg)
 {
 	char line1[17];
 	char line2[17];
@@ -52,21 +55,21 @@ void LCD_print(char* msg)
 	}
 }
 
-void LCD_printUP(char* msg)
+void LCD_printUP(const char* msg)
 {
 	char line[17];
 	makeLine(msg, line, 0, strlen(msg));
 	LCD_pushLine(line, LCD_ROW_1);
 }
 
-void LCD_printDOWN(char* msg)
+void LCD_printDOWN(const char* msg)
 {
 	char line[17];
 	makeLine(msg, line, 0, strlen(msg));
 	LCD_pushLine(line, LCD_ROW_2);
 }
 
-void LCD_printCentered(char* msg, uint8_t row)
+void LCD_printCentered(const char* msg, uint8_t row)
 {
 	size_t len = strlen(msg);
 	char line[17];
@@ -74,7 +77,7 @@ void LCD_printCentered(char* msg, uint8_t row)
 	LCD_pushLine(line, row);
 }
 
-uint8_t LCD_pushString(char* msg, uint8_t row, uint8_t pos)
+uint8_t LCD_pushString(const char* msg, uint8_t row, uint8_t pos)
 {
 	uint8_t i , err=0;
 
@@ -91,7 +94,7 @@ uint8_t LCD_pushString(char* msg, uint8_t row, uint8_t pos)
 	return err;
 }
 
-uint8_t LCD_pushLine(__RW char* msg, uint8_t row)
+uint8_t LCD_pushLine(const char* msg, uint8_t row)
 {
 	uint8_t i , err=0;
 
@@ -106,23 +109,6 @@ uint8_t LCD_pushLine(__RW char* msg, uint8_t row)
 		err += pushLCD( msg [i] , LCD_DATA );
 
 	return err;
-}
-
-// copia src en dest, empezando en start, y llenando con espacios
-void makeLine(const char* src, char* dest, uint8_t start, uint8_t len)
-{
-	uint8_t i;
-
-	for( i = 0 ; i < 16 ; i++ )
-	{
-		if(i < start)
-			dest[i] = ' ';
-		else if(i < len + start)
-			dest[i] = src[i - start];
-		else
-			dest[i] = ' ';
-	}
-	dest[i] = '\0';
 }
 
 
@@ -145,9 +131,26 @@ void LCD_updateClock()
 }
 
 
-void LCD_printReceived(char *msg)
+void LCD_printReceived(const char* msg)
 {
 	LCD_clear();
 	LCD_scrollMessage(msg, LCD_ROW_1);
 	LCD.isOn = FALSE;
+}
+
+// copia src en dest, empezando en start, y llenando con espacios
+static void makeLine(const char* src, char* dest, uint8_t start, uint8_t len)
+{
+	uint8_t i;
+
+	for( i = 0 ; i < 16 ; i++ )
+	{
+		if(i < start)
+			dest[i] = ' ';
+		else if(i < len + start)
+			dest[i] = src[i - start];
+		else
+			dest[i] = ' ';
+	}
+	dest[i] = '\0';
 }

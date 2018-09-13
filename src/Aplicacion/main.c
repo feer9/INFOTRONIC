@@ -3,12 +3,11 @@
 #include "../Drivers/LCD.h"
 #include "../Drivers/Teclado.h"
 #include "../Drivers/Timer.h"
+#include "Aplicacion.h"
 
-void showClock(void);
-void ledBlink(void);
-void kit_init(void);
+extern void kit_init(void);
 
-void dummy(void){}
+static void dummy(void) {}
 
 int main(void)
 {

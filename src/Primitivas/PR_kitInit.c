@@ -1,13 +1,13 @@
-#include "regsLPC1769.h"
-#include "KitInfo2_BaseBoard.h"
-#include "PLL.h"
-#include "Timer.h"
-#include "RTC.h"
-#include "LCD.h"
-#include "UART.h"
+#include "../Drivers/regsLPC1769.h"
+#include "../Drivers/KitInfo2_BaseBoard.h"
+#include "../Drivers/PLL.h"
+#include "../Drivers/Timer.h"
+#include "../Drivers/RTC.h"
+#include "../Drivers/LCD.h"
+#include "../Drivers/UART.h"
 
 
-void kit_init		( void );
+
 void LEDs_init		( void );
 void ExtInt_init	( void );
 void SysTick_init	( uint32_t us);
@@ -23,7 +23,7 @@ void kit_init ( void )
 	ExtInt_init();
 	LEDs_init();
 	LCD_init(0);
-//	UART0_init();
+	UART0_init();
 }
 
 

@@ -1,11 +1,14 @@
 #include "UART.h"
 
+static uint8_t	pushRx(uint8_t data);
+static int16_t	popTx(void);
+
 uart_t uart0 = {
 		.indexRxIn  = 0,
 		.indexRxOut = 0,
 		.indexTxIn  = 0,
 		.indexTxOut = 0,
-		.bufferRxFull = 0,
+		.bufferRxFull  = 0,
 		.bufferRxEmpty = 1,
 		.bufferTxFull  = 0,
 		.bufferTxEmpty = 1,
@@ -79,7 +82,7 @@ void UART0_init()//uint32_t baudrate)
 	ISER0 |= (0x01 << NVIC_UART0);
 }
 
-uint8_t pushRx(uint8_t data)
+static uint8_t pushRx(uint8_t data)
 {
 	if(uart0.bufferRxFull)
 		return 1;
@@ -96,7 +99,7 @@ uint8_t pushRx(uint8_t data)
 	return 0;
 }
 
-int16_t popTx(void)
+static int16_t popTx(void)
 {
 	int16_t data = -1;
 
@@ -113,4 +116,13 @@ int16_t popTx(void)
 	}
 
 	return data;
+}
+
+inline void UART0_startTx(void)
+{
+	if(!uart0.TxStart)
+	{
+		U0THR = popTx();
+		uart0.TxStart = 1;
+	}
 }
