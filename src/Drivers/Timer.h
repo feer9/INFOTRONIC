@@ -11,28 +11,32 @@
 #define TIMER_FINISHED 2
 #define IS_TIMER_END 3
 
-typedef struct
+// struct de cada instancia de timer
+struct timer
 {
-	uint32_t count;			// tiempo seteado para el timer "n"
-	uint8_t state;			// estado del timer "n"
+	uint32_t MR;			// numero en el match register
+	uint32_t timeSet;		// tiempo seteado
+	uint8_t state;			// encendido o apagado
 	void (*handler)(void);	// funcion que se ejecutará al finalizar
-} timer_t;
+} ;
 
+// struct de la máquina de timers
 typedef struct
 {
-	timer_t timer[N_TIMERS];
+	struct timer timer[N_TIMERS];
 	uint8_t active;			// numero de timers activos
 	uint8_t MR0isOn;		// numero de timer mas proximo a terminar
 } m_timers_t;
 
-
+/** funcioness drivers **/
 void TIMER0_init(uint32_t us);
 extern void timerEnded();
 
 /** funciones de usuario */
 uint8_t	isTimerEnd	(uint8_t);
-void	stopTimer	(uint8_t);
-uint8_t	startTimer	(           uint32_t time, callback_t handler);
-uint8_t	startnTimer	(uint8_t n, uint32_t time, callback_t handler);
+int8_t  startTimer 	(uint32_t time, callback_t handler);
+uint8_t	restartTimer(uint8_t);
+uint8_t stopTimer	(uint8_t);
+
 
 #endif // _TIMER_H

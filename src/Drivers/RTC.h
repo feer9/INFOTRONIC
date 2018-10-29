@@ -8,9 +8,9 @@ typedef struct {
 	uint32_t sec;
 	uint32_t min;
 	uint32_t hour;
-	uint32_t dom;
-	uint32_t dow;
-	uint32_t doy;
+	uint32_t dayOfMonth;
+	uint32_t dayOfWeek;
+	uint32_t dayOfYear;
 	uint32_t month;
 	uint32_t year;
 } rtc_t;

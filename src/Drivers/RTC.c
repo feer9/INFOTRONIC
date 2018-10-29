@@ -17,7 +17,7 @@ void RTC_init()
 		LPC_RTC->CCR = 0x12;
 
 		LPC_RTC->CALIBRATION = 86400 | (0x01 << 17); 	// adelantaba ~1seg / dia
-
+#if 0
 		LPC_RTC->YEAR  = 2018;
 		LPC_RTC->MONTH = 9;
 		LPC_RTC->DOY   = 246;
@@ -32,7 +32,7 @@ void RTC_init()
 		LPC_RTC->GPREG2 = 0;
 		LPC_RTC->GPREG3 = 0;
 		LPC_RTC->GPREG4 = 0;
-
+#endif
 		LPC_RTC->RTC_AUX _SET_BIT(4);	// clear flag
 
 //		CCR->CLKEN  = 1: The time counters are enabled
@@ -70,9 +70,9 @@ void RTC_setTime (rtc_t *rtc)
 	LPC_RTC->SEC   = rtc->sec;
 	LPC_RTC->MIN   = rtc->min;
 	LPC_RTC->HOUR  = rtc->hour;
-	LPC_RTC->DOM   = rtc->dom;
-	LPC_RTC->DOW   = rtc->dow;
-	LPC_RTC->DOY   = rtc->doy;
+	LPC_RTC->DOM   = rtc->dayOfMonth;
+	LPC_RTC->DOW   = rtc->dayOfWeek;
+	LPC_RTC->DOY   = rtc->dayOfYear;
 	LPC_RTC->MONTH = rtc->month;
 	LPC_RTC->YEAR  = rtc->year;
 }
@@ -82,9 +82,9 @@ void RTC_getTime(rtc_t *rtc)
 	rtc->sec   = LPC_RTC->SEC;
 	rtc->min   = LPC_RTC->MIN;
 	rtc->hour  = LPC_RTC->HOUR;
-	rtc->dom   = LPC_RTC->DOM;
-	rtc->dow   = LPC_RTC->DOW;
-	rtc->doy   = LPC_RTC->DOY;
+	rtc->dayOfMonth   = LPC_RTC->DOM;
+	rtc->dayOfWeek   = LPC_RTC->DOW;
+	rtc->dayOfYear   = LPC_RTC->DOY;
 	rtc->month = LPC_RTC->MONTH;
 	rtc->year  = LPC_RTC->YEAR;
 }

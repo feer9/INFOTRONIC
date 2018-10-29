@@ -16,6 +16,7 @@
  *       y abajo con desplazamiento imprimir el mensaje
  * */
 
+int8_t s_timerId = -1, m_timerId = -1;
 extern uint8_t ledStatus;
 extern LCD_t LCD;
 
@@ -68,15 +69,15 @@ void ledBlink()
 	}
 	else
 	{
-		startTimer(100, ledBlink);
 		write_pin(LEDLPC_G, LEDLPC_ON);
+		startTimer(100, ledBlink);
 	}
 	st = !st;
 }
 
-
 void showMenu()
 {
+	stopTimer(s_timerId);
 	if(menu.level == 0)
 	{
 		LCD_printCentered(menu.op[menu.pos[0]].msg , LCD_ROW_1);
@@ -89,7 +90,7 @@ void showMenu()
 		LCD_printCentered(menu.op[menu.pos[0]].sub_op[menu.pos[1]].msg , LCD_ROW_1);
 	}
 
-	startnTimer(6, 20000, restoreScreen);
+	s_timerId = startTimer(20000, restoreScreen);
 }
 
 void enterMenu()
@@ -110,39 +111,17 @@ void enterMenu()
 	showMenu();
 }
 
-
-/*		if(ledStatus)
-		{
-			ledOFF();
-			if(LCD.isOn)
-			{
-				LCD.isInClock = FALSE;
-				LCD_clear();
-				LCD_print("Led OFF");
-				startnTimer(7, 1000, showClock);
-			}
-		}
-		else
-		{
-			ledON();
-			if(LCD.isOn)
-			{
-				LCD.isInClock = FALSE;
-				LCD_clear();
-				LCD_print("Led ON");
-				startnTimer(7, 1000, showClock);
-			}
-		}*/
 void SW1_handler(uint8_t st)
 {
-	if(st)
+	if(st) // presionado
 	{
-		startnTimer(5, 600, enterMenu);
+		m_timerId = startTimer(600, enterMenu);
 	}
-	else
+	else   // soltado
 	{
-		if(!isTimerEnd(5))
+		if(!isTimerEnd(m_timerId))
 		{
+			stopTimer(m_timerId);
 			if(LCD.isInMenu)
 			{
 				menu.pos[menu.level]++;
@@ -151,7 +130,6 @@ void SW1_handler(uint8_t st)
 				else if(menu.level == 1)
 					menu.pos[menu.level] %= 4;
 			}
-			stopTimer(5);
 			showMenu();
 		}
 		LCD.isInMenu = TRUE;
@@ -203,39 +181,25 @@ void SW3_handler(uint8_t st)
 {
 	if(st)
 	{
-		if(ledStatus)
-		{
-			ledUP();
-			if(LCD.isOn)
-			{
-				LCD.isInClock = FALSE;
-				LCD_clear();
-				LCD_printCentered("Swap LED", LCD_ROW_1);
-				startnTimer(7, 2000, showClock);
-			}
+		LCD.isOn = FALSE;
+		LCD_clear();
+		int err = 0, msjs=0;
+		char str[17] = "send()   err:";
+		char aux[4];
+		for(int i=0; i < BUFFER_TX_SIZE/2; i++) {
+			err += UART0_sendChar(0x55);
+			err += UART0_sendChar(0xAA);
+			msjs += 2;
 		}
-		else
-		{
-			LCD.isOn = FALSE;
-			LCD_clear();
-			int err = 0, msjs=0;
-			char str[17] = "send()   err:";
-			char aux[4];
-			for(int i=0; i < BUFFER_TX_SIZE/2; i++) {
-				err += UART0_sendChar(0x55);
-				err += UART0_sendChar(0xAA);
-				msjs += 2;
-			}
-			LCD_clear();
-			LCD_printUP(strcat(str, intToStr(err, aux, 1)));
-			strcpy(str,"buf:");
-			strcat(str, intToStr(BUFFER_TX_SIZE, aux, 1));
-			strcat(str," msjs:");
-			strcat(str, intToStr(msjs, aux, 1));
-			LCD_printDOWN(str);
+		LCD_clear();
+		LCD_printUP(strcat(str, intToStr(err, aux, 1)));
+		strcpy(str,"buf:");
+		strcat(str, intToStr(BUFFER_TX_SIZE, aux, 1));
+		strcat(str," msjs:");
+		strcat(str, intToStr(msjs, aux, 1));
+		LCD_printDOWN(str);
 
-			startTimer(8000, restoreScreen);
-		}
+		startTimer(8000, restoreScreen);
 	}
 }
 */
@@ -244,9 +208,5 @@ void SW4_handler(uint8_t st) {}
 #if _5_ENTRADAS
 void SW5_handler(uint8_t st) {}
 #endif
-
-
-
-
 
 

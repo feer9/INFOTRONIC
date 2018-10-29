@@ -37,21 +37,21 @@ void LCD_scroll(void)
 		if(LCD.scroll.index == 0)
 		{
 			LCD.scroll.index++;
-			startnTimer(8,1500, LCD_scroll);
+			startTimer(1500, LCD_scroll);
 		}
 
 		// fin de scrolleo
 		else if(LCD.scroll.index + 16 >= LCD.scroll.len)
 		{
 			LCD.scroll.index = 0;
-			startnTimer(8,1500, LCD_scroll);
+			startTimer(1500, LCD_scroll);
 		}
 
 		// desplazamiento
 		else
 		{
 			LCD.scroll.index++;
-			startnTimer(8,200, LCD_scroll);
+			startTimer(200, LCD_scroll);
 		}
 	}
 }
