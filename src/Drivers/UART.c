@@ -17,30 +17,31 @@ uart_t uart0 = {
 
 void UART0_IRQHandler()
 {
-	uint8_t iir, int_id;
+	uint8_t iir, intId;
 	int16_t data;
 
-	do {
+	do
+	{
 		iir = (uint8_t) U0IIR;
-		int_id = (iir & 0x06);
+		intId = (iir  >> 1) & 0x03;
 
-		if(int_id == 0x02) // TX
+		if(intId == 0x03) // error: analizar LSR
+		{
+			data = U0LSR;
+			// do stuff
+		}
+		else if(intId == 0x02) // RX data available
+		{
+			data = U0RBR;
+			pushRx((uint8_t) data);
+		}
+		else if(intId == 0x01) // THRE (TX)
 		{
 			data = popTx();
 			if(data != -1)
 				U0THR = (uint8_t) data;
 			else
 				uart0.TxStart = 0;
-		}
-		if(int_id == 0x04) // RX
-		{
-			data = U0RBR;
-			pushRx((uint8_t) data);
-		}
-		if(int_id == 0x06) // error: analizar LSR
-		{
-			int_id = (uint8_t) U0LSR;
-			// do stuff
 		}
 	}
 	while(!(iir & 0x01));
