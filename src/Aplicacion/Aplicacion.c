@@ -9,9 +9,10 @@
 #include "../Drivers/string.h"
 #include "../Drivers/varios.h"
 #include "../Drivers/UART.h"
+#include "../Drivers/ADC.h"
 #include "Aplicacion.h"
 
-/* TODO: añadir, opcion 1 del teclado: enviar por la uart0
+/* TODO: añadir, opcion 2 del teclado: enviar por la uart0
  *       Al recibir, imprimir en pantalla "mensaje entrante uart0" o algo asi
  *       y abajo con desplazamiento imprimir el mensaje
  * */
@@ -19,6 +20,7 @@
 int8_t s_timerId = -1, m_timerId = -1;
 extern uint8_t ledStatus;
 extern LCD_t LCD;
+extern ADC_t adc;
 
 menu_t menu = {
 		.level = 0,
@@ -29,8 +31,9 @@ menu_t menu = {
 		.op[0].sub_op[1].msg = "switch LED1",
 		.op[0].sub_op[2].msg = "switch LED2",
 		.op[0].sub_op[3].msg = "switch LED3",
-		.op[1].msg = "opt1",
-		.op[1].desc = "opt1 desc. Hold to enter.",
+		.op[1].msg = "ADC Read",
+		.op[1].desc = "get value of \"Ent Analog 0\". Hold to enter",
+		.op[1].sub_op[0].msg = "AD0.5",
 		.op[2].msg = "opt2",
 		.op[2].desc = "opt2 desc. Hold to enter."
 
@@ -41,14 +44,28 @@ void showClock()
 	if(LCD.isInClock == FALSE && LCD.isOn == TRUE)
 	{
 		LCD.scroll.isScrolling = FALSE;
+		stopTimer(LCD.scroll.timerId);
+		LCD.scroll.timerId = -1;
 		LCD_displayClock();
 		LCD.isInClock = TRUE;
 	}
 }
 
+void showADC()
+{
+	if (adc.change)
+	{
+		adc.change = 0;
+		LCD_printInt(adc.AD5_val, LCD_ROW_2, 4);
+	}
+	adc.timerId = startTimer(200, showADC);
+}
+
 void restoreScreen()
 {
 	LCD.scroll.isScrolling = FALSE;
+	stopTimer(LCD.scroll.timerId);
+	LCD.scroll.timerId = -1;
 	LCD.isInMenu = FALSE;
 	if(LCD.isInClock == TRUE)
 		LCD_displayClock();
@@ -77,7 +94,7 @@ void ledBlink()
 
 void showMenu()
 {
-	stopTimer(s_timerId);
+	//stopTimer(s_timerId);
 	if(menu.level == 0)
 	{
 		LCD_printCentered(menu.op[menu.pos[0]].msg , LCD_ROW_1);
@@ -86,17 +103,25 @@ void showMenu()
 	else if(menu.level == 1)
 	{
 		LCD.scroll.isScrolling = FALSE;
-		LCD_clear();
+		stopTimer(LCD.scroll.timerId);
+		LCD.scroll.timerId = -1;
+		if(menu.pos[0] != 1)
+			LCD_clear();
 		LCD_printCentered(menu.op[menu.pos[0]].sub_op[menu.pos[1]].msg , LCD_ROW_1);
 	}
 
-	s_timerId = startTimer(20000, restoreScreen);
+//	s_timerId = startTimer(20000, restoreScreen);
 }
 
 void enterMenu()
 {
 	if(menu.level == 0)
 	{
+		if(menu.pos[0] == 1)
+		{
+			ADC_start();
+			showADC();
+		}
 		menu.level++;
 	}
 	else if(menu.level == 1)
@@ -105,6 +130,8 @@ void enterMenu()
 		{
 		case 0:
 			toggleLed(menu.pos[1]);
+			break;
+		case 1:
 			break;
 		}
 	}
@@ -122,13 +149,17 @@ void SW1_handler(uint8_t st)
 		if(!isTimerEnd(m_timerId))
 		{
 			stopTimer(m_timerId);
+			m_timerId = -1;
 			if(LCD.isInMenu)
 			{
-				menu.pos[menu.level]++;
-				if(menu.level == 0)
-					menu.pos[menu.level] %= 3;
-				else if(menu.level == 1)
-					menu.pos[menu.level] %= 4;
+				if(!(menu.level == 1 && menu.pos[0] == 1)) // entro al adc
+				{
+					menu.pos[menu.level]++;
+					if(menu.level == 0)
+						menu.pos[menu.level] %= 3;
+					else if(menu.level == 1)
+						menu.pos[menu.level] %= 4;
+				}
 			}
 			showMenu();
 		}
@@ -145,6 +176,12 @@ void SW2_handler(uint8_t st)
 		{
 			if(menu.level>0)
 			{
+				if(menu.pos[0] == 1) // adc
+				{
+					stopTimer(adc.timerId);
+					adc.timerId = -1;
+					ADC_stop();
+				}
 				menu.level--;
 				showMenu();
 			}

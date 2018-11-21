@@ -19,9 +19,12 @@ m_timers_t t = {
 /**  FUNCIONES DE USUARIO */
 
 // devuelve 1 si el timer NO está activo
-uint8_t isTimerEnd(uint8_t id)
+uint8_t isTimerEnd(int8_t id)
 {
-	return !t.timer[id].state;
+	if(id >= 0)
+		return !t.timer[id].state;
+	else
+		return 2;
 }
 
 // time: tiempo en ms , handler: funcion de callback, puede ser NULL
@@ -40,10 +43,10 @@ int8_t startTimer (uint32_t time, callback_t handler)
 		if(!(t.active))			// si no habia ninguno prendido
 		{
 			T0->MR0 = t.timer[id].MR;	// Seteo temporizacion
-			T0->MCR _SET_BIT(0);			// Interrumpe en match0
+			T0->MCR _SET_BIT(MR0I);		// Interrumpe en match0
 			t.MR0isOn = id;
-			T0->TCR = 1;					// Enciendo el temporizador
-			ISER0 _SET_BIT(NVIC_TIMER0);	// Habilito Interrupcion TIMER0
+			T0->TCR = 1;				// Enciendo el temporizador
+			ISER0 = _BIT(NVIC_TIMER0);	// Habilito Interrupcion TIMER0
 		}
 		else
 		{
@@ -61,15 +64,17 @@ int8_t startTimer (uint32_t time, callback_t handler)
 			t.active ++;
 		}
 	}
+	else while(1); // no deberia pasar, todos los timers en uso
+
 	return id;
 }
 
 // funcion que vuelve a iniciar la cuenta atrás del timer [id]
 // id: numero de timer
 // retorna 0 si lo reinició, 1 si no estaba encendido (no tiene datos para encenderlo)
-uint8_t restartTimer(uint8_t id)
+uint8_t restartTimer(int8_t id)
 {
-	if(!t.timer[id].state)
+	if(id < 0 || !t.timer[id].state)
 		return 1;
 
 	t.timer[id].MR = T0->TC + t.timer[id].timeSet;
@@ -81,9 +86,9 @@ uint8_t restartTimer(uint8_t id)
 }
 
 // devuelve 0 si detuvo el timer, 1 si no estaba encendido
-uint8_t stopTimer(uint8_t n)
+uint8_t stopTimer(int8_t n)
 {
-	if(!t.timer[n].state) // si esta apagado
+	if(!t.timer[n].state || n < 0) // si esta apagado
 		return 1;
 
 	t.timer[n].state = 0;
@@ -93,10 +98,10 @@ uint8_t stopTimer(uint8_t n)
 	t.active --;
 	if(!t.active) // apago t0do
 	{
-		ICER0 = (0x01 << 1);	// Deshabilito Interrupcion TIMER0
-		T0->MCR _RESET_BIT(0);	// Desactivo interrupcion match 0
-		T0->TCR = 2;			// Apago y reseteo el temporizador
-		T0->MR0 = 0;			// Restablezco el Match Register
+		ICER0 = _BIT(NVIC_TIMER0);	// Deshabilito Interrupcion TIMER0
+		T0->MCR _RESET_BIT(MR0I);	// Desactivo interrupcion match 0
+		T0->TCR = 2;				// Apago y reseteo el temporizador
+		T0->MR0 = 0;				// Restablezco el Match Register
 	}
 	else
 	{
@@ -179,5 +184,6 @@ void timerEnded(void)
 		if(callback != NULL)
 			callback();
 	}
-	while ( (T0->TCR & _BIT(0)) && (T0->MR0 < T0->TC) );
+	// mientras haya temporizaciones corriendo, y el match ya haya pasado
+	while ( (T0->TCR & 0x01) && (T0->MR0 < T0->TC) );
 }

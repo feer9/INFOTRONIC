@@ -15,8 +15,9 @@ typedef struct {
 	uint32_t year;
 } rtc_t;
 
-void RTC_init	( void );
-void RTC_setTime(rtc_t*);
-void RTC_getTime(rtc_t*);
+void RTC_init		( void );
+void RTC_setTime	(rtc_t*);
+void RTC_getTime	(rtc_t*);
+void RTC_resetTime	( void );
 
 #endif /* DRIVERS_RTC_H_ */

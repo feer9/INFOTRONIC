@@ -5,8 +5,8 @@
  *      Author: Mica y Chor
  */
 
-#ifndef KIT_INFO2BASEBOARD_H_
-#define KIT_INFO2BASEBOARD_H_
+#ifndef KITINFO2_BASEBOARD_H_
+#define KITINFO2_BASEBOARD_H_
 
 #include <GPIO.h>
 

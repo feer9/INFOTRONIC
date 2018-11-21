@@ -6,7 +6,7 @@ extern LCD_t LCD;
 
 void RTC_init()
 {
-	PCONP _SET_BIT(9);				// power control periferic rtc
+	PCONP _SET_BIT(PCONP_RTC);			// power control periferic rtc
 	LPC_RTC->RTC_AUXEN _SET_BIT(4);		// the RTC Oscillator Fail detect interrupt is enabled
 
 	if(LPC_RTC->RTC_AUX & _BIT(4))		// RTC Oscillator Fail detect flag.
@@ -17,22 +17,9 @@ void RTC_init()
 		LPC_RTC->CCR = 0x12;
 
 		LPC_RTC->CALIBRATION = 86400 | (0x01 << 17); 	// adelantaba ~1seg / dia
-#if 0
-		LPC_RTC->YEAR  = 2018;
-		LPC_RTC->MONTH = 9;
-		LPC_RTC->DOY   = 246;
-		LPC_RTC->DOM   = 3;
-		LPC_RTC->DOW   = 1;
-		LPC_RTC->HOUR  = 5;
-		LPC_RTC->MIN   = 43;
-		LPC_RTC->SEC   = 0;
 
-		LPC_RTC->GPREG0 = 20180903;
-		LPC_RTC->GPREG1 = 54300;
-		LPC_RTC->GPREG2 = 0;
-		LPC_RTC->GPREG3 = 0;
-		LPC_RTC->GPREG4 = 0;
-#endif
+		RTC_resetTime();
+
 		LPC_RTC->RTC_AUX _SET_BIT(4);	// clear flag
 
 //		CCR->CLKEN  = 1: The time counters are enabled
@@ -43,8 +30,8 @@ void RTC_init()
 
 	LPC_RTC->CIIR = 0x01;		// interrupcion cada: bit0->seg bit1->min bit2->hora...
 	LPC_RTC->AMR = 0xFF;		// when 1, the * value is not compared for the alarm
-	ICPR0 _SET_BIT(17);				// limpio interrupcion
-	ISER0 _SET_BIT(17);				// habilito interrupcion en el NVIC
+	ICPR0 = _BIT(NVIC_RTC);		// limpio interrupcion
+	ISER0 = _BIT(NVIC_RTC);		// habilito interrupcion en el NVIC
 }
 
 void RTC_IRQHandler(void)
@@ -62,7 +49,24 @@ void RTC_IRQHandler(void)
 	{
 		LPC_RTC->ILR _SET_BIT(1);
 	}
+}
 
+void RTC_resetTime()
+{
+	LPC_RTC->YEAR  = 2018;
+	LPC_RTC->MONTH = 11;
+	LPC_RTC->DOY   = 0;
+	LPC_RTC->DOM   = 21;
+	LPC_RTC->DOW   = 3;
+	LPC_RTC->HOUR  = 4;
+	LPC_RTC->MIN   = 41;
+	LPC_RTC->SEC   = 0;
+
+	LPC_RTC->GPREG0 = 20181121;
+	LPC_RTC->GPREG1 = 044100;
+	LPC_RTC->GPREG2 = 0;
+	LPC_RTC->GPREG3 = 0;
+	LPC_RTC->GPREG4 = 0;
 }
 
 void RTC_setTime (rtc_t *rtc)

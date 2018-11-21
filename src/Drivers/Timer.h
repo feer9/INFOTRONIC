@@ -33,10 +33,10 @@ void TIMER0_init(uint32_t us);
 extern void timerEnded();
 
 /** funciones de usuario */
-uint8_t	isTimerEnd	(uint8_t);
+uint8_t	isTimerEnd	(int8_t);
 int8_t  startTimer 	(uint32_t time, callback_t handler);
-uint8_t	restartTimer(uint8_t);
-uint8_t stopTimer	(uint8_t);
+uint8_t	restartTimer(int8_t);
+uint8_t stopTimer	(int8_t);
 
 
 #endif // _TIMER_H

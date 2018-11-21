@@ -4,7 +4,7 @@
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
 
-#define U0_ENABLE
+//#define U0_ENABLE
 
 #define UART0_CLK		(CORE_CLK / 4)
 

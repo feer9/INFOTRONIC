@@ -5,7 +5,7 @@
 #include "../Drivers/RTC.h"
 #include "../Drivers/LCD.h"
 #include "../Drivers/UART.h"
-
+#include "../Drivers/ADC.h"
 
 
 void LEDs_init		( void );
@@ -26,6 +26,7 @@ void kit_init ( void )
 #ifdef U0_ENABLE
 	UART0_init();
 #endif
+	ADC_init();
 }
 
 

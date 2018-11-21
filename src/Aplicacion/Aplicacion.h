@@ -1,13 +1,15 @@
 #ifndef APLICACION_APLICACION_H_
 #define APLICACION_APLICACION_H_
 
+#include "../Drivers/regsLPC1769.h"
+
 #define N_OPTIONS 3
 
 #if 0
 #define OPTION0 "CHANGE OUTPUT"
 #define OPTION0_DESC "Turn the state of an output. Hold to enter."
-#define OPTION1 "opt1"
-#define OPTION1_DESC "opt1 desc. Hold to enter."
+#define OPTION1 "ADC Read"
+#define OPTION1_DESC "get value of \"Ent Analog 0\". Hold to enter"
 #define OPTION2 "opt2"
 #define OPTION2_DESC "opt2 desc. Hold to enter."
 #endif
@@ -25,8 +27,8 @@ typedef struct {
 } option_t;
 
 typedef struct {
-	uint8_t level;
-	uint8_t pos[2];
+	uint8_t level;	// menu general (0), o submenú (1)
+	uint8_t pos[2];	// pos[0] pos en el menu gral, pos[1] pos en el submenú actual
 	option_t op[N_OPTIONS];
 } menu_t;
 
@@ -35,7 +37,7 @@ void ledBlink(void);
 void restoreScreen(void);
 void showMenu(void);
 void enterMenu(void);
-
+void showADC(void);
 
 
 #endif /* APLICACION_APLICACION_H_ */

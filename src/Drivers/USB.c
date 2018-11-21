@@ -1,3 +1,3 @@
 #include "USB.h"
 
-/* oleee... to be done. */
+/* oleee, algun dia... */

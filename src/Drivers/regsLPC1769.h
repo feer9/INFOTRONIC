@@ -186,13 +186,15 @@ typedef struct
 	__RW uint32_t PIN;
 	__RW uint32_t SET;
 	__RW uint32_t CLR;
-}FIO_t ;
+} GPIO_t;
 
-#define		FIO0	( ( FIO_t * ) 0x2009C000UL )
-#define		FIO1	( ( FIO_t * ) 0x2009C020UL )
-#define		FIO2	( ( FIO_t * ) 0x2009C040UL )
-#define		FIO3	( ( FIO_t * ) 0x2009C060UL )
-#define		FIO4	( ( FIO_t * ) 0x2009C080UL )
+#define		FIO		( ( GPIO_t * ) 0x2009C000UL )
+
+#define		FIO0	( ( GPIO_t * ) 0x2009C000UL )
+#define		FIO1	( ( GPIO_t * ) 0x2009C020UL )
+#define		FIO2	( ( GPIO_t * ) 0x2009C040UL )
+#define		FIO3	( ( GPIO_t * ) 0x2009C060UL )
+#define		FIO4	( ( GPIO_t * ) 0x2009C080UL )
 
 
 //-----------------------------------------------------------------------------
@@ -531,6 +533,7 @@ typedef struct
 #define		U1LCR		DIR_UART1[3]
 #define		U1LSR		DIR_UART1[5]
 
+//!< /////////////		FIN UARTs		///////////////////////////
 
 //!< ////////////		RTC		///////////////////
 
@@ -650,6 +653,43 @@ typedef struct {
 //!< ////////////////  END USB  /////////////////////
 
 
+//!< ////////////////  ADC  /////////////////////
 
+typedef struct
+{
+	__RW uint32_t ADCR;
+
+	__RW uint32_t ADGDR;
+
+	__R  uint32_t dummy;
+
+	__RW uint32_t ADINTEN;
+
+	__R  uint32_t ADDR0;
+	__R  uint32_t ADDR1;
+	__R  uint32_t ADDR2;
+	__R  uint32_t ADDR3;
+	__R  uint32_t ADDR4;
+	__R  uint32_t ADDR5;
+	__R  uint32_t ADDR6;
+	__R  uint32_t ADDR7;
+
+	__R  uint32_t ADSTAT;
+
+	__RW uint32_t ADTRM;
+} LPC_ADC_t;
+
+#define		ADC			( ( LPC_ADC_t * ) 0x40034000UL )
+
+// Control Register setting bits
+#define		CR_SEL		0
+#define		CR_CLKDIV	8
+#define		CR_BURST	16
+#define		CR_PDN		21
+#define		CR_START	24
+#define		CR_EDGE		27
+
+
+//!< ////////////////  END ADC  /////////////////////
 
 #endif /* REGS_H_ */

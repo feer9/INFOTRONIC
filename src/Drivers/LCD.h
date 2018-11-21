@@ -26,7 +26,7 @@ typedef struct {
 	__RW uint32_t	indexIn;
 	__RW uint32_t	indexOut;
 	__RW uint8_t	queueSize;
-} LCD_send_t;
+} LCD_buffer_t;
 
 typedef struct {
 	__RW char		string[LCD_MAX_MSG_SIZE];
@@ -34,6 +34,7 @@ typedef struct {
 	__RW uint8_t	index;
 	__RW bool		isScrolling;
 	__RW uint8_t	line;
+	__RW int8_t		timerId;
 } LCD_scroll_t;
 
 typedef struct {
@@ -41,9 +42,9 @@ typedef struct {
 	__RW bool		isInClock;
 	__RW bool		isInMenu;
 
-	LCD_send_t		send;
-
+	LCD_buffer_t	send;
 	LCD_scroll_t	scroll;
+
 } LCD_t;
 
 #define		LCD_printClockTemplate() LCD_print(" Hour:   :  :   Date:     /  /  ")
@@ -59,6 +60,7 @@ void		LCD_printUP			(const char* msg);
 void		LCD_printCentered	(const char* msg, uint8_t row);
 void		LCD_print			(const char* msg);
 void 		LCD_printReceived	(const char* msg);
+void		LCD_printInt		(int num, uint8_t row, uint8_t d);
 void		LCD_displayClock	(void);
 void		LCD_updateClock		(void);
 void		LCD_scrollMessage	(const char* msg, uint8_t line);

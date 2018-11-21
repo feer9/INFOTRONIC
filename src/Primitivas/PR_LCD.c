@@ -21,6 +21,7 @@ void LCD_scrollMessage(const char* msg, uint8_t line)
 		LCD.scroll.index = 0;
 		LCD.scroll.isScrolling = TRUE;
 
+		stopTimer(LCD.scroll.timerId);
 		LCD_scroll();
 //		startnTimer(6, 6000 + 2 * 200 * (len-16), restoreScreen);
 	}
@@ -153,4 +154,11 @@ static void makeLine(const char* src, char* dest, uint8_t start, uint8_t len)
 			dest[i] = ' ';
 	}
 	dest[i] = '\0';
+}
+
+void LCD_printInt(int num, uint8_t row, uint8_t d)
+{
+	char n[17];
+	intToStr(num, n, d);
+	LCD_printCentered(n, row);
 }
