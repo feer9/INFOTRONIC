@@ -22,7 +22,7 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} status;
  * _BIT(n) is intended to be used in "OR" and "AND" expressions:
  * e.g., "(_BIT(3) | _BIT(7))".
  */
-#define _BIT(n) (0x01 << (n))
+#define _BIT(n) (1UL << (n))
 
 /* _SBF(f,v) sets the bit field starting at position "f" to value "v".
  * _SBF(f,v) is intended to be used in "OR" and "AND" expressions:

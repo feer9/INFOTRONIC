@@ -7,7 +7,7 @@
 __RW uint8_t ledActual = 0;
 __RW uint8_t ledStatus = OFF;*/
 
-void LEDs_init( void )
+void D_IN_init( void )
 {
 	set_dir(RGB_R, SALIDA);
 	set_dir(RGB_G, SALIDA);
@@ -34,7 +34,7 @@ void LEDs_init( void )
 	write_pin(LED4, BUZZER_OFF);
 }
 
-void toggleLed(uint8_t n)
+void D_IN_toggle(uint8_t n)
 {
 	switch (n)
 	{
@@ -45,6 +45,19 @@ void toggleLed(uint8_t n)
 	case 4: toggle_pin(LED4); break;
 	default: break;
 	}
+}
+
+bool D_IN_getStatus(uint8_t n)
+{
+	switch (n)
+	{
+	case 0: return read(LED0);
+	case 1: return read(LED1);
+	case 2: return read(LED2);
+	case 3: return read(LED3);
+	case 4: return read(LED4);
+	}
+	return FALSE;
 }
 /*
 void ledOFF(void)

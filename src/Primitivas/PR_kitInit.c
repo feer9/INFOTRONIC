@@ -8,7 +8,7 @@
 #include "../Drivers/ADC.h"
 
 
-void LEDs_init		( void );
+void D_IN_init		( void );
 void ExtInt_init	( void );
 void SysTick_init	( uint32_t us);
 
@@ -21,7 +21,7 @@ void kit_init ( void )
 	SysTick_init(2500);
 	RTC_init();
 	ExtInt_init();
-	LEDs_init();
+	D_IN_init();
 	LCD_init(0);
 #ifdef U0_ENABLE
 	UART0_init();

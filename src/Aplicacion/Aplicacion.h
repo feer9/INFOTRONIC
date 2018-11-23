@@ -21,14 +21,15 @@ typedef struct {
 } sub_option_t;
 
 typedef struct {
-	char msg[14];
+	char msg[17];
 	char desc[44];
 	sub_option_t sub_op[4];
 } option_t;
 
 typedef struct {
-	uint8_t level;	// menu general (0), o submenú (1)
+	uint8_t level;	// si estoy en menu general (0), o submenú (1)
 	uint8_t pos[2];	// pos[0] pos en el menu gral, pos[1] pos en el submenú actual
+	int8_t  timerId;
 	option_t op[N_OPTIONS];
 } menu_t;
 
@@ -38,6 +39,6 @@ void restoreScreen(void);
 void showMenu(void);
 void enterMenu(void);
 void showADC(void);
-
+void stopADC(void);
 
 #endif /* APLICACION_APLICACION_H_ */

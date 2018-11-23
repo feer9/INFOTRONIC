@@ -62,6 +62,7 @@ void RTC_resetTime()
 	LPC_RTC->MIN   = 41;
 	LPC_RTC->SEC   = 0;
 
+	// Guardo la fecha en que actualicé el rtc para ajustar la calibracion
 	LPC_RTC->GPREG0 = 20181121;
 	LPC_RTC->GPREG1 = 044100;
 	LPC_RTC->GPREG2 = 0;
@@ -83,12 +84,12 @@ void RTC_setTime (rtc_t *rtc)
 
 void RTC_getTime(rtc_t *rtc)
 {
-	rtc->sec   = LPC_RTC->SEC;
-	rtc->min   = LPC_RTC->MIN;
-	rtc->hour  = LPC_RTC->HOUR;
-	rtc->dayOfMonth   = LPC_RTC->DOM;
-	rtc->dayOfWeek   = LPC_RTC->DOW;
-	rtc->dayOfYear   = LPC_RTC->DOY;
-	rtc->month = LPC_RTC->MONTH;
-	rtc->year  = LPC_RTC->YEAR;
+	rtc->sec		= LPC_RTC->SEC;
+	rtc->min		= LPC_RTC->MIN;
+	rtc->hour		= LPC_RTC->HOUR;
+	rtc->dayOfMonth	= LPC_RTC->DOM;
+	rtc->dayOfWeek	= LPC_RTC->DOW;
+	rtc->dayOfYear	= LPC_RTC->DOY;
+	rtc->month		= LPC_RTC->MONTH;
+	rtc->year		= LPC_RTC->YEAR;
 }

@@ -18,10 +18,12 @@ m_timers_t t = {
 
 /**  FUNCIONES DE USUARIO */
 
-// devuelve 1 si el timer NO está activo
+// devuelve 0 si el timer está activo
+//          1 si NO está activo (terminó)
+//          2 si no es un timer
 uint8_t isTimerEnd(int8_t id)
 {
-	if(id >= 0)
+	if(id >= 0 && id < N_TIMERS)
 		return !t.timer[id].state;
 	else
 		return 2;

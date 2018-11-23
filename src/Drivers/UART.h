@@ -4,7 +4,7 @@
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
 
-//#define U0_ENABLE
+#define U0_ENABLE
 
 #define UART0_CLK		(CORE_CLK / 4)
 
@@ -26,9 +26,12 @@ typedef struct {
 	__RW uint8_t bufferTxEmpty;
 
 	__RW uint8_t TxStart;
+	__RW bool    status;
 } uart_t;
 
 void		UART0_init(void);
+void		UART0_up(void);
+void		UART0_down(void);
 uint8_t		UART0_sendString(char *msg);
 uint8_t 	UART0_sendChar(char c);
 void		UART0_receive(void);

@@ -12,7 +12,8 @@ uart_t uart0 = {
 		.bufferRxEmpty = 1,
 		.bufferTxFull  = 0,
 		.bufferTxEmpty = 1,
-		.TxStart = 0
+		.TxStart = 0,
+		.status = 0
 };
 
 void UART0_IRQHandler()
@@ -69,8 +70,8 @@ void UART0_init()//uint32_t baudrate)
 	set_dir(Tx0, SALIDA);
 	set_dir(Rx0, ENTRADA);
 	// pinsel pins P0,2 y P0,3 (Tx0 y Rx0)
-	setPINSEL(Tx0, PINSEL_FUNC1);
-	setPINSEL(Rx0, PINSEL_FUNC1);
+//	setPINSEL(Tx0, PINSEL_FUNC1);
+//	setPINSEL(Rx0, PINSEL_FUNC1);
 	setPINMODE(Tx0, PINMODE_PULLUP);
 	setPINMODE(Rx0, PINMODE_PULLUP);
 
@@ -80,7 +81,26 @@ void UART0_init()//uint32_t baudrate)
 	// interrupciones por RBR, THRE y RX Line Status
 	U0IER = 0x07;
 	// y por ultimo en el NVIC
-	ISER0 |= (0x01 << NVIC_UART0);
+//	ISER0 = (0x01 << NVIC_UART0);
+	PCONP &= ~(0x01 << PCONP_UART0); // para encender, llamar a UART0_up()
+}
+
+void UART0_up()
+{
+	PCONP |= (0x01 << PCONP_UART0);
+	setPINSEL(Tx0, PINSEL_FUNC1);
+	setPINSEL(Rx0, PINSEL_FUNC1);
+	ISER0 = (0x01 << NVIC_UART0);
+	uart0.status = 1;
+}
+
+void UART0_down()
+{
+	ICER0 = (0x01 << NVIC_UART0);
+	setPINSEL(Tx0, PINSEL_GPIO);
+	setPINSEL(Rx0, PINSEL_GPIO);
+	PCONP &= ~(0x01 << PCONP_UART0);
+	uart0.status = 0;
 }
 
 static uint8_t pushRx(uint8_t data)
