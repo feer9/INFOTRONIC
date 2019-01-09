@@ -4,6 +4,9 @@
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
 
+#define		LCD_INTERNAL_RESET_ENABLED  1
+#define		LCD_INTERNAL_RESET_DISABLED 0
+
 #define		LCD_BUFFER_SIZE	160
 
 #define 	LCD_ROW_1		0
@@ -41,6 +44,7 @@ typedef struct {
 	__RW bool		isOn;
 	__RW bool		isInClock;
 	__RW bool		isInMenu;
+	__RW int8_t		restore_timerId;
 
 	LCD_buffer_t	send;
 	LCD_scroll_t	scroll;

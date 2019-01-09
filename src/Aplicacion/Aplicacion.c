@@ -12,7 +12,13 @@
 #include "../Drivers/ADC.h"
 #include "Aplicacion.h"
 
-
+/* TODO:
+	- Cuando no se esta mostrando el reloj,
+	desactivar las interrupciones del RTC (segundos)
+	- Alguna interacion con la pc con QtSerialPort
+	por ejemplo sincronizar el RTC con la hora de la compu
+	- Opcion para reiniciar un Timer
+*/
 
 static int8_t sw1_timerId = -1;
 extern uint8_t ledStatus;
@@ -74,6 +80,7 @@ void restoreScreen()
 
 void showClock()
 {
+	LCD.restore_timerId = -1;
 	if(LCD.isInClock == FALSE && LCD.isOn == TRUE)
 	{
 		LCD_stopScroll();
@@ -157,7 +164,7 @@ void enterMenu()
 			if(menu.pos[1] == 0)
 			{
 				if(uart0.status)
-					UART0_sendString("NUDES\n");
+					UART0_sendString("NUDES\r\n");
 			}
 			else if(menu.pos[1] == 1)
 				UART0_up();
@@ -301,3 +308,18 @@ void SW4_handler(uint8_t st) {}
 void SW5_handler(uint8_t st) {}
 #endif
 
+void tramaRecibida(char *msg)
+{
+	switch(msg[0])
+	{
+	// answer obtained
+	case 'A':
+		// time/date message
+		if(msg[1] == 'T')
+		{
+			// check 2 bytes year + 1 month + 1 day + 1 hour + 1 min + 1 sec = 7 bytes
+			if(strlen(msg+2) == 7)
+				RTC_setTime_fromString(msg+2);
+		}
+	}
+}

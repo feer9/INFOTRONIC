@@ -40,5 +40,6 @@ void showMenu(void);
 void enterMenu(void);
 void showADC(void);
 void stopADC(void);
+void tramaRecibida(char *msg);
 
 #endif /* APLICACION_APLICACION_H_ */

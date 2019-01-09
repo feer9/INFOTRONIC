@@ -19,5 +19,6 @@ void RTC_init		( void );
 void RTC_setTime	(rtc_t*);
 void RTC_getTime	(rtc_t*);
 void RTC_resetTime	( void );
+void RTC_setTime_fromString(char*);
 
 #endif /* DRIVERS_RTC_H_ */

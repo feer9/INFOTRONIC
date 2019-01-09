@@ -16,11 +16,14 @@ LCD_t LCD = {
 		.isOn = TRUE,
 		.isInClock = FALSE,
 		.isInMenu = FALSE,
+		.restore_timerId = -1,
 
 		.send.indexIn = 0,
 		.send.indexOut = 0,
 		.send.queueSize = 0,
+		.send.buffer[0] = '\0',
 
+		.scroll.string[0] = '\0',
 		.scroll.len = 0,
 		.scroll.index = 0,
 		.scroll.isScrolling = FALSE,
@@ -62,11 +65,19 @@ void LCD_scroll(void)
 void LCD_init(uint8_t IR)
 {
 	setPINSEL(LCD_D4, PINSEL_GPIO);
-	setPINSEL(LCD_D4, PINSEL_GPIO);
-	setPINSEL(LCD_D4, PINSEL_GPIO);
-	setPINSEL(LCD_D4, PINSEL_GPIO);
+	setPINSEL(LCD_D5, PINSEL_GPIO);
+	setPINSEL(LCD_D6, PINSEL_GPIO);
+	setPINSEL(LCD_D7, PINSEL_GPIO);
 	setPINSEL(LCD_RS, PINSEL_GPIO);
 	setPINSEL(LCD_E , PINSEL_GPIO);
+
+	// no deberia ser necesario
+	setPINMODE(LCD_D4, PINMODE_NONE);
+	setPINMODE(LCD_D5, PINMODE_NONE);
+	setPINMODE(LCD_D6, PINMODE_NONE);
+	setPINMODE(LCD_D7, PINMODE_NONE);
+	setPINMODE(LCD_RS, PINMODE_NONE);
+	setPINMODE(LCD_E , PINMODE_NONE);
 
 	set_dir(LCD_D4, SALIDA);
 	set_dir(LCD_D5, SALIDA);
@@ -82,7 +93,7 @@ void LCD_init(uint8_t IR)
 	write_pin(LCD_RS, 0);
 	write_pin(LCD_E , 0);
 
-	if(IR) // internal reset
+	if(LCD_INTERNAL_RESET_DISABLED)
 		LCD_init4Bits_IR();
 	else
 		LCD_init4Bits();
@@ -125,7 +136,7 @@ static void LCD_init4Bits()
 
 	write_pin(LCD_E,0);
 
-	LCD_Delay = 1;
+	LCD_Delay = 2;
 	while(LCD_Delay);
 }
 
@@ -199,7 +210,7 @@ void LCD_send()
 
 uint8_t pushLCD(uint8_t dato, uint8_t control)
 {
-	if(LCD.send.queueSize >= LCD_BUFFER_SIZE)
+	if(LCD.send.queueSize + 1 >= LCD_BUFFER_SIZE)
 		return 1;
 
 	LCD.send.buffer [ LCD.send.indexIn ] = ( dato >> 4 ) & 0x0F;

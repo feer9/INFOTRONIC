@@ -187,5 +187,5 @@ void timerEnded(void)
 			callback();
 	}
 	// mientras haya temporizaciones corriendo, y el match ya haya pasado
-	while ( (T0->TCR & 0x01) && (T0->MR0 < T0->TC) );
+	while ( (T0->TCR & 0x01) && (T0->MR0 <= T0->TC) );
 }

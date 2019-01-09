@@ -192,6 +192,9 @@
 #define		OFF			0
 #define		ON			1
 
+#define		OK			0
+#define		ERROR		1
+
 #define		BUZZER_ON	0
 #define		BUZZER_OFF	1
 

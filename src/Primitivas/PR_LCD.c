@@ -16,7 +16,7 @@ void LCD_scrollMessage(const char* msg, uint8_t line)
 	if(len > 16)
 	{
 		if(LCD.scroll.isScrolling)
-			stopTimer(LCD.scroll.timerId);
+			LCD_stopScroll();
 		else
 			LCD.scroll.isScrolling = TRUE;
 		strncpy((char*) LCD.scroll.string, msg, len);
@@ -32,7 +32,7 @@ void LCD_scrollMessage(const char* msg, uint8_t line)
 	}
 }
 
-void LCD_stopScroll()
+inline void LCD_stopScroll()
 {
 	if(LCD.scroll.isScrolling)
 	{
@@ -56,10 +56,10 @@ void LCD_print(const char* msg)
 	{
 		extract_substr(msg, line1, 0, 15);
 
-		if(len < 32)
-			extract_substr(msg, line2, 16, len);
-		else
-			extract_substr(msg, line2, 16, 32);
+		if(len > 32)
+			len = 32;
+
+		extract_substr(msg, line2, 16, len);
 
 		LCD_pushString(line1, LCD_ROW_1, 0);
 		LCD_pushString(line2, LCD_ROW_2, 0);
@@ -155,6 +155,10 @@ void LCD_printReceived(const char* msg)
 	LCD_clear();
 	LCD_printCentered("UART0 Received:", LCD_ROW_1);
 	LCD_scrollMessage(msg, LCD_ROW_2);
+
+	if(LCD.restore_timerId >= 0)
+		stopTimer(LCD.restore_timerId);
+	LCD.restore_timerId = startTimer(10000,showClock);
 }
 
 // copia src en dest, empezando en start, y llenando con espacios

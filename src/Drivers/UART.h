@@ -4,12 +4,14 @@
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
 
-#define U0_ENABLE
+#define U0_INIT_STATUS 1
 
 #define UART0_CLK		(CORE_CLK / 4)
 
 #define BUFFER_RX_SIZE	256
 #define BUFFER_TX_SIZE	256
+
+enum UART0_requests {UART0_REQUEST_NULL, UART0_REQUEST_TIME, UART0_REQUEST_MAX};
 
 typedef struct {
 	__RW uint8_t bufferRx[BUFFER_RX_SIZE];
@@ -29,12 +31,14 @@ typedef struct {
 	__RW bool    status;
 } uart_t;
 
-void		UART0_init(void);
+void		UART0_init(uint8_t);
 void		UART0_up(void);
 void		UART0_down(void);
 uint8_t		UART0_sendString(char *msg);
 uint8_t 	UART0_sendChar(char c);
 void		UART0_receive(void);
 extern void	UART0_startTx(void);
+uint8_t		UART0_sendRequest(uint8_t id);
+void		UART0_requestTime(void);
 
 #endif /* DRIVERS_UART_H_ */

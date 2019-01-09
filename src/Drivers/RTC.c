@@ -53,18 +53,18 @@ void RTC_IRQHandler(void)
 
 void RTC_resetTime()
 {
-	LPC_RTC->YEAR  = 2018;
-	LPC_RTC->MONTH = 11;
+	LPC_RTC->YEAR  = 2019;
+	LPC_RTC->MONTH = 0;
 	LPC_RTC->DOY   = 0;
-	LPC_RTC->DOM   = 21;
-	LPC_RTC->DOW   = 3;
-	LPC_RTC->HOUR  = 4;
-	LPC_RTC->MIN   = 41;
+	LPC_RTC->DOM   = 0;
+	LPC_RTC->DOW   = 0;
+	LPC_RTC->HOUR  = 0;
+	LPC_RTC->MIN   = 0;
 	LPC_RTC->SEC   = 0;
 
 	// Guardo la fecha en que actualicé el rtc para ajustar la calibracion
-	LPC_RTC->GPREG0 = 20181121;
-	LPC_RTC->GPREG1 = 044100;
+	LPC_RTC->GPREG0 = 20190000;
+	LPC_RTC->GPREG1 = 000000;
 	LPC_RTC->GPREG2 = 0;
 	LPC_RTC->GPREG3 = 0;
 	LPC_RTC->GPREG4 = 0;
@@ -92,4 +92,17 @@ void RTC_getTime(rtc_t *rtc)
 	rtc->dayOfYear	= LPC_RTC->DOY;
 	rtc->month		= LPC_RTC->MONTH;
 	rtc->year		= LPC_RTC->YEAR;
+}
+
+void RTC_setTime_fromString(char *s)
+{
+	rtc_t rtc;
+	rtc.year       = (s[0] << 8) | s[1];
+	rtc.month      = s[2];
+	rtc.dayOfMonth = s[3];
+	rtc.hour       = s[4];
+	rtc.min        = s[5];
+	rtc.sec        = s[6];
+
+	RTC_setTime(&rtc);
 }
