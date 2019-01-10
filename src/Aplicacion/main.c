@@ -15,12 +15,13 @@ extern uart_t uart0;
 int main(void)
 {
 	kit_init();
-//	RTC_resetTime();
 	LCD_printCentered("WELCOME", LCD_ROW_1);
 	ledBlink();
 	startTimer(1000, showClock); // reloj en 1s
+#if 0
+	RTC_resetTime();
 	startTimer(5000, UART0_requestTime);
-
+#endif
 
 	while(1) {
 

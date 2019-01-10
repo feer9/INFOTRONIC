@@ -5,15 +5,17 @@
 
 static int16_t	popRx(void);
 static uint8_t	pushTx(uint8_t data);
+uint8_t	UART0_pushTx_16(char data[17]);
+void sendPackage(char data[17]);
 
 extern uart_t uart0;
 
 uint8_t UART0_sendChar(char c)
 {
-	if( pushTx(c) != OK )
+	if( pushTx(c) != SUCCESS )
 		return ERROR;
 
-	return OK;
+	return SUCCESS;
 }
 
 uint8_t UART0_sendString(char *msg)
@@ -22,22 +24,24 @@ uint8_t UART0_sendString(char *msg)
 
 	for(i=0; msg[i]; i++)
 	{
-		if( pushTx(msg[i]) != OK )
+		if( pushTx(msg[i]) != SUCCESS )
 			return ERROR;
 	}
-	return OK;
+	return SUCCESS;
 }
 
 uint8_t UART0_sendRequest(uint8_t id)
 {
-	char msg[20];
+	uint8_t ret = 0;
 	switch(id)
 	{
 	case UART0_REQUEST_TIME:
-		strcpy(msg, "<RT>");
+		ret = UART0_pushTx_16("<RT>");
+		//TODO: ver como ajustar de manera segura a 16 caracteres cualquier mensaje
 		break;
 	}
-	return UART0_sendString(msg);
+
+	return ret;
 }
 
 inline void UART0_requestTime()
@@ -108,16 +112,14 @@ static int16_t popRx(void)
 {
 	int16_t data = -1;
 
-	if(!uart0.bufferRxEmpty)
+	if(!uart0.bufferRx.isEmpty())
 	{
-		data = uart0.bufferRx[uart0.indexRxOut];
+		data = uart0.bufferRx.item[uart0.bufferRx.indexOut];
 
-		uart0.indexRxOut++;
-		uart0.indexRxOut %= BUFFER_RX_SIZE;
+		uart0.bufferRx.indexOut++;
+		uart0.bufferRx.indexOut %= BUFFER_UART_SIZE;
 
-		uart0.bufferRxFull = 0;
-		if(uart0.indexRxIn == uart0.indexRxOut)
-			uart0.bufferRxEmpty = 1;
+		uart0.bufferRx.quantity--;
 	}
 
 	return data;
@@ -125,19 +127,50 @@ static int16_t popRx(void)
 
 static uint8_t pushTx(uint8_t data)
 {
-	if(uart0.bufferTxFull)
-		return ERROR;
+	if(!uart0.TxStart)
+	{
+		U0THR = data;
+		uart0.TxStart = TRUE;
+	}
+	else
+	{
+		if(uart0.bufferTx.isFull())
+			return ERROR;
 
-	uart0.bufferTx[uart0.indexTxIn] = data;
+		uart0.bufferTx.item[uart0.bufferTx.indexIn] = data;
 
-	uart0.indexTxIn++;
-	uart0.indexTxIn %= BUFFER_TX_SIZE;
+		uart0.bufferTx.indexIn++;
+		uart0.bufferTx.indexIn %= BUFFER_UART_SIZE;
 
-	uart0.bufferTxEmpty = 0;
-	if(uart0.indexTxIn == uart0.indexTxOut)
-		uart0.bufferTxFull = 1;
+		uart0.bufferTx.quantity++;
+	}
 
-	UART0_startTx();
+	return SUCCESS;
+}
 
-	return OK;
+
+uint8_t UART0_pushTx_16(char data[17])
+{
+	uint8_t i;
+	if(! uart0.TxStart )
+	{
+		sendPackage(data);
+		uart0.TxStart = TRUE;
+	}
+	else
+	{
+		if(uart0.bufferTx.quantity + 16 > BUFFER_UART_SIZE)
+			return ERROR;
+
+		for(i=0; i<16; i++)
+		{
+			uart0.bufferTx.item[uart0.bufferTx.indexIn] = data[i];
+
+			uart0.bufferTx.indexIn++;
+			uart0.bufferTx.indexIn %= BUFFER_UART_SIZE;
+		}
+		uart0.bufferTx.quantity += 16;
+	}
+
+	return SUCCESS;
 }

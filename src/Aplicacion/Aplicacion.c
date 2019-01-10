@@ -15,8 +15,6 @@
 /* TODO:
 	- Cuando no se esta mostrando el reloj,
 	desactivar las interrupciones del RTC (segundos)
-	- Alguna interacion con la pc con QtSerialPort
-	por ejemplo sincronizar el RTC con la hora de la compu
 	- Opcion para reiniciar un Timer
 */
 
@@ -40,7 +38,7 @@ menu_t menu = {
 		.op[1].sub_op[0].msg = "AD0.5",
 		.op[2].msg = "3- UART",
 		.op[2].desc = "enable/send through UART0. Hold to enter.",
-		.op[2].sub_op[0].msg = "Send nudes",
+		.op[2].sub_op[0].msg = "Send <F0RRo>",
 		.op[2].sub_op[1].msg = "set up",
 		.op[2].sub_op[2].msg = "set down",
 		.timerId = -1
@@ -164,7 +162,7 @@ void enterMenu()
 			if(menu.pos[1] == 0)
 			{
 				if(uart0.status)
-					UART0_sendString("NUDES\r\n");
+					UART0_sendString("<F0RRo>\r\n");
 			}
 			else if(menu.pos[1] == 1)
 				UART0_up();
@@ -322,4 +320,8 @@ void tramaRecibida(char *msg)
 				RTC_setTime_fromString(msg+2);
 		}
 	}
+
+	// test de comunicacion
+	if(!strncmp(msg, "PUT0", 4))
+		UART0_sendString("<F0RRo>\r\n");
 }

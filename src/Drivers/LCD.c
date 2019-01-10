@@ -62,7 +62,7 @@ void LCD_scroll(void)
 }
 
 
-void LCD_init(uint8_t IR)
+void LCD_init(uint8_t internalReset)
 {
 	setPINSEL(LCD_D4, PINSEL_GPIO);
 	setPINSEL(LCD_D5, PINSEL_GPIO);
@@ -93,7 +93,7 @@ void LCD_init(uint8_t IR)
 	write_pin(LCD_RS, 0);
 	write_pin(LCD_E , 0);
 
-	if(LCD_INTERNAL_RESET_DISABLED)
+	if(internalReset)
 		LCD_init4Bits_IR();
 	else
 		LCD_init4Bits();

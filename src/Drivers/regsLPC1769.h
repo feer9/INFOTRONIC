@@ -15,7 +15,7 @@ typedef 	unsigned char 	uint8_t;
 
 typedef enum {FALSE = 0, TRUE = !FALSE} bool;
 typedef enum {RESET = 0, SET = !RESET} flagStatus, intStatus, setState;
-typedef enum {ERROR = 0, SUCCESS = !ERROR} status;
+typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
 
 
 /* _BIT(n) sets the bit at position "n"
@@ -532,6 +532,27 @@ typedef struct
 #define		U1IIR		DIR_UART1[2]
 #define		U1LCR		DIR_UART1[3]
 #define		U1LSR		DIR_UART1[5]
+
+
+#define		IIR_RLS		0x03
+#define		IIR_RDA		0x02
+#define		IIR_CTI		0x06
+#define		IIR_THRE	0x01
+
+
+// RX TRIGGER LEVEL
+
+// 1  character  or 0x01
+#define		TRIGGER_LEVEL_0		0UL
+// 4  characters or 0x04
+#define		TRIGGER_LEVEL_1		1UL
+// 8  characters or 0x08
+#define		TRIGGER_LEVEL_2		2UL
+// 14 characters or 0x0E
+#define		TRIGGER_LEVEL_3		3UL
+
+// trigger level bit position
+#define		U0FCR_TRIGGER_LEVEL		6
 
 //!< /////////////		FIN UARTs		///////////////////////////
 
