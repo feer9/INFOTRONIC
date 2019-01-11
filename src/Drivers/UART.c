@@ -172,12 +172,12 @@ void UART0_init(uint8_t st)//,uint32_t baudrate)
 	U0IER = 0x07;
 
 	if(st)
-		UART0_up();
+		UART0_setUp();
 	else
-		UART0_down();
+		UART0_setDown();
 }
 
-void UART0_up()
+void UART0_setUp()
 {
 	PCONP |= (0x01 << PCONP_UART0);
 	setPINSEL(Tx0, PINSEL_FUNC1);
@@ -186,7 +186,7 @@ void UART0_up()
 	uart0.status = ON;
 }
 
-void UART0_down()
+void UART0_setDown()
 {
 	ICER0 = (0x01 << NVIC_UART0);
 	setPINSEL(Tx0, PINSEL_GPIO);

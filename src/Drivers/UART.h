@@ -57,8 +57,8 @@ static inline bool isTxFull (void) {
 
 
 void		UART0_init(uint8_t);
-void		UART0_up(void);
-void		UART0_down(void);
+void		UART0_setUp(void);
+void		UART0_setDown(void);
 uint8_t		UART0_sendString(char *msg);
 uint8_t 	UART0_sendChar(char c);
 void		UART0_receive(void);

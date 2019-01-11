@@ -16,30 +16,27 @@ void ADC_init()
 	PCLKSEL0 |= (PCLK_CCLK_8 << PCLKSEL_ADC);
 	// seteo el divisor de clock (tiene q quedar <= 13MHZ)
 	// CLKDIV = 1 + este valor
-	ADC->ADCR |= (99 << CR_CLKDIV);
+	ADC->ADCR |= (0UL << CR_CLKDIV);
 
 	set_dir(ADC5, ENTRADA);
 	setPINSEL(ADC5, PINSEL_FUNC3);
 	setPINMODE(ADC5, PINMODE_NONE);
 
 	// seteo AD0.5 como fuente de entrada analogica
-	ADC->ADCR |= (0x01 << 5);
-	// seteo el modo burst, para que haga lecturas continuas
-//	ADC->ADCR |= (0x01 << CR_BURST);
+	ADC->ADCR |= (1UL << 5);
 
+	// Habilito interrupcion para AD0.5
+	ADC->ADINTEN = (1UL << 5);
 
-	ADC->ADINTEN = (0x01 << 5);
-	// Habilito interrupcion en el NVIC
-//	ISER0 = (0x01 << NVIC_ADC);
-
-	ADC_stop(); // todavia no lo wa usar
+	// Lo dejo apagado porque no lo estoy usando
+	ADC_stop();
 }
 
 void ADC_stop()
 {
-//	setPINSEL(ADC5, PINSEL_GPIO);
-	ADC->ADCR _RESET_BIT(CR_BURST);
-	ADC->ADCR _RESET_BIT(CR_PDN);
+	setPINSEL(ADC5, PINSEL_GPIO);
+	ADC->ADCR _RESET_BIT(CR_BURST);	// Conversions are software controlled
+	ADC->ADCR _RESET_BIT(CR_PDN);	// The A/D converter is in power-down mode
 	PCONP _RESET_BIT(PCONP_ADC);
 	ICER0 = _BIT(NVIC_ADC);
 }
@@ -47,16 +44,16 @@ void ADC_stop()
 void ADC_start()
 {
 	PCONP _SET_BIT(PCONP_ADC);
-	ADC->ADCR _SET_BIT(CR_PDN);
-	ADC->ADCR _SET_BIT(CR_BURST);
-//	setPINSEL(ADC5, PINSEL_FUNC3);
+	ADC->ADCR _SET_BIT(CR_PDN);		// The A/D converter is operational
+	ADC->ADCR _SET_BIT(CR_BURST);	// The A/D converter does repeated conversions at up to 200 kHz
+	setPINSEL(ADC5, PINSEL_FUNC3);
 	ISER0 = (0x01 << NVIC_ADC);
 }
 
 void ADC_IRQHandler()
 {
-	uint32_t dr5 = ADC->ADDR5;
 	static uint16_t prev = 0;
+	uint32_t dr5 = ADC->ADDR5;
 
 	if(dr5 >> 31) // DONE
 	{

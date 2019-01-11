@@ -15,10 +15,8 @@ void LCD_scrollMessage(const char* msg, uint8_t line)
 
 	if(len > 16)
 	{
-		if(LCD.scroll.isScrolling)
-			LCD_stopScroll();
-		else
-			LCD.scroll.isScrolling = TRUE;
+		LCD_stopScroll();
+		LCD.scroll.isScrolling = TRUE;
 		strncpy((char*) LCD.scroll.string, msg, len);
 		LCD.scroll.len = len;
 		LCD.scroll.line = line;
@@ -178,9 +176,9 @@ static void makeLine(const char* src, char* dest, uint8_t start, uint8_t len)
 	dest[i] = '\0';
 }
 
-void LCD_printInt(int num, uint8_t row, uint8_t d)
+void LCD_printInt(int num, uint8_t row, uint8_t digits)
 {
 	char n[17];
-	intToStr(num, n, d);
+	intToStr(num, n, digits);
 	LCD_printCentered(n, row);
 }

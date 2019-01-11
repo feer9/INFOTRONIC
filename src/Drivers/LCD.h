@@ -64,7 +64,7 @@ void		LCD_printUP			(const char* msg);
 void		LCD_printCentered	(const char* msg, uint8_t row);
 void		LCD_print			(const char* msg);
 void 		LCD_printReceived	(const char* msg);
-void		LCD_printInt		(int num, uint8_t row, uint8_t d);
+void		LCD_printInt		(int num, uint8_t row, uint8_t digits);
 void		LCD_displayClock	(void);
 void		LCD_updateClock		(void);
 void		LCD_scrollMessage	(const char* msg, uint8_t line);

@@ -165,9 +165,9 @@ void enterMenu()
 					UART0_sendString("<F0RRo>\r\n");
 			}
 			else if(menu.pos[1] == 1)
-				UART0_up();
+				UART0_setUp();
 			else if(menu.pos[1] == 2)
-				UART0_down();
+				UART0_setDown();
 			break;
 		}
 	}
