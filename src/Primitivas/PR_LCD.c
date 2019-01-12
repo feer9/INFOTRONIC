@@ -16,11 +16,11 @@ void LCD_scrollMessage(const char* msg, uint8_t line)
 	if(len > 16)
 	{
 		LCD_stopScroll();
-		LCD.scroll.isScrolling = TRUE;
 		strncpy((char*) LCD.scroll.string, msg, len);
 		LCD.scroll.len = len;
 		LCD.scroll.line = line;
 		LCD.scroll.index = 0;
+		LCD.scroll.isScrolling = TRUE;
 
 		LCD_scroll();
 	}
@@ -35,8 +35,7 @@ inline void LCD_stopScroll()
 	if(LCD.scroll.isScrolling)
 	{
 		LCD.scroll.isScrolling = FALSE;
-		stopTimer(LCD.scroll.timerId);
-		LCD.scroll.timerId = -1;
+		stopTimer(&LCD.scroll.timerId);
 	}
 }
 
@@ -147,15 +146,14 @@ void LCD_printReceived(const char* msg)
 	LCD.isInMenu = FALSE;
 	if(LCD.scroll.isScrolling) {
 		LCD.scroll.isScrolling = FALSE;
-		stopTimer(LCD.scroll.timerId);
-		LCD.scroll.timerId = -1;
+		stopTimer(&LCD.scroll.timerId);
 	}
 	LCD_clear();
 	LCD_printCentered("UART0 Received:", LCD_ROW_1);
 	LCD_scrollMessage(msg, LCD_ROW_2);
 
 	if(LCD.restore_timerId >= 0)
-		stopTimer(LCD.restore_timerId);
+		stopTimer(&LCD.restore_timerId);
 	LCD.restore_timerId = startTimer(10000,showClock);
 }
 

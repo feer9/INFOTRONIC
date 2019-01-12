@@ -16,7 +16,7 @@ void ADC_init()
 	PCLKSEL0 |= (PCLK_CCLK_8 << PCLKSEL_ADC);
 	// seteo el divisor de clock (tiene q quedar <= 13MHZ)
 	// CLKDIV = 1 + este valor
-	ADC->ADCR |= (0UL << CR_CLKDIV);
+	ADC->ADCR |= (99UL << CR_CLKDIV);
 
 	set_dir(ADC5, ENTRADA);
 	setPINSEL(ADC5, PINSEL_FUNC3);
@@ -47,7 +47,7 @@ void ADC_start()
 	ADC->ADCR _SET_BIT(CR_PDN);		// The A/D converter is operational
 	ADC->ADCR _SET_BIT(CR_BURST);	// The A/D converter does repeated conversions at up to 200 kHz
 	setPINSEL(ADC5, PINSEL_FUNC3);
-	ISER0 = (0x01 << NVIC_ADC);
+	ISER0 = (1UL << NVIC_ADC);
 }
 
 void ADC_IRQHandler()

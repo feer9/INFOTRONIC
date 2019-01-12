@@ -5,11 +5,11 @@
 #include "KitInfo2_BaseBoard.h"
 #include <types.h>
 
-#define _ANY_TIMER -1
+//#define _ANY_TIMER -1
 
 #define N_TIMERS 10
-#define TIMER_FINISHED 2
-#define IS_TIMER_END 3
+//#define TIMER_FINISHED 2
+//#define IS_TIMER_END 3
 
 // struct de cada instancia de timer
 struct timer
@@ -36,7 +36,7 @@ extern void timerEnded();
 uint8_t	isTimerEnd	(int8_t);
 int8_t  startTimer 	(uint32_t time, callback_t handler);
 uint8_t	restartTimer(int8_t);
-uint8_t stopTimer	(int8_t);
+uint8_t stopTimer	(__RW int8_t *);
 
 
 #endif // _TIMER_H

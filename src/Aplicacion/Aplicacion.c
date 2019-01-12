@@ -25,8 +25,8 @@ extern ADC_t adc;
 extern uart_t uart0;
 
 menu_t menu = {
-		.level = 0,
-		.pos = {0,0},
+		.level = 0,			// 0 (menu) , 1 (submenu)
+		.pos = {0,0},		// position in each level
 		.op[0].msg = "1- CHANGE OUTPUT",
 		.op[0].desc = "Turn the state of an output. Hold to enter.",
 		.op[0].sub_op[0].msg = "switch LED0",
@@ -99,14 +99,13 @@ void showADC()
 
 void stopADC()
 {
-	stopTimer(adc.timerId);
-	adc.timerId = -1;
+	stopTimer(&adc.timerId);
 	ADC_stop();
 }
 
 void showMenu()
 {
-	//stopTimer(menu.timerId);
+	//stopTimer(&menu.timerId);
 	if(menu.level == 0)
 	{
 		LCD_printCentered(menu.op[menu.pos[0]].msg , LCD_ROW_1);
@@ -184,8 +183,7 @@ void SW1_handler(uint8_t st)
 	{
 		if(!isTimerEnd(sw1_timerId)) // si está en curso
 		{
-			stopTimer(sw1_timerId);
-			sw1_timerId = -1;
+			stopTimer(&sw1_timerId);
 			if(LCD.isInMenu)
 			{
 				if(menu.level == 0)

@@ -58,7 +58,7 @@ void PLL_init ( void )
 
 void power_init()
 {
-	PCONP = (0x01 << PCONP_RTC) | (0x01 << PCONP_GPIO);
+	PCONP = (1UL << PCONP_RTC) | (1UL << PCONP_GPIO);
 //	PCONP =   0b00000000000000001000001000000000;
 /*	solo dejo encendidos los perifericos:
 	bit	9	RTC

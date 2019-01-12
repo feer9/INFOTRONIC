@@ -16,15 +16,17 @@ int main(void)
 {
 	kit_init();
 	LCD_printCentered("WELCOME", LCD_ROW_1);
+	LCD_printInt(LPC_RTC->GPREG2++, LCD_ROW_2, 3);
 	ledBlink();
 	startTimer(1000, showClock); // reloj en 1s
+
 #if 0
 	RTC_resetTime();
 	startTimer(5000, UART0_requestTime);
 #endif
 
-	while(1) {
-
+	while(1)
+	{
 		if(uart0.status)
 			UART0_receive();
 

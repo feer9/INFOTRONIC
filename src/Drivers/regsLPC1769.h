@@ -383,10 +383,10 @@ typedef struct
 #define		PCLKSEL1		PCLKSEL[1]
 
 
-#define		PCLK_CCLK_4		0x00
-#define		PCLK_CCLK		0x01
-#define		PCLK_CCLK_2		0x02
-#define		PCLK_CCLK_8		0x03
+#define		PCLK_CCLK_4		0UL
+#define		PCLK_CCLK		1UL
+#define		PCLK_CCLK_2		2UL
+#define		PCLK_CCLK_8		3UL
 
 
 #define		PCLKSEL_WDT		0
@@ -460,23 +460,23 @@ typedef struct {
 //!< /////////////		TIMERs		///////////////////////////
 typedef struct
 {
-	__RW uint32_t IR;			/** IR - INTERRUPT REGISTER */
-	__RW uint32_t TCR;			/** TCR - TIMER CONTROL REGISTER */
-	__RW uint32_t TC;			/** TC - TIMER COUNTER REGISTER */
-	__RW uint32_t PR;			/** PR - PRESCALE REGISTER */
-	__RW uint32_t PC;			/** PC - PRESCALE COUNTER REGISTER */
-	__RW uint32_t MCR;			/** MCR - MATCH CONTROL REGISTER */
-	__RW uint32_t MR0;			/** MR - MATCH REGISTERS */
+	__RW uint32_t IR;			/** IR   - INTERRUPT REGISTER        */
+	__RW uint32_t TCR;			/** TCR  - TIMER CONTROL REGISTER    */
+	__RW uint32_t TC;			/** TC   - TIMER COUNTER REGISTER    */
+	__RW uint32_t PR;			/** PR   - PRESCALE REGISTER         */
+	__RW uint32_t PC;			/** PC   - PRESCALE COUNTER REGISTER */
+	__RW uint32_t MCR;			/** MCR  - MATCH CONTROL REGISTER    */
+	__RW uint32_t MR0;			/** MR   - MATCH REGISTERS           */
 	__RW uint32_t MR1;
 	__RW uint32_t MR2;
 	__RW uint32_t MR3;
-	__RW uint32_t CCR;			/** CCR - CAPTURE CONTROL REGISTER */
-	__RW uint32_t CR0;			/** CR - CAPTURE REGISTERS */
+	__RW uint32_t CCR;			/** CCR  - CAPTURE CONTROL REGISTER  */
+	__RW uint32_t CR0;			/** CR   - CAPTURE REGISTERS         */
 	__RW uint32_t CR1;
 	__R  uint32_t dummy1[2];
-	__RW uint32_t EMR;			/** EMR - EXTERNAL MATCH REGISTER */
+	__RW uint32_t EMR;			/** EMR  - EXTERNAL MATCH REGISTER   */
 	__R  uint32_t dummy2[12];
-	__RW uint32_t CTCR;			/** CTCR - COUNT CONTROL REGISTER */
+	__RW uint32_t CTCR;			/** CTCR - COUNT CONTROL REGISTER    */
 } TIMER_t;
 
 // Direcciones iniciales de cada Timer
