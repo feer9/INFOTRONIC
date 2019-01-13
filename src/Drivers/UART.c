@@ -49,7 +49,10 @@ void UART0_IRQHandler()
 
 	case IIR_THRE: // Transmitter Holding Register Empty
 
-		sendOn();
+		if(uart0.bufferTx.isEmpty())
+			uart0.TxStart = FALSE;
+		else
+			sendOn();
 		break;
 
 	default:
@@ -120,22 +123,16 @@ sendPackage (char data[17])
 static void sendOn(void)
 {
 	uint8_t i;
-	if(uart0.bufferTx.isEmpty())
-	{
-		uart0.TxStart = FALSE;
-	}
-	else
-	{
-		for(i=0; i<16 && i < uart0.bufferTx.quantity; i++)
-		{
-			U0THR = uart0.bufferTx.item[uart0.bufferTx.indexOut];
 
-			uart0.bufferTx.indexOut++;
-			uart0.bufferTx.indexOut %= BUFFER_UART_SIZE;
-		}
+	for(i=0; i<16 && i < uart0.bufferTx.quantity; i++)
+	{
+		U0THR = uart0.bufferTx.item[uart0.bufferTx.indexOut];
 
-		uart0.bufferTx.quantity -= i;
+		uart0.bufferTx.indexOut++;
+		uart0.bufferTx.indexOut %= BUFFER_UART_SIZE;
 	}
+
+	uart0.bufferTx.quantity -= i;
 }
 
 
