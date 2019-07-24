@@ -16,7 +16,7 @@
 
 
 typedef struct {
-	char msg[13];
+	char msg[17];
 //	char desc[];
 } sub_option_t;
 

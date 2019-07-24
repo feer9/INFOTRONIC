@@ -3,18 +3,32 @@
 
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
+#include "clock.h"
 
-#define U0_INIT_STATUS ON
+#define U0_INIT_STATUS OFF
 
 #define UART0_CLK		(CORE_CLK / 4)
 
 #define BUFFER_UART_SIZE 256
 
-enum UART0_requests {UART0_REQUEST_NULL, UART0_REQUEST_TIME, UART0_REQUEST_MAX};
+typedef enum UART0_requests_t {UART0_REQUEST_NONE, UART0_REQUEST_TIME, UART0_REQUEST_TOP} UART0_requests_t;
 
 
-#define TRIGGER_LEVEL		TRIGGER_LEVEL_2
-#define U0_RX_TRIGGER_LEVEL_CHARS	8
+// interruption identifiers
+#define		IIR_RLS		0x03
+#define		IIR_RDA		0x02
+#define		IIR_CTI		0x06
+#define		IIR_THRE	0x01
+
+
+// RX TRIGGER LEVELS
+#define		U0FCR_TRIGGER_LEVEL_0		(0x0 << 6)  /* 1  character  or 0x01 */
+#define		U0FCR_TRIGGER_LEVEL_1		(0x1 << 6)  /* 4  characters or 0x04 */
+#define		U0FCR_TRIGGER_LEVEL_2		(0x2 << 6)  /* 8  characters or 0x08 */
+#define		U0FCR_TRIGGER_LEVEL_3		(0x3 << 6)  /* 14 characters or 0x0E */
+
+// n bytes of selected trigger level
+#define U0_RX_TRIGGER_LEVEL_BYTES	8
 
 
 struct buffer_UART {
@@ -40,19 +54,19 @@ typedef struct {
 extern uart_t uart0;
 
 static inline bool isRxEmpty (void) {
-	return (uart0.bufferRx.quantity == 0) ? TRUE : FALSE;
+	return (bool) (uart0.bufferRx.quantity == 0);
 }
 
 static inline bool isTxEmpty (void) {
-	return (uart0.bufferTx.quantity == 0) ? TRUE : FALSE;
+	return (bool) (uart0.bufferTx.quantity == 0);
 }
 
 static inline bool isRxFull (void) {
-	return (uart0.bufferRx.quantity == BUFFER_UART_SIZE) ? TRUE : FALSE;
+	return (bool) (uart0.bufferRx.quantity == BUFFER_UART_SIZE);
 }
 
 static inline bool isTxFull (void) {
-	return (uart0.bufferTx.quantity == BUFFER_UART_SIZE) ? TRUE : FALSE;
+	return (bool) (uart0.bufferTx.quantity == BUFFER_UART_SIZE);
 }
 
 

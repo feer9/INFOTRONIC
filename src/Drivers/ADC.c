@@ -2,18 +2,19 @@
 
 ADC_t adc = {
 		.AD5_val = 0,
-		.change = FALSE,
+		.change = false,
 		.timerId = -1
 };
 
 void ADC_init()
 {
-	PCONP _SET_BIT(PCONP_ADC);
+	PCONP |= PCONP_ADC;
 	// PDN = 1 => The A/D Converter is operational
 	ADC->ADCR = _BIT(CR_PDN);
 
 	// seteo la fuente de clock, core clock / 8 = 12,5MHz
-	PCLKSEL0 |= (PCLK_CCLK_8 << PCLKSEL_ADC);
+	setPCLKDiv(PCLKSEL_ADC, PCLKDIV_8);
+
 	// seteo el divisor de clock (tiene q quedar <= 13MHZ)
 	// CLKDIV = 1 + este valor
 	ADC->ADCR |= (99UL << CR_CLKDIV);
@@ -37,22 +38,22 @@ void ADC_stop()
 	setPINSEL(ADC5, PINSEL_GPIO);
 	ADC->ADCR _RESET_BIT(CR_BURST);	// Conversions are software controlled
 	ADC->ADCR _RESET_BIT(CR_PDN);	// The A/D converter is in power-down mode
-	PCONP _RESET_BIT(PCONP_ADC);
-	ICER0 = _BIT(NVIC_ADC);
+	PCONP &= ~PCONP_ADC;
+	ICER0 = NVIC_ADC;
 }
 
 void ADC_start()
 {
-	PCONP _SET_BIT(PCONP_ADC);
+	PCONP |= PCONP_ADC;
 	ADC->ADCR _SET_BIT(CR_PDN);		// The A/D converter is operational
 	ADC->ADCR _SET_BIT(CR_BURST);	// The A/D converter does repeated conversions at up to 200 kHz
 	setPINSEL(ADC5, PINSEL_FUNC3);
-	ISER0 = (1UL << NVIC_ADC);
+	ISER0 = NVIC_ADC;
 }
 
 void ADC_IRQHandler()
 {
-	static uint16_t prev = 0;
+	static uint32_t prev = 0;
 	uint32_t dr5 = ADC->ADDR5;
 
 	if(dr5 >> 31) // DONE
@@ -63,7 +64,7 @@ void ADC_IRQHandler()
 		{
 			prev = dr5;
 			adc.AD5_val = dr5;
-			adc.change = TRUE;
+			adc.change = true;
 		}
 	}
 }

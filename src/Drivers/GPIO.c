@@ -3,41 +3,50 @@
 
 void setPINSEL(uint8_t port, uint8_t pin, uint8_t sel)
 {
+	uint32_t tmp;
 	port = port * 2 + pin / 16;				//!< Calcula registro PINSEL
 	pin = ( pin % 16 ) * 2;					//!< Calcula campo de bits
-	PINSEL[ port ] &= ( ~ ( 3 << pin ) );	//!< Limpia campo de bits
-	PINSEL[ port ] |= ( sel << pin );		//!< Set de bits en campo
+	tmp = PINSEL[ port ] & ~(3 << pin);		//!< Limpia campo de bits
+	PINSEL[ port ] = tmp | (sel << pin);	//!< Set de bits en campo
 }
 
 void setPINMODE(uint8_t port, uint8_t pin, uint8_t modo)
 {
+	uint32_t tmp;
 	port = port * 2 + pin / 16;				//!< Calcula registro PINMODE
 	pin = ( pin % 16 ) * 2;					//!< Calcula campo de bits
-	PINMODE[ port ] &= ( ~ ( 3 << pin ) );	//!< Limpia campo de bits
-	PINMODE[ port ] |= ( modo << pin );		//!< Set de bits en campo
+	tmp = PINMODE[ port ] & ~(3 << pin);	//!< Limpia campo de bits
+	PINMODE[ port ] = tmp | (modo << pin);	//!< Set de bits en campo
 }
 
-inline void setMODE_OD (uint8_t port, uint8_t pin, uint8_t mode)
+// clear registers when debugging
+// (not cleared at software restart)
+void PIN_init()
 {
-	mode ?	(PINMODE_OD[port] |=  (1UL << pin)) : (PINMODE_OD[port] &= ~(1UL << pin));
-}
+#ifdef DEBUG
+	PINSEL0 = 0;
+	PINSEL1 = 0;
+	PINSEL2 = 0;
+	PINSEL3 = 0;
+	PINSEL4 = 0;
+	PINSEL7 = 0;
+	PINSEL9 = 0;
+	PINSEL10 = 0;
 
-inline void setDIR (uint8_t port, uint8_t pin, uint8_t dir)
-{
-	dir	?	(FIODIR[8*port] |=  (1UL << pin)) : (FIODIR[8*port] &= ~(1UL << pin)) ;
-}
+	PINMODE0 = 0;
+	PINMODE1 = 0;
+	PINMODE2 = 0;
+	PINMODE3 = 0;
+	PINMODE4 = 0;
+	PINMODE7 = 0;
+	PINMODE9 = 0;
 
-inline void setPIN (uint8_t port, uint8_t pin, uint8_t state)
-{
-	state ? (FIOSET[8*port] |= (1UL << pin)) : (FIOCLR[8*port] |= (1UL << pin)) ;
-}
+	PINMODE_OD0 = 0;
+	PINMODE_OD1 = 0;
+	PINMODE_OD2 = 0;
+	PINMODE_OD3 = 0;
+	PINMODE_OD4 = 0;
 
-inline uint8_t getPIN (uint8_t port, uint8_t pin, uint8_t activ)
-{
-	return (((FIOPIN[8*port] >> pin) & 1UL) == activ) ? 1 : 0 ;
-}
-
-inline void tooglePIN(uint8_t port, uint8_t pin)
-{
-	FIOPIN[8*port] ^= (1UL << pin) ;
+	I2CPADCFG = 0;
+#endif
 }

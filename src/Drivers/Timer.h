@@ -1,11 +1,27 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
+#include <lpc_types.h>
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
-#include <types.h>
+#include "clock.h"
 
 //#define _ANY_TIMER -1
+
+
+// Acciones en match register
+#define		MR0I	0  /* Interrupt on MRn */
+#define		MR0R	1  /* Reset     on MRn */
+#define		MR0S	2  /* Stop      on MRn */
+#define		MR1I	3
+#define		MR1R	4
+#define		MR1S	5
+#define		MR2I	6
+#define		MR2R	7
+#define		MR2S	8
+#define		MR3I	9
+#define		MR3R	10
+#define		MR3S	11
 
 #define N_TIMERS 10
 //#define TIMER_FINISHED 2

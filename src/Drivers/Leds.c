@@ -9,17 +9,17 @@ __RW uint8_t ledStatus = OFF;*/
 
 void D_IN_init( void )
 {
-	set_dir(RGB_R, SALIDA);
-	set_dir(RGB_G, SALIDA);
-	set_dir(RGB_B, SALIDA);
-	set_dir(LEDLPC_R, SALIDA);
-	set_dir(LEDLPC_G, SALIDA);
-	set_dir(LEDLPC_B, SALIDA);
-	set_dir(LED0, SALIDA);
-	set_dir(LED1, SALIDA);
-	set_dir(LED2, SALIDA);
-	set_dir(LED3, SALIDA);
-	set_dir(LED4, SALIDA);
+	set_dir_output(RGB_R);
+	set_dir_output(RGB_G);
+	set_dir_output(RGB_B);
+	set_dir_output(LEDLPC_R);
+	set_dir_output(LEDLPC_G);
+	set_dir_output(LEDLPC_B);
+	set_dir_output(LED0);
+	set_dir_output(LED1);
+	set_dir_output(LED2);
+	set_dir_output(LED3);
+	set_dir_output(LED4);
 
 	write_pin(RGB_R, OFF);
 	write_pin(RGB_G, OFF);
@@ -32,6 +32,10 @@ void D_IN_init( void )
 	write_pin(LED2, OFF);
 	write_pin(LED3, OFF);
 	write_pin(LED4, BUZZER_OFF);
+
+	// turn off glitch filtering and slew rate control
+	// for both P0.27 & P0.28 (I2C features)
+	I2CPADCFG = (_BIT(1) | _BIT(3));
 }
 
 void D_IN_toggle(uint8_t n)
@@ -51,13 +55,13 @@ bool D_IN_getStatus(uint8_t n)
 {
 	switch (n)
 	{
-	case 0: return read(LED0);
-	case 1: return read(LED1);
-	case 2: return read(LED2);
-	case 3: return read(LED3);
-	case 4: return read(LED4);
+	case 0: return (bool) read(LED0);
+	case 1: return (bool) read(LED1);
+	case 2: return (bool) read(LED2);
+	case 3: return (bool) read(LED3);
+	case 4: return (bool) read(LED4);
 	}
-	return FALSE;
+	return false;
 }
 /*
 void ledOFF(void)

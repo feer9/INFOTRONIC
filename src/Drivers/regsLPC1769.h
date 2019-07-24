@@ -2,59 +2,8 @@
 #define REGSLPC1769_H_
 
 
-#define		__R		volatile const
-#define		__W		volatile
-#define		__RW	volatile
+#include <lpc_types.h>
 
-typedef 	signed int		int32_t;
-typedef 	signed short	int16_t;
-typedef 	signed char		int8_t;
-typedef 	unsigned int 	uint32_t;
-typedef 	unsigned short 	uint16_t;
-typedef 	unsigned char 	uint8_t;
-
-typedef enum {FALSE = 0, TRUE = !FALSE} bool;
-typedef enum {RESET = 0, SET = !RESET} flagStatus, intStatus, setState;
-typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
-
-
-/* _BIT(n) sets the bit at position "n"
- * _BIT(n) is intended to be used in "OR" and "AND" expressions:
- * e.g., "(_BIT(3) | _BIT(7))".
- */
-#define _BIT(n) (1UL << (n))
-
-/* _SBF(f,v) sets the bit field starting at position "f" to value "v".
- * _SBF(f,v) is intended to be used in "OR" and "AND" expressions:
- * e.g., "((_SBF(5,7) | _SBF(12,0xF)) & 0xFFFF)"
- */
-#define _SBF(f, v) ((v) << (f))
-
-/* _BITMASK constructs a symbol with 'field_width' least significant
- * bits set.
- * e.g., _BITMASK(5) constructs '0x1F', _BITMASK(16) == 0xFFFF
- * The symbol is intended to be used to limit the bit field width
- * thusly:
- * <a_register> = (any_expression) & _BITMASK(x), where 0 < x <= 32.
- * If "any_expression" results in a value that is larger than can be
- * contained in 'x' bits, the bits above 'x - 1' are masked off.  When
- * used with the _SBF example above, the example would be written:
- * a_reg = ((_SBF(5,7) | _SBF(12,0xF)) & _BITMASK(16))
- * This ensures that the value written to a_reg is no wider than
- * 16 bits, and makes the code easier to read and understand.
- */
-#define _BITMASK(field_width) ( _BIT(field_width) - 1)
-
-#define _RESET_BIT(n) &= ~ _BIT(n)
-#define _SET_BIT(n)   |=   _BIT(n)
-#define clearBIT(n)   &= ~ _BIT(n)
-#define setBIT(n)     |=   _BIT(n)
-
-
-/* Number of elements in an array */
-#define NELEMENTS(array)  (sizeof(array) / sizeof(array[0]))
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 
 //!< ////////////////Registros PINSEL//////////////////////////////
@@ -67,16 +16,12 @@ typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
 #define		PINSEL3		PINSEL[3]	//!< PINSEL3--->P1[31:16](0x4002C00C)
 #define		PINSEL4		PINSEL[4]	//!< PINSEL4--->P2[15:0] (0x4002C010)
 #define		PINSEL5		PINSEL[5]	//!< PINSEL5--->P2[31:16] NOT USED
-#define		PINSEL6		PINSEL[6]	//!< PINSEL6--->P3[15:0] NOT USED
-#define		PINSEL7		PINSEL[7]	//!< PINSEL7--->P3[31:16] 0x4002C01C)
+#define		PINSEL6		PINSEL[6]	//!< PINSEL6--->P3[15:0]  NOT USED
+#define		PINSEL7		PINSEL[7]	//!< PINSEL7--->P3[31:16](0x4002C01C)
 #define		PINSEL8		PINSEL[8]	//!< PINSEL8--->P4[15:0]  NOT USED
 #define		PINSEL9		PINSEL[9]	//!< PINSEL9--->P4[31:16](0x4002C024)
+#define		PINSEL10	PINSEL[10]	//!< PINSEL10-->P2[6:2]  (0x4002C028) (Trace function)
 
-//!< ----------- Estados de PINSEL:
-#define		PINSEL_GPIO			0
-#define		PINSEL_FUNC1		1
-#define		PINSEL_FUNC2		2
-#define		PINSEL_FUNC3		3
 
 //!< //////////////////Registros PINMODE ///////////////////////////
 //!< 0x4002C040UL : Direccion de inicio de los registros de modo de los pines del GPIO
@@ -93,15 +38,6 @@ typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
 #define		PINMODE9	PINMODE[9]		//!< 0x4002C064
 
 
-
-//!< ----------- Estados de PINMODE
-//!< 00	Pull Up resistor enable (reset value)		01	repeated mode enable
-//!< 11	Pull Down resistor enable					10	ni Pull Up ni Pull DOwn
-#define		PINMODE_PULLUP 		0x00
-#define		PINMODE_REPEAT 		0x01
-#define		PINMODE_NONE 		0x02
-#define		PINMODE_PULLDOWN 	0x03
-
 //!< ///////////////// REGISTROS PINMODE_OD ///////////////////////////
 //!< 0x4002C068UL : Direccion de inicio de los registros de control del modo OPEN DRAIN
 #define		PINMODE_OD		( ( __RW uint32_t  * ) 0x4002C068UL )
@@ -112,9 +48,20 @@ typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
 #define		PINMODE_OD3		PINMODE_OD[3]
 #define		PINMODE_OD4		PINMODE_OD[4]
 
+// 0x4002C07CUL : I2C Pin Configuration register :
+#define		I2CPADCFG		( * ( ( __RW uint32_t  * ) 0x4002C07CUL ) )
+
+
 //!< ////////////////// REGISTROS GPIOs //////////////////////////////
 //!< 0x2009C000UL : Direccion de inicio de los registros de GPIOs
 #define	GPIOs		( ( __RW uint32_t  * ) 0x2009C000UL )
+
+#define GPIO_BASE		0x2009C000UL
+#define FIODIR_BASE		0x2009C000UL
+#define FIOMASK_BASE	0x2009C010UL
+#define FIOPIN_BASE		0x2009C014UL
+#define FIOSET_BASE		0x2009C018UL
+#define FIOCLR_BASE		0x2009C01CUL
 
 /*	*						*
 	*************************
@@ -138,57 +85,18 @@ typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
 	*						*
 */
 
-#define 	FIODIR		( ( __RW uint32_t * ) 0x2009C000UL )
-#define		FIO0DIR		GPIOs[0]	//!< 0x2009C000
-#define		FIO1DIR		GPIOs[8]	//!< 0x2009C020
-#define		FIO2DIR		GPIOs[16]	//!< 0x2009C040
-#define		FIO3DIR		GPIOs[24]	//!< 0x2009C060
-#define		FIO4DIR		GPIOs[32]	//!< 0x2009C080
-
-#define 	FIOMASK		( ( __RW uint32_t * ) 0x2009C010UL )
-#define		FIO0MASK	GPIOs[4]	//!< 0x2009C010
-#define		FIO1MASK	GPIOs[12]	//!< 0x2009C030
-#define		FIO2MASK	GPIOs[20]	//!< 0x2009C050
-#define		FIO3MASK	GPIOs[28]	//!< 0x2009C070
-#define		FIO4MASK	GPIOs[36]	//!< 0x2009C090
-
-#define 	FIOPIN		( ( __RW uint32_t * ) 0x2009C014UL )
-#define		FIO0PIN		GPIOs[5]	//!< 0x2009C014
-#define		FIO1PIN		GPIOs[13]	//!< 0x2009C034
-#define		FIO2PIN		GPIOs[21]	//!< 0x2009C054
-#define		FIO3PIN		GPIOs[29]	//!< 0x2009C074
-#define		FIO4PIN		GPIOs[37]	//!< 0x2009C094
-
-#define 	FIOSET		( ( __RW uint32_t * ) 0x2009C018UL )
-#define		FIO0SET		GPIOs[6]	//!< 0x2009C018
-#define		FIO1SET		GPIOs[14]	//!< 0x2009C038
-#define		FIO2SET		GPIOs[22]	//!< 0x2009C058
-#define		FIO3SET		GPIOs[30]	//!< 0x2009C078
-#define		FIO4SET		GPIOs[38]	//!< 0x2009C098
-
-#define 	FIOCLR		( ( __RW uint32_t * ) 0x2009C01CUL )
-#define		FIO0CLR		GPIOs[7]	//!< 0x2009C01C
-#define		FIO1CLR		GPIOs[15]	//!< 0x2009C03C
-#define		FIO2CLR		GPIOs[23]	//!< 0x2009C05C
-#define		FIO3CLR		GPIOs[31]	//!< 0x2009C07C
-#define		FIO4CLR		GPIOs[39]	//!< 0x2009C09C
-
-// dirección en FIODIR
-#define 	ENTRADA			0
-#define 	SALIDA			1
-
-
+// estructura de GPIOs
 typedef struct
 {
 	__RW uint32_t DIR;
-	__R uint32_t reserved[3];
+	__R  uint32_t reserved[3];
 	__RW uint32_t MASK;
 	__RW uint32_t PIN;
 	__RW uint32_t SET;
 	__RW uint32_t CLR;
 } GPIO_t;
 
-#define		FIO		( ( GPIO_t * ) 0x2009C000UL )
+#define		FIO		( ( GPIO_t * ) GPIO_BASE )
 
 #define		FIO0	( ( GPIO_t * ) 0x2009C000UL )
 #define		FIO1	( ( GPIO_t * ) 0x2009C020UL )
@@ -196,6 +104,43 @@ typedef struct
 #define		FIO3	( ( GPIO_t * ) 0x2009C060UL )
 #define		FIO4	( ( GPIO_t * ) 0x2009C080UL )
 
+
+
+
+#define 	FIODIR		( ( __RW uint32_t * ) FIODIR_BASE  )
+#define		FIO0DIR		FIO[0]->DIR		//!< 0x2009C000
+#define		FIO1DIR		FIO[1]->DIR		//!< 0x2009C020
+#define		FIO2DIR		FIO[2]->DIR		//!< 0x2009C040
+#define		FIO3DIR		FIO[3]->DIR		//!< 0x2009C060
+#define		FIO4DIR		FIO[4]->DIR		//!< 0x2009C080
+
+#define 	FIOMASK		( ( __RW uint32_t * ) FIOMASK_BASE )
+#define		FIO0MASK	FIO[0]->MASK	//!< 0x2009C010
+#define		FIO1MASK	FIO[1]->MASK	//!< 0x2009C030
+#define		FIO2MASK	FIO[2]->MASK	//!< 0x2009C050
+#define		FIO3MASK	FIO[3]->MASK	//!< 0x2009C070
+#define		FIO4MASK	FIO[4]->MASK	//!< 0x2009C090
+
+#define 	FIOPIN		( ( __RW uint32_t * ) FIOPIN_BASE  )
+#define		FIO0PIN		FIO[0]->PIN		//!< 0x2009C014
+#define		FIO1PIN		FIO[1]->PIN		//!< 0x2009C034
+#define		FIO2PIN		FIO[2]->PIN		//!< 0x2009C054
+#define		FIO3PIN		FIO[3]->PIN		//!< 0x2009C074
+#define		FIO4PIN		FIO[4]->PIN		//!< 0x2009C094
+
+#define 	FIOSET		( ( __RW uint32_t * ) FIOSET_BASE  )
+#define		FIO0SET		FIO[0]->SET		//!< 0x2009C018
+#define		FIO1SET		FIO[1]->SET		//!< 0x2009C038
+#define		FIO2SET		FIO[2]->SET		//!< 0x2009C058
+#define		FIO3SET		FIO[3]->SET		//!< 0x2009C078
+#define		FIO4SET		FIO[4]->SET		//!< 0x2009C098
+
+#define 	FIOCLR		( ( __RW uint32_t * ) FIOCLR_BASE  )
+#define		FIO0CLR		FIO[0]->CLR		//!< 0x2009C01C
+#define		FIO1CLR		FIO[1]->CLR		//!< 0x2009C03C
+#define		FIO2CLR		FIO[2]->CLR		//!< 0x2009C05C
+#define		FIO3CLR		FIO[3]->CLR		//!< 0x2009C07C
+#define		FIO4CLR		FIO[4]->CLR		//!< 0x2009C09C
 
 //-----------------------------------------------------------------------------
 // NVIC
@@ -238,41 +183,41 @@ typedef struct
 
 //	Bits relativos a ISER0, ICER0, ISPR0, ICPR0, IABR0
 //	los registros IPR y STIR son aparte
-#define		NVIC_WDT		0
-#define		NVIC_TIMER0		1
-#define		NVIC_TIMER1		2
-#define		NVIC_TIMER2		3
-#define		NVIC_TIMER3		4
-#define		NVIC_UART0		5
-#define		NVIC_UART1		6
-#define		NVIC_UART2		7
-#define		NVIC_UART3		8
-#define		NVIC_PWM		9
-#define		NVIC_I2C0		10
-#define		NVIC_I2C1		11
-#define		NVIC_I2C2		12
-#define		NVIC_SPI		13
-#define		NVIC_SSP0		14
-#define		NVIC_SSP1		15
-#define		NVIC_PLL0		16
-#define		NVIC_RTC		17
-#define		NVIC_EINT0		18
-#define		NVIC_EINT1		19
-#define		NVIC_EINT2		20
-#define		NVIC_EINT3		21
-#define		NVIC_ADC		22
-#define		NVIC_BOD		23
-#define		NVIC_USB		24
-#define		NVIC_CAN		25
-#define		NVIC_DMA		26
-#define		NVIC_I2S		27
-#define		NVIC_ENET		28
-#define		NVIC_RIT		29
-#define		NVIC_MCPWM		30
-#define		NVIC_QEI		31
-#define		NVIC_PLL1		32
-#define		NVIC_USBACT		33
-#define		NVIC_CANACT		34
+#define		NVIC_WDT		(1UL << 0)
+#define		NVIC_TIMER0		(1UL << 1)
+#define		NVIC_TIMER1		(1UL << 2)
+#define		NVIC_TIMER2		(1UL << 3)
+#define		NVIC_TIMER3		(1UL << 4)
+#define		NVIC_UART0		(1UL << 5)
+#define		NVIC_UART1		(1UL << 6)
+#define		NVIC_UART2		(1UL << 7)
+#define		NVIC_UART3		(1UL << 8)
+#define		NVIC_PWM		(1UL << 9)
+#define		NVIC_I2C0		(1UL << 10)
+#define		NVIC_I2C1		(1UL << 11)
+#define		NVIC_I2C2		(1UL << 12)
+#define		NVIC_SPI		(1UL << 13)
+#define		NVIC_SSP0		(1UL << 14)
+#define		NVIC_SSP1		(1UL << 15)
+#define		NVIC_PLL0		(1UL << 16)
+#define		NVIC_RTC		(1UL << 17)
+#define		NVIC_EINT0		(1UL << 18)
+#define		NVIC_EINT1		(1UL << 19)
+#define		NVIC_EINT2		(1UL << 20)
+#define		NVIC_EINT3		(1UL << 21)
+#define		NVIC_ADC		(1UL << 22)
+#define		NVIC_BOD		(1UL << 23)
+#define		NVIC_USB		(1UL << 24)
+#define		NVIC_CAN		(1UL << 25)
+#define		NVIC_DMA		(1UL << 26)
+#define		NVIC_I2S		(1UL << 27)
+#define		NVIC_ENET		(1UL << 28)
+#define		NVIC_RIT		(1UL << 29)
+#define		NVIC_MCPWM		(1UL << 30)
+#define		NVIC_QEI		(1UL << 31)
+#define		NVIC_PLL1		(1UL << 32)
+#define		NVIC_USBACT		(1UL << 33)
+#define		NVIC_CANACT		(1UL << 34)
 
 
 //-----------------------------------------------------------------------------
@@ -341,121 +286,43 @@ typedef struct
 #define		PCONP 		( * ( ( __RW uint32_t * ) 0x400FC0C4UL ) )
 
 
-#define 	PCONP_TIMER0	1
-#define 	PCONP_TIMER1	2
-#define 	PCONP_UART0		3
-#define 	PCONP_UART1		4
-
-#define 	PCONP_PWM1		6
-#define 	PCONP_I2C0		7
-#define 	PCONP_SPI		8
-#define 	PCONP_RTC		9
-#define 	PCONP_SSP1		10
-
-#define 	PCONP_ADC		12
-#define 	PCONP_CAN1		13
-#define 	PCONP_CAN2		14
-#define 	PCONP_GPIO		15
-#define 	PCONP_RIT		16
-#define 	PCONP_MCPWM		17
-#define 	PCONP_QEI		18
-#define 	PCONP_I2C1		19
-
-#define 	PCONP_SSP0		21
-#define 	PCONP_TIM2		22
-#define 	PCONP_TIM3		23
-#define 	PCONP_UART2		24
-#define 	PCONP_UART3		25
-#define 	PCONP_I2C2		26
-#define 	PCONP_I2S		27
-
-#define 	PCONP_GPDMA		29
-#define 	PCONP_ENET		30
-#define 	PCONP_USB		31
 
 
 //!< ///////////////////   PCLKSEL   //////////////////////////
 //!< Peripheral Clock Selection registers 0 and 1 (PCLKSEL0 -0x400F C1A8 and PCLKSEL1 - 0x400F C1AC) [pag. 56 user manual]
 //!< 0x400FC1A8UL : Direccion de inicio de los registros de seleccion de los CLKs de los dispositivos:
-#define		PCLKSEL		( ( __RW uint32_t  * ) 0x400FC1A8UL )
+#define		DIR_PCLKSEL		0x400FC1A8UL
 //!< Registros PCLKSEL
-#define		PCLKSEL0		PCLKSEL[0]
-#define		PCLKSEL1		PCLKSEL[1]
+#define		PCLKSEL				( ( __RW uint32_t  * ) DIR_PCLKSEL )
+#define		PCLKSEL0			( ( __RW uint32_t  * ) DIR_PCLKSEL )[0]
+#define		PCLKSEL1			( ( __RW uint32_t  * ) DIR_PCLKSEL )[1]
 
-
-#define		PCLK_CCLK_4		0UL
-#define		PCLK_CCLK		1UL
-#define		PCLK_CCLK_2		2UL
-#define		PCLK_CCLK_8		3UL
-
-
-#define		PCLKSEL_WDT		0
-#define		PCLKSEL_TIMER0	2
-#define		PCLKSEL_TIMER1	4
-#define		PCLKSEL_UART0	6
-#define		PCLKSEL_UART1	8
-
-#define		PCLKSEL_PWM1	12
-#define		PCLKSEL_I2C0	14
-#define		PCLKSEL_SPI		16
-
-#define		PCLKSEL_SSP1	20
-#define		PCLKSEL_DAC		22
-#define		PCLKSEL_ADC		24
-#define		PCLKSEL_CAN1	26
-#define		PCLKSEL_CAN2	28
-#define		PCLKSEL_ACF		30
-#define		PCLKSEL_QEI		32
-#define		PCLKSEL_GPIOINT	34
-#define		PCLKSEL_PCB		36
-#define		PCLKSEL_I2C1	38
-
-#define		PCLKSEL_SSP0	42
-#define		PCLKSEL_TIMER2	44
-#define		PCLKSEL_TIMER3	46
-#define		PCLKSEL_UART2	48
-#define		PCLKSEL_UART3	50
-#define		PCLKSEL_I2C2	52
-#define		PCLKSEL_I2S		54
-
-#define		PCLKSEL_RIT		58
-#define		PCLKSEL_SYSCON	60
-#define		PCLKSEL_MC		62
 
 
 //!< /////////////		SYSTICK		///////////////////////////
 //!< Tipo de dato específico para manejar el SYSTICK
 typedef struct {
 	union {
-		__RW uint32_t STCTRL;
+		__RW uint32_t CTRL;
 		struct {
-			__RW uint32_t ENABLE:1;
-			__RW uint32_t TICKINT:1;
-			__RW uint32_t CLKSOURCE:1;
-			__R  uint32_t RESERVED0:13;
-			__RW uint32_t COUNTFLAG:1;
-			__R  uint32_t RESERVED1:15;
+			__RW unsigned ENABLE:1;
+			__RW unsigned TICKINT:1;
+			__RW unsigned CLKSOURCE:1;
+			__R  unsigned RESERVED0:13;
+			__RW unsigned COUNTFLAG:1;
+			__R  unsigned RESERVED1:15;
 		} ;
 	} ;
-	__RW uint32_t STRELOAD;
-	__RW uint32_t STCURR;
-	__R uint32_t  STCALIB;
-} systick_t;
+	__RW uint32_t RELOAD;
+	__RW uint32_t CURR;
+	__RW uint32_t CALIB;
+} SYSTICK_T;
 
 //!< 0xE000E010UL: Registro de control del SysTick:
-#define 	SYSTICK		( (systick_t *) 0xE000E010UL )
+#define 	SysTick		( (SYSTICK_T *) 0xE000E010UL )
 
 #define		SYSTICK_COUNTFLAG	16
-/*
-#define		STCTRL		DIR_SYSTICK->_STCTRL
-	#define	ENABLE			DIR_SYSTICK->_ENABLE
-	#define	TICKINT			DIR_SYSTICK->_TICKINT
-	#define	CLKSOURCE		DIR_SYSTICK->_CLKSOURCE
-	#define	COUNTFLAG		DIR_SYSTICK->_COUNTFLAG
-#define		STRELOAD	DIR_SYSTICK->_STRELOAD
-#define		STCURR		DIR_SYSTICK->_STCURR
-#define		STCALIB		DIR_SYSTICK->_STCALIB
-*/
+
 
 //!< /////////////		TIMERs		///////////////////////////
 typedef struct
@@ -471,8 +338,8 @@ typedef struct
 	__RW uint32_t MR2;
 	__RW uint32_t MR3;
 	__RW uint32_t CCR;			/** CCR  - CAPTURE CONTROL REGISTER  */
-	__RW uint32_t CR0;			/** CR   - CAPTURE REGISTERS         */
-	__RW uint32_t CR1;
+	__R  uint32_t CR0;			/** CR   - CAPTURE REGISTERS         */
+	__R  uint32_t CR1;
 	__R  uint32_t dummy1[2];
 	__RW uint32_t EMR;			/** EMR  - EXTERNAL MATCH REGISTER   */
 	__R  uint32_t dummy2[12];
@@ -485,76 +352,75 @@ typedef struct
 #define		T2				( ( TIMER_t *) 0x40090000UL )
 #define		T3				( ( TIMER_t *) 0x40094000UL )
 
-#define		MR0I	0
-#define		MR0R	1
-#define		MR0S	2
-#define		MR1I	3
-#define		MR1R	4
-#define		MR1S	5
-#define		MR2I	6
-#define		MR2R	7
-#define		MR2S	8
-#define		MR3I	9
-#define		MR3R	10
-#define		MR3S	11
-
 //!< /////////////		FIN TIMERs		///////////////////////////
 
 
 
 //!< /////////////		UARTs		///////////////////////////
 //0x40010000UL : Registro de recepcion de la UART0:
-#define		DIR_UART0		( ( __RW uint32_t  * ) 0x4000C000UL )
+#define		UART0_DIR		( ( __RW uint32_t  * ) 0x4000C000UL )
 
-#define		U0RBR		DIR_UART0[0]	// DLAB = 0
-#define		U0THR		DIR_UART0[0]	// DLAB = 0
-#define		U0DLL		DIR_UART0[0]	// DLAB = 1
-#define		U0DLM		DIR_UART0[1]	// DLAB = 1
-#define		U0IER		DIR_UART0[1]	// DLAB = 0
-#define		U0IIR		DIR_UART0[2]
-#define		U0FCR		DIR_UART0[2]
-#define		U0LCR		DIR_UART0[3]
-#define		U0LSR		DIR_UART0[5]
-#define		U0SCR		DIR_UART0[7]
-#define		U0ACR		DIR_UART0[8]
-#define		U0ICR		DIR_UART0[9]
-#define		U0FDR		DIR_UART0[10]
-#define		U0TER		DIR_UART0[12]
+#define		U0RBR		UART0_DIR[0]	// DLAB = 0
+#define		U0THR		UART0_DIR[0]	// DLAB = 0
+#define		U0DLL		UART0_DIR[0]	// DLAB = 1
+#define		U0DLM		UART0_DIR[1]	// DLAB = 1
+#define		U0IER		UART0_DIR[1]	// DLAB = 0
+#define		U0IIR		UART0_DIR[2]
+#define		U0FCR		UART0_DIR[2]
+#define		U0LCR		UART0_DIR[3]
+#define		U0LSR		UART0_DIR[5]
+#define		U0SCR		UART0_DIR[7]
+#define		U0ACR		UART0_DIR[8]
+#define		U0ICR		UART0_DIR[9]
+#define		U0FDR		UART0_DIR[10]
+#define		U0TER		UART0_DIR[12]
 
 //0x40010000UL : Registro de recepcion de la UART1:
-#define		DIR_UART1		( ( __RW uint32_t  * ) 0x40010000UL )
+#define		UART1_DIR		( ( __RW uint32_t  * ) 0x40010000UL )
 
-#define		U1RBR		DIR_UART1[0]
-#define		U1THR		DIR_UART1[0]
-#define		U1DLL		DIR_UART1[0]
-#define		U1IER		DIR_UART1[1]
-#define		U1DLM		DIR_UART1[1]
-#define		U1IIR		DIR_UART1[2]
-#define		U1LCR		DIR_UART1[3]
-#define		U1LSR		DIR_UART1[5]
-
-
-#define		IIR_RLS		0x03
-#define		IIR_RDA		0x02
-#define		IIR_CTI		0x06
-#define		IIR_THRE	0x01
-
-
-// RX TRIGGER LEVEL
-
-// 1  character  or 0x01
-#define		TRIGGER_LEVEL_0		0UL
-// 4  characters or 0x04
-#define		TRIGGER_LEVEL_1		1UL
-// 8  characters or 0x08
-#define		TRIGGER_LEVEL_2		2UL
-// 14 characters or 0x0E
-#define		TRIGGER_LEVEL_3		3UL
-
-// trigger level bit position
-#define		U0FCR_TRIGGER_LEVEL		6
+#define		U1RBR		UART1_DIR[0]
+#define		U1THR		UART1_DIR[0]
+#define		U1DLL		UART1_DIR[0]
+#define		U1IER		UART1_DIR[1]
+#define		U1DLM		UART1_DIR[1]
+#define		U1IIR		UART1_DIR[2]
+#define		U1LCR		UART1_DIR[3]
+#define		U1LSR		UART1_DIR[5]
 
 //!< /////////////		FIN UARTs		///////////////////////////
+
+
+
+//!< /////////////		I2C		///////////////////////////
+
+typedef struct {				/* I2C0 Structure         */
+	__RW uint32_t CONSET;		/*!< I2C Control Set Register. When a one is written to a bit of this register, the corresponding bit in the I2C control register is set. Writing a zero has no effect on the corresponding bit in the I2C control register. */
+	__R  uint32_t STAT;			/*!< I2C Status Register. During I2C operation, this register provides detailed status codes that allow software to determine the next action needed. */
+	__RW uint32_t DAT;			/*!< I2C Data Register. During master or slave transmit mode, data to be transmitted is written to this register. During master or slave receive mode, data that has been received may be read from this register. */
+	__RW uint32_t ADR0;			/*!< I2C Slave Address Register 0. Contains the 7-bit slave address for operation of the I2C interface in slave mode, and is not used in master mode. The least significant bit determines whether a slave responds to the General Call address. */
+	__RW uint32_t SCLH;			/*!< SCH Duty Cycle Register High Half Word. Determines the high time of the I2C clock. */
+	__RW uint32_t SCLL;			/*!< SCL Duty Cycle Register Low Half Word. Determines the low time of the I2C clock. SCLL and SCLH together determine the clock frequency generated by an I2C master and certain times used in slave mode. */
+	__W  uint32_t CONCLR;		/*!< I2C Control Clear Register. When a one is written to a bit of this register, the corresponding bit in the I2C control register is cleared. Writing a zero has no effect on the corresponding bit in the I2C control register. */
+	__RW uint32_t MMCTRL;		/*!< Monitor mode control register. */
+	__RW uint32_t ADR1;			/*!< I2C Slave Address Register. Contains the 7-bit slave address for operation of the I2C interface in slave mode, and is not used in master mode. The least significant bit determines whether a slave responds to the General Call address. */
+	__RW uint32_t ADR2;			/*!< I2C Slave Address Register. Contains the 7-bit slave address for operation of the I2C interface in slave mode, and is not used in master mode. The least significant bit determines whether a slave responds to the General Call address. */
+	__RW uint32_t ADR3;			/*!< I2C Slave Address Register. Contains the 7-bit slave address for operation of the I2C interface in slave mode, and is not used in master mode. The least significant bit determines whether a slave responds to the General Call address. */
+	__R  uint32_t DATA_BUFFER;	/*!< Data buffer register. The contents of the 8 MSBs of the DAT shift register will be transferred to the DATA_BUFFER automatically after every nine bits (8 bits of data plus ACK or NACK) has been received on the bus. */
+	__RW uint32_t MASK[4];		/*!< I2C Slave address mask register */
+} LPC_I2C_T;
+
+// I2C Pin Configuration registers :
+#define LPC_I2C0_BASE             0x4001C000UL
+#define LPC_I2C1_BASE             0x4005C000UL
+#define LPC_I2C2_BASE             0x400A0000UL
+
+#define LPC_I2C0		( ( LPC_I2C_T * ) LPC_I2C0_BASE )
+#define LPC_I2C1		( ( LPC_I2C_T * ) LPC_I2C1_BASE )
+#define LPC_I2C2		( ( LPC_I2C_T * ) LPC_I2C2_BASE )
+
+//!< /////////////		FIN I2C		///////////////////////////
+
+
 
 //!< ////////////		RTC		///////////////////
 
@@ -596,9 +462,10 @@ typedef struct {
 	__RW uint32_t ALDOY;
 	__RW uint32_t ALMON;
 	__RW uint32_t ALYEAR;
-} RTC_t;
+} LPC_RTC_t;
 
-#define	LPC_RTC		( (RTC_t *) 0x40024000UL )
+#define LPC_RTC_BASE	0x40024000UL
+#define	LPC_RTC			( (LPC_RTC_t *) LPC_RTC_BASE )
 
 //!< //////////////// END RTC ///////////////////
 
@@ -701,15 +568,6 @@ typedef struct
 } LPC_ADC_t;
 
 #define		ADC			( ( LPC_ADC_t * ) 0x40034000UL )
-
-// Control Register setting bits
-#define		CR_SEL		0
-#define		CR_CLKDIV	8
-#define		CR_BURST	16
-#define		CR_PDN		21
-#define		CR_START	24
-#define		CR_EDGE		27
-
 
 //!< ////////////////  END ADC  /////////////////////
 

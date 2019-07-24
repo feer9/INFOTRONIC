@@ -11,7 +11,7 @@
 #include <GPIO.h>
 
 
-#define CORE_CLK	100000000
+//#define CORE_CLK	100000000
 
 // identificadores de los puertos
 #define P0		0
@@ -180,9 +180,32 @@
 #define		ETH_TXN
 #define		ETH_TXP
 
-// Memorias
-#define		SCL			P0,1
-#define		SDA			P0,0
+// I2C Pins
+// SDA0 en el Kit se choca con LED3 y LED4. NO USAR
+#define		SDA0		P0,27
+#define		SCL0		P0,28
+
+#define		SDA1		P0,0
+#define		SCL1		P0,1
+
+// SDA2 en el Kit se choca con LCD_D5 y SW3. NO USAR
+#define		SDA2		P0,10
+#define		SCL2		P0,11
+
+#if 0// ESTAS NO SON I2C1, NO USAR.
+#define		SDA1		P0,19 /* SDA1 -> EXPANSION5  -> P0,19 */
+#define		SCL1		P0,20 /* SCL1 -> EXPANSION10 -> P0,20 */
+#endif
+
+#define		I2C			I2C1
+#define		I2C_SDA		SDA1
+#define		I2C_SCL		SCL1
+
+// Memoria EEPROM (I2C1)
+#define		EEPROM_SDA	P0,0
+#define		EEPROM_SCL	P0,1
+
+// SD Card SPI
 #define		MISO		P0,8
 #define		MOSI		P0,9
 #define		SCK			P0,7

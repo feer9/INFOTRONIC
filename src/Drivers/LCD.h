@@ -9,10 +9,10 @@
 
 #define		LCD_BUFFER_SIZE	160
 
-#define 	LCD_ROW_1		0
-#define 	LCD_ROW_2		1
-#define		LCD_CONTROL		1
-#define		LCD_DATA		0
+#define 	LCD_ROW_1		0U
+#define 	LCD_ROW_2		1U
+#define		LCD_CONTROL		1U
+#define		LCD_DATA		0U
 
 #define		LCD_LINE_SIZE	16
 #define		LCD_MAX_MSG_SIZE 80
@@ -57,6 +57,7 @@ typedef struct {
 #define		LCD_OFF()		pushLCD( 0x08 , LCD_CONTROL )
 #define		LCD_ON()		pushLCD( 0x0C , LCD_CONTROL )
 
+void		LCD_WelcomeMessage	(void);
 uint8_t		LCD_pushString		(const char* msg, uint8_t row, uint8_t pos);
 uint8_t		LCD_pushLine		(const char* msg, uint8_t row);
 void		LCD_printDOWN		(const char* msg);

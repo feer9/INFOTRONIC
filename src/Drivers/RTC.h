@@ -3,6 +3,7 @@
 
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
+#include "clock.h"
 
 typedef struct {
 	uint32_t sec;
@@ -20,5 +21,6 @@ void RTC_setTime	(rtc_t*);
 void RTC_getTime	(rtc_t*);
 void RTC_resetTime	( void );
 void RTC_setTime_fromString(char*);
+void RTC_setGPREG_fromTime(void);
 
 #endif /* DRIVERS_RTC_H_ */

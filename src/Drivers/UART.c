@@ -1,9 +1,9 @@
 #include "UART.h"
 
-static uint8_t	pushRx (uint8_t);
+static status	pushRx (uint8_t data);
+static status  pushRxPackage(uint8_t size);
 //static int16_t	popTx  (void);
 static void     sendOn (void);
-static uint8_t  pushRxPackage(uint8_t);
 
 uart_t uart0 = {
 		.bufferRx.indexIn     = 0,
@@ -18,7 +18,7 @@ uart_t uart0 = {
 		.bufferTx.isEmpty     = isTxEmpty,
 		.bufferTx.isFull      = isTxFull,
 
-		.TxStart        = FALSE,
+		.TxStart        = false,
 		.status         = U0_INIT_STATUS
 };
 
@@ -39,7 +39,7 @@ void UART0_IRQHandler()
 
 	case IIR_RDA:  // Receive data available
 
-		pushRxPackage(U0_RX_TRIGGER_LEVEL_CHARS);
+		pushRxPackage(U0_RX_TRIGGER_LEVEL_BYTES);
 		break;
 
 	case IIR_CTI:  //  Character Time-out Indicator
@@ -50,7 +50,7 @@ void UART0_IRQHandler()
 	case IIR_THRE: // Transmitter Holding Register Empty
 
 		if(uart0.bufferTx.isEmpty())
-			uart0.TxStart = FALSE;
+			uart0.TxStart = false;
 		else
 			sendOn();
 		break;
@@ -62,7 +62,7 @@ void UART0_IRQHandler()
 
 }
 
-static uint8_t pushRx(uint8_t data)
+static status pushRx(uint8_t data)
 {
 	if(uart0.bufferRx.isFull())
 		return ERROR;
@@ -77,19 +77,19 @@ static uint8_t pushRx(uint8_t data)
 	return SUCCESS;
 }
 
-static uint8_t pushRxPackage(uint8_t pSize)
+static status pushRxPackage(uint8_t size)
 {
-	if(uart0.bufferRx.quantity + pSize > BUFFER_UART_SIZE)
+	if(uart0.bufferRx.quantity + size > BUFFER_UART_SIZE)
 		return ERROR;
 
-	for(uint8_t i=0; i < pSize; i++)
+	for(uint8_t i=0; i < size; i++)
 	{
 		uart0.bufferRx.item[uart0.bufferRx.indexIn] = U0RBR;
 
 		uart0.bufferRx.indexIn++;
 		uart0.bufferRx.indexIn %= BUFFER_UART_SIZE;
 	}
-	uart0.bufferRx.quantity += pSize;
+	uart0.bufferRx.quantity += size;
 
 	return SUCCESS;
 }
@@ -138,10 +138,9 @@ static void sendOn(void)
 
 void UART0_init(uint8_t st)//,uint32_t baudrate)
 {
-	PCONP |= (0x01 << PCONP_UART0);
+	PCONP |=  PCONP_UART0;
 
-	PCLKSEL0 &= ~(0x03 << PCLKSEL_UART0);
-	PCLKSEL0 |= (PCLK_CCLK_4 << PCLKSEL_UART0);
+	setPCLKDiv(PCLKSEL_UART0, PCLKDIV_4);
 
 	// 8-bit ; 1 stop bit ; parity enabled ; odd parity (impar) ; break control disabled ; DLAB = 1
 	U0LCR = 0b10001011;
@@ -155,7 +154,7 @@ void UART0_init(uint8_t st)//,uint32_t baudrate)
 	// enable FIFO Rx & Tx
 	U0FCR = 0x07;
 	// Rx Trigger Level 2: 8 characters (interrumpe al 8vo byte en el FIFO de Rx)
-	U0FCR |= (TRIGGER_LEVEL << U0FCR_TRIGGER_LEVEL);
+	U0FCR |= U0FCR_TRIGGER_LEVEL_2;
 
 	// Tx0: P0,2 ; Rx0: P0,3
 	set_dir(Tx0, SALIDA);
@@ -176,18 +175,18 @@ void UART0_init(uint8_t st)//,uint32_t baudrate)
 
 void UART0_setUp()
 {
-	PCONP |= (0x01 << PCONP_UART0);
+	PCONP |= PCONP_UART0;
 	setPINSEL(Tx0, PINSEL_FUNC1);
 	setPINSEL(Rx0, PINSEL_FUNC1);
-	ISER0 = (0x01 << NVIC_UART0);
+	ISER0 = NVIC_UART0;
 	uart0.status = ON;
 }
 
 void UART0_setDown()
 {
-	ICER0 = (0x01 << NVIC_UART0);
+	ICER0 = NVIC_UART0;
 	setPINSEL(Tx0, PINSEL_GPIO);
 	setPINSEL(Rx0, PINSEL_GPIO);
-	PCONP &= ~(0x01 << PCONP_UART0);
+	PCONP &= ~PCONP_UART0;
 	uart0.status = OFF;
 }

@@ -58,6 +58,9 @@ extern "C" {
 extern void SystemInit(void);
 #endif
 
+// Declaracion propia de SystemInit
+extern void SystemInit(void);
+
 //*****************************************************************************
 //
 // Forward declaration of the default handlers. These are aliased.

@@ -1,7 +1,7 @@
 #include "LCD.h"
 #include "GPIO.h"
 #include "Timer.h"
-
+#include "delay.h"
 
 static void		LCD_init4Bits(void);
 static void		LCD_init4Bits_IR(void);
@@ -10,12 +10,11 @@ static int16_t	popLCD(void);
 
 extern uint8_t	LCD_pushLine	(const char* msg, uint8_t row);
 
-__RW uint8_t LCD_Delay = 0;
 
 LCD_t LCD = {
-		.isOn = TRUE,
-		.isInClock = FALSE,
-		.isInMenu = FALSE,
+		.isOn = true,
+		.isInClock = false,
+		.isInMenu = false,
 		.restore_timerId = -1,
 
 		.send.indexIn = 0,
@@ -26,7 +25,7 @@ LCD_t LCD = {
 		.scroll.string[0] = '\0',
 		.scroll.len = 0,
 		.scroll.index = 0,
-		.scroll.isScrolling = FALSE,
+		.scroll.isScrolling = false,
 		.scroll.line = LCD_ROW_1,
 		.scroll.timerId = -1
 };
@@ -71,27 +70,19 @@ void LCD_init(uint8_t internalReset)
 	setPINSEL(LCD_RS, PINSEL_GPIO);
 	setPINSEL(LCD_E , PINSEL_GPIO);
 
-	// no deberia ser necesario
-	setPINMODE(LCD_D4, PINMODE_NONE);
-	setPINMODE(LCD_D5, PINMODE_NONE);
-	setPINMODE(LCD_D6, PINMODE_NONE);
-	setPINMODE(LCD_D7, PINMODE_NONE);
-	setPINMODE(LCD_RS, PINMODE_NONE);
-	setPINMODE(LCD_E , PINMODE_NONE);
+	set_dir(LCD_D4, GPIO_OUTPUT);
+	set_dir(LCD_D5, GPIO_OUTPUT);
+	set_dir(LCD_D6, GPIO_OUTPUT);
+	set_dir(LCD_D7, GPIO_OUTPUT);
+	set_dir(LCD_RS, GPIO_OUTPUT);
+	set_dir(LCD_E , GPIO_OUTPUT);
 
-	set_dir(LCD_D4, SALIDA);
-	set_dir(LCD_D5, SALIDA);
-	set_dir(LCD_D6, SALIDA);
-	set_dir(LCD_D7, SALIDA);
-	set_dir(LCD_RS, SALIDA);
-	set_dir(LCD_E , SALIDA);
-
-	write_pin(LCD_D4, 0);
-	write_pin(LCD_D5, 0);
-	write_pin(LCD_D6, 0);
-	write_pin(LCD_D7, 0);
-	write_pin(LCD_RS, 0);
-	write_pin(LCD_E , 0);
+	clear_pin(LCD_D4);
+	clear_pin(LCD_D5);
+	clear_pin(LCD_D6);
+	clear_pin(LCD_D7);
+	clear_pin(LCD_RS);
+	clear_pin(LCD_E );
 
 	if(internalReset)
 		LCD_init4Bits_IR();
@@ -103,13 +94,10 @@ void LCD_init(uint8_t internalReset)
 
 static void LCD_init4Bits()
 {
-	uint8_t i = 0;
-
-	LCD_Delay = 10;
 	write_pin(LCD_E, 0);
-	while(LCD_Delay);
+	delay_us(25000);
 
-	for(i=0; i<3; i++)
+	for(uint8_t i=0; i<3; i++)
 	{
 		write_pin(LCD_E, 1);
 
@@ -121,8 +109,7 @@ static void LCD_init4Bits()
 
 		write_pin(LCD_E, 0);
 
-		LCD_Delay = 2;
-		while(LCD_Delay);
+		delay_us(5000);
 	}
 
 	// Configuracion en 4 bits
@@ -136,14 +123,12 @@ static void LCD_init4Bits()
 
 	write_pin(LCD_E,0);
 
-	LCD_Delay = 2;
-	while(LCD_Delay);
+	delay_us(5000);
 }
 
 static void LCD_init4Bits_IR()
 {
-	LCD_Delay = 10;
-	while(LCD_Delay);
+	delay_us(25000);
 
 	// Initialization by internal reset
 	// Sets to 4-bit operation
@@ -157,8 +142,7 @@ static void LCD_init4Bits_IR()
 
 	write_pin(LCD_E, 0);
 
-	LCD_Delay = 2;
-	while(LCD_Delay);
+	delay_us(5000);
 }
 
 static void LCD_config()
@@ -174,7 +158,7 @@ static void LCD_config()
 	pushLCD( 0x01 , LCD_CONTROL);	// clear display
 
 	pushLCD( 0x06 , LCD_CONTROL);	// I/D = 1 : Incrementa puntero
-									// S = 0 : NO Shift Display
+									// S = 0   : NO Shift Display
 
 	// Activo el LCD y listo para usar !
 	pushLCD( 0x0C , LCD_CONTROL);	// D = 1 : display ON

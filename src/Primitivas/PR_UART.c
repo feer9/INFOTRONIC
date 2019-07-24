@@ -1,11 +1,11 @@
+#include <string.h>
 #include "../Drivers/UART.h"
 #include "../Drivers/LCD.h"
 #include "../Aplicacion/Aplicacion.h"
-#include "../Drivers/string.h"
 
 static int16_t	popRx(void);
 static uint8_t	pushTx(uint8_t data);
-uint8_t	UART0_pushTx_16(char data[17]);
+static uint8_t	UART0_pushTx_16(char data[17]);
 void sendPackage(char data[17]);
 
 extern uart_t uart0;
@@ -37,7 +37,7 @@ uint8_t UART0_sendRequest(uint8_t id)
 	{
 	case UART0_REQUEST_TIME:
 		ret = UART0_pushTx_16("<RT>");
-		//TODO: ver como ajustar de manera segura a 16 caracteres cualquier mensaje
+		//TODO: si el mensaje es mas corto que 16 caracteres, llenar con 0xFFs
 		break;
 	}
 
@@ -54,7 +54,7 @@ void UART0_receive(void)
 	int16_t data;
 	char c;
 	static uint32_t i=0;
-	static bool recibiendoTrama = FALSE;
+	static bool recibiendoTrama = false;
 	static char msg[LCD_MAX_MSG_SIZE];
 
 	if ((data = popRx()) != -1)
@@ -64,7 +64,7 @@ void UART0_receive(void)
 		{
 			if(c == '>')
 			{
-				recibiendoTrama = FALSE;
+				recibiendoTrama = false;
 				msg[i] = '\0';
 				i = 0;
 
@@ -80,7 +80,7 @@ void UART0_receive(void)
 			if(c == '<')
 			{
 				i = 0;
-				recibiendoTrama = TRUE;
+				recibiendoTrama = true;
 			}
 			else if(c == '\r')
 			{
@@ -98,7 +98,7 @@ void UART0_receive(void)
 		{
 			msg[i] = '\0';
 			if(recibiendoTrama) // ?? trama enorme?
-				recibiendoTrama = FALSE;
+				recibiendoTrama = false;
 
 			else
 				LCD_printReceived(msg);
@@ -130,7 +130,7 @@ static uint8_t pushTx(uint8_t data)
 	if(!uart0.TxStart)
 	{
 		U0THR = data;
-		uart0.TxStart = TRUE;
+		uart0.TxStart = true;
 	}
 	else
 	{
@@ -149,13 +149,13 @@ static uint8_t pushTx(uint8_t data)
 }
 
 
-uint8_t UART0_pushTx_16(char data[17])
+static uint8_t UART0_pushTx_16(char data[17])
 {
 	uint8_t i;
 	if(! uart0.TxStart )
 	{
 		sendPackage(data);
-		uart0.TxStart = TRUE;
+		uart0.TxStart = true;
 	}
 	else
 	{

@@ -1,3 +1,4 @@
+#include <string.h>
 #include "../Drivers/regsLPC1769.h"
 #include "../Drivers/KitInfo2_BaseBoard.h"
 #include "../Drivers/Teclado.h"
@@ -5,8 +6,7 @@
 #include "../Drivers/Timer.h"
 #include "../Drivers/LCD.h"
 #include "../Drivers/RTC.h"
-#include "../Drivers/types.h"
-#include "../Drivers/string.h"
+#include "../Drivers/lpc_types.h"
 #include "../Drivers/varios.h"
 #include "../Drivers/UART.h"
 #include "../Drivers/ADC.h"
@@ -39,8 +39,12 @@ menu_t menu = {
 		.op[2].msg = "3- UART",
 		.op[2].desc = "enable/send through UART0. Hold to enter.",
 		.op[2].sub_op[0].msg = "Send <F0RRo>",
-		.op[2].sub_op[1].msg = "set up",
+		.op[2].sub_op[1].msg = "Send time req",
+#if (U0_INIT_STATUS == OFF)
+		.op[2].sub_op[2].msg = "set up",
+#else
 		.op[2].sub_op[2].msg = "set down",
+#endif
 		.timerId = -1
 };
 
@@ -48,7 +52,7 @@ menu_t menu = {
 
 void ledBlink()
 {
-	static bool st = TRUE;
+	static bool st = true;
 	if(st)
 	{
 		write_pin(LEDLPC_G, LEDLPC_OFF);
@@ -66,12 +70,12 @@ void restoreScreen()
 {
 //	menu.timerId = -1;
 	LCD_stopScroll();
-	LCD.isInMenu = FALSE;
-	if(LCD.isInClock == TRUE)
+	LCD.isInMenu = false;
+	if(LCD.isInClock == true)
 		LCD_displayClock();
 	else
 		LCD_clear();
-	LCD.isOn = TRUE;
+	LCD.isOn = true;
 	menu.pos[0] = 0;
 	menu.pos[1] = 0;
 }
@@ -79,11 +83,11 @@ void restoreScreen()
 void showClock()
 {
 	LCD.restore_timerId = -1;
-	if(LCD.isInClock == FALSE && LCD.isOn == TRUE)
+	if(LCD.isInClock == false && LCD.isOn == true)
 	{
 		LCD_stopScroll();
 		LCD_displayClock();
-		LCD.isInClock = TRUE;
+		LCD.isInClock = true;
 	}
 }
 
@@ -164,9 +168,21 @@ void enterMenu()
 					UART0_sendString("<F0RRo>\r\n");
 			}
 			else if(menu.pos[1] == 1)
-				UART0_setUp();
+			{
+				if(uart0.status)
+					UART0_requestTime();
+			}
 			else if(menu.pos[1] == 2)
-				UART0_setDown();
+			{
+				if(uart0.status == ON) {
+					UART0_setDown();
+					strcpy(menu.op[2].sub_op[2].msg, "set up");
+				}
+				else {
+					UART0_setUp();
+					strcpy(menu.op[2].sub_op[2].msg, "set down");
+				}
+			}
 			break;
 		}
 	}
@@ -210,8 +226,8 @@ void SW1_handler(uint8_t st)
 			}
 			showMenu();
 		}
-		LCD.isInMenu = TRUE;
-		LCD.isInClock = FALSE;
+		LCD.isInMenu = true;
+		LCD.isInClock = false;
 	}
 }
 
@@ -235,13 +251,13 @@ void SW2_handler(uint8_t st)
 			}
 			else
 			{
-				LCD.isInClock = TRUE;
+				LCD.isInClock = true;
 				restoreScreen();
 			}
 		}
 		else if(!LCD.isInClock)
 		{
-			LCD.isInClock = TRUE;
+			LCD.isInClock = true;
 			restoreScreen();
 		}
 	}
@@ -254,9 +270,9 @@ void SW3_handler(uint8_t st)
 		LCD_stopScroll();
 		if(LCD.isInClock || LCD.isInMenu)
 		{
-			LCD.isOn = FALSE;
-			LCD.isInClock = FALSE;
-			LCD.isInMenu = FALSE;
+			LCD.isOn = false;
+			LCD.isInClock = false;
+			LCD.isInMenu = false;
 			if(menu.level>0 && menu.pos[0] == 1)
 				stopADC();
 			menu.level = 0;
@@ -264,9 +280,9 @@ void SW3_handler(uint8_t st)
 		}
 		else
 		{
-			LCD.isOn = TRUE;
-			LCD.isInClock = TRUE;
-			LCD.isInMenu = FALSE;
+			LCD.isOn = true;
+			LCD.isInClock = true;
+			LCD.isInMenu = false;
 			LCD_displayClock();
 		}
 	}
@@ -276,7 +292,7 @@ void SW3_handler(uint8_t st)
 {
 	if(st)
 	{
-		LCD.isOn = FALSE;
+		LCD.isOn = false;
 		LCD_clear();
 		int err = 0, msjs=0;
 		char str[17] = "send()   err:";
@@ -306,16 +322,21 @@ void SW5_handler(uint8_t st) {}
 
 void tramaRecibida(char *msg)
 {
-	switch(msg[0])
+	int i = 0;
+	switch(msg[i++])
 	{
 	// answer obtained
 	case 'A':
 		// time/date message
-		if(msg[1] == 'T')
+		if(msg[i] == 'T')
 		{
+			i++;
 			// check 2 bytes year + 1 month + 1 day + 1 hour + 1 min + 1 sec = 7 bytes
-			if(strlen(msg+2) == 7)
-				RTC_setTime_fromString(msg+2);
+			if(strlen(&msg[i]) == 7) {
+				RTC_setTime_fromString(&msg[i]);
+				RTC_setGPREG_fromTime();
+			}
+
 		}
 	}
 

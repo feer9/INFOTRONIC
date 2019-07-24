@@ -6,10 +6,10 @@ extern LCD_t LCD;
 
 void RTC_init()
 {
-	PCONP _SET_BIT(PCONP_RTC);			// power control periferic rtc
-	LPC_RTC->RTC_AUXEN _SET_BIT(4);		// the RTC Oscillator Fail detect interrupt is enabled
+	PCONP |= PCONP_RTC;				// power control periferic rtc
+	LPC_RTC->RTC_AUXEN _SET_BIT(4);	// the RTC Oscillator Fail detect interrupt is enabled
 
-	if(LPC_RTC->RTC_AUX & _BIT(4))		// RTC Oscillator Fail detect flag.
+	if(LPC_RTC->RTC_AUX & _BIT(4))	// RTC Oscillator Fail detect flag.
 	{
 //		CCR->CLKEN  = 0 : The time counters are disabled so that they may be initialized.
 //		CCR->CTCRST = 1 : The elements in the internal oscillator divider are reset
@@ -28,10 +28,10 @@ void RTC_init()
 		LPC_RTC->CCR = 0x01;
 	}
 
-	LPC_RTC->CIIR = 0x01;		// interrupcion cada: bit0->seg bit1->min bit2->hora...
-	LPC_RTC->AMR = 0xFF;		// when 1, the * value is not compared for the alarm
-	ICPR0 = _BIT(NVIC_RTC);		// limpio interrupcion
-	ISER0 = _BIT(NVIC_RTC);		// habilito interrupcion en el NVIC
+	LPC_RTC->CIIR = 1UL;	// interrupcion cada: bit0->seg bit1->min bit2->hora...
+	LPC_RTC->AMR = 0xFFUL;	// when 'n' bit is 1, the value is not compared for the alarm
+	ICPR0 = NVIC_RTC;		// limpio interrupcion
+	ISER0 = NVIC_RTC;		// habilito interrupcion en el NVIC
 }
 
 void RTC_IRQHandler(void)
@@ -97,12 +97,28 @@ void RTC_getTime(rtc_t *rtc)
 void RTC_setTime_fromString(char *s)
 {
 	rtc_t rtc;
-	rtc.year       = (s[0] << 8) | s[1];
+	rtc.year       = (uint32_t) (s[0] << 8) | s[1];
 	rtc.month      = s[2];
 	rtc.dayOfMonth = s[3];
 	rtc.hour       = s[4];
 	rtc.min        = s[5];
 	rtc.sec        = s[6];
 
+	rtc.dayOfWeek = 0;
+	rtc.dayOfYear = 0;
+
 	RTC_setTime(&rtc);
+}
+
+void RTC_setGPREG_fromTime ()
+{
+	uint32_t tmp;
+
+	tmp = 10000 * LPC_RTC->YEAR + 100 * LPC_RTC->MONTH + LPC_RTC->DOM;
+	LPC_RTC->GPREG0 = tmp;
+
+	tmp = 10000 * LPC_RTC->HOUR + 100 * LPC_RTC->MIN   + LPC_RTC->SEC;
+	LPC_RTC->GPREG1 = tmp;
+
+	LPC_RTC->GPREG2 = 0; // starts count
 }
