@@ -1,9 +1,9 @@
 #ifndef DRIVERS_RTC_H_
 #define DRIVERS_RTC_H_
 
+#include <chip.h>
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
-#include "clock.h"
 
 typedef struct {
 	uint32_t sec;
@@ -22,5 +22,6 @@ void RTC_getTime	(rtc_t*);
 void RTC_resetTime	( void );
 void RTC_setTime_fromString(char*);
 void RTC_setGPREG_fromTime(void);
-
+void RTC_setAlarmInMinutes(uint32_t minutes);
+void RTC_setAlarmInSeconds(uint32_t seconds);
 #endif /* DRIVERS_RTC_H_ */

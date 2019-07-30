@@ -39,7 +39,7 @@ void RTC_IRQHandler(void)
 	// RTCCIF (counter increment interrupt)
 	if(LPC_RTC->ILR & _BIT(0))
 	{
-		LPC_RTC->ILR _SET_BIT(0);
+		LPC_RTC->ILR = _BIT(0);
 		if(LCD.isInClock && LCD.isOn)
 			LCD_updateClock();
 	}
@@ -47,7 +47,12 @@ void RTC_IRQHandler(void)
 	// RTCALF (alarma)
 	if(LPC_RTC->ILR & _BIT(1))
 	{
-		LPC_RTC->ILR _SET_BIT(1);
+		LPC_RTC->ILR = _BIT(1);
+		LPC_RTC->AMR = 0xFFUL; // desactivo alarma
+		uint32_t dummy = PCON;
+		PCON |= (1UL << 8);
+
+		toggle_pin(LEDLPC_B);
 	}
 }
 
@@ -121,4 +126,21 @@ void RTC_setGPREG_fromTime ()
 	LPC_RTC->GPREG1 = tmp;
 
 	LPC_RTC->GPREG2 = 0; // starts count
+}
+
+void RTC_setAlarmInMinutes(uint32_t minutes)
+{
+	LPC_RTC->ALSEC = LPC_RTC->SEC;
+	LPC_RTC->ALMIN = (LPC_RTC->MIN + minutes) % 60;
+
+	// activo alarma por match en minutos y segundos
+	LPC_RTC->AMR = 0xFFUL & ~0x03UL;
+}
+
+void RTC_setAlarmInSeconds(uint32_t seconds)
+{
+	LPC_RTC->ALSEC = (LPC_RTC->SEC + seconds) % 60;
+
+	// activo alarma por match en segundos
+	LPC_RTC->AMR = 0xFFUL & ~0x01UL;
 }
