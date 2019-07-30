@@ -15,6 +15,9 @@ typedef unsigned int size_t;
 #define NULL ((void *) 0)
 #endif
 
+#ifndef INLINE
+#define INLINE inline
+#endif
 
 #define		__R		volatile const
 #define		__W		volatile

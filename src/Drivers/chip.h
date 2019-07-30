@@ -1,9 +1,11 @@
 #ifndef _CLOCK_H
 #define _CLOCK_H
 
-#include <lpc_types.h>
+#include "regsLPC1769.h"
+#include "lpc_types.h"
 
 //////////////Registros del CLOCK y de sistema/////////////////
+//#define		LPC_SYSCTL_BASE		0x400FC000
 //0x400FC1A0UL: Registro de control de sistema y registro de status:
 #define		DIR_SCS				( (__RW uint32_t *) 0x400FC1A0UL)
 //0x400FC104UL: Registro de configuracion del clock:
@@ -72,7 +74,14 @@
 #define FLASHCFG_Value			0x00004000
 
 
+#define SYSCTL_OSCRANGE_15_25 (1 << 4)	/*!< SCS register - main oscillator range 15 to 25MHz */
+#define SYSCTL_OSCEC          (1 << 5)	/*!< SCS register - main oscillator enable */
+#define SYSCTL_OSCSTAT        (1 << 6)	/*!< SCS register - main oscillator is ready status */
+
 #define SYSCTL_IRC_FREQ (4000000)
+
+#define SYSCTL_PLL_ENABLE   (1 << 0)	/*!< PLL enable flag */
+#define SYSCTL_PLL_CONNECT  (1 << 1)	/*!< PLL connect flag only applies to 175x/6x */
 
 
 #define PLL0STS_ENABLED   (1 << 24)	/*!< PLL0 enable flag */
@@ -81,6 +90,19 @@
 #define PLL1STS_ENABLED   (1 << 8)	/*!< PLL1 enable flag */
 #define PLL1STS_CONNECTED (1 << 9)	/*!< PLL1 connect flag */
 #define PLL1STS_LOCKED    (1 << 10)	/*!< PLL1 connect flag */
+
+#define LPC_SYSCTL		((LPC_SYSCTL_T *) LPC_SYSCTL_BASE)
+
+/* LPC17XX/40XX Clock and Power PLL register block structure */
+typedef struct {
+	__RW uint32_t PLLCON;	/*!< (R/W)  PLL Control Register */
+	__RW uint32_t PLLCFG;	/*!< (R/W)  PLL Configuration Register */
+	__R  uint32_t PLLSTAT;	/*!< (R/ )  PLL Status Register */
+	__W  uint32_t PLLFEED;	/*!< ( /W)  PLL Feed Register */
+	uint32_t RESERVED1[4];
+} SYSCTL_PLL_REGS_T;
+
+#define		PLL		((SYSCTL_PLL_REGS_T *) 0x400FC080UL)
 
 /* Selectable PLLs */
 typedef enum {
@@ -103,16 +125,17 @@ typedef enum PLLCLKSRC {
 } PLLCLKSRC_T;
 
 
+
 //!< ///////////////////   PCLKSEL   //////////////////////////
 /**
  * Peripheral clock divider rates used with the
  * PCLKSEL_T clock types (devices only)
  */
 typedef enum {
-	PCLKDIV_4,			/*!< Divider by 4 */
-	PCLKDIV_1,			/*!< Divider by 1 */
-	PCLKDIV_2,			/*!< Divider by 2 */
-	PCLKDIV_8,			/*!< Divider by 8, not for use with CAN */
+	PCLKDIV_4,					/*!< Divider by 4 */
+	PCLKDIV_1,					/*!< Divider by 1 */
+	PCLKDIV_2,					/*!< Divider by 2 */
+	PCLKDIV_8,					/*!< Divider by 8, not for use with CAN */
 	PCLKDIV_6_CCAN = PCLKDIV_8	/*!< Divider by 6, CAN only */
 } PCLKDIV_T;
 
@@ -192,6 +215,17 @@ typedef enum {
 #define 	PCONP_USB		(1UL << 31)
 
 
+/* FLASH Access time definitions */
+typedef enum {
+	FLASHTIM_20MHZ_CPU = 0,		/*!< Flash accesses use 1 CPU clocks. Use for up to 20 MHz CPU clock */
+	FLASHTIM_40MHZ_CPU = 1,		/*!< Flash accesses use 2 CPU clocks. Use for up to 40 MHz CPU clock */
+	FLASHTIM_60MHZ_CPU = 2,		/*!< Flash accesses use 3 CPU clocks. Use for up to 60 MHz CPU clock */
+	FLASHTIM_80MHZ_CPU = 3,		/*!< Flash accesses use 4 CPU clocks. Use for up to 80 MHz CPU clock */
+	FLASHTIM_100MHZ_CPU = 4,	/*!< Flash accesses use 5 CPU clocks. Use for up to 100 MHz CPU clock */
+	FLASHTIM_120MHZ_CPU = 4,	/*!< Flash accesses use 5 CPU clocks. Use for up to 120 Mhz for LPC1759 and LPC1769 only.*/
+	FLASHTIM_SAFE_SETTING = 5,	/*!< Flash accesses use 6 CPU clocks. Safe setting for any allowed conditions */
+} FMC_FLASHTIM_T;
+
 
 /** System oscillator rate
  * This value is defined externally to the chip layer and contains
@@ -238,14 +272,39 @@ static inline uint32_t getMainPLLInClockRate(void)
 	return getSYSCLKRate();
 }
 
-static inline bool isMainPLLConnected(void)
+static inline uint32_t getPLLStatus(SYSCTL_PLL_T PLLNum)
 {
-	return (bool) ((PLL0STAT & PLL0STS_CONNECTED) != 0);
+	return PLL[PLLNum].PLLSTAT;
 }
 
 static inline bool isMainPLLEnabled(void)
 {
 	return (bool) ((PLL0STAT & PLL0STS_ENABLED) != 0);
+}
+
+static inline bool isMainPLLConnected(void)
+{
+	return (bool) ((PLL0STAT & PLL0STS_CONNECTED) != 0);
+}
+
+static inline bool isMainPLLLocked(void)
+{
+	return (bool) ((PLL0STAT & PLL0STS_LOCKED) != 0);
+}
+
+static inline bool isUSBPLLEnabled(void)
+{
+	return (bool) ((PLL1STAT & PLL1STS_ENABLED) != 0);
+}
+
+static inline bool isUSBPLLConnected(void)
+{
+	return (bool) ((PLL1STAT & PLL1STS_CONNECTED) != 0);
+}
+
+static inline bool isUSBPLLLocked(void)
+{
+	return (bool) ((PLL1STAT & PLL1STS_LOCKED) != 0);
 }
 
 static inline uint32_t getSystemClockRate(void)
@@ -257,5 +316,79 @@ static inline void SystemCoreClockUpdate(void)
 {
 	SystemCoreClock = getSystemClockRate();
 }
+
+static inline void setCPUClockDiv(uint32_t div)
+{
+	CCLKCFG = div;
+}
+
+static inline void setMainPLLSource(PLLCLKSRC_T src)
+{
+	CLKSRCSEL = src;
+}
+
+static inline bool isCrystalEnabled(void)
+{
+	return (SCS & SYSCTL_OSCSTAT) != 0;
+}
+
+static inline void enableCrystal(void)
+{
+	SCS |= SYSCTL_OSCEC;
+}
+
+static inline void setFLASHAccess(FMC_FLASHTIM_T clks)
+{
+	uint32_t tmp = FLASHCFG & 0xFFF;
+
+	/* Don't alter lower bits */
+	FLASHCFG = tmp | (clks << 12);
+}
+
+/**
+ * @brief	Enables or connects a PLL
+ * @param	PLLNum:	PLL number
+ * @param	flags:	SYSCTL_PLL_ENABLE or SYSCTL_PLL_CONNECT
+ * @return	Nothing
+ * @note	This will also perform a PLL feed sequence. Connect only applies to the
+ * LPC175x/6x devices.
+ */
+void enablePLL(SYSCTL_PLL_T PLLNum, uint32_t flags);
+void disablePLL(SYSCTL_PLL_T PLLNum, uint32_t flags);
+/**
+ * @brief	Feeds a PLL
+ * @param	PLLNum:	PLL number
+ * @return	Nothing
+ */
+static inline void feedPLL(SYSCTL_PLL_T PLLNum)
+{
+	PLL[PLLNum].PLLFEED = 0xAA;
+	PLL[PLLNum].PLLFEED = 0x55;
+}
+
+
+void setupPLL(SYSCTL_PLL_T PLLNum, uint32_t msel, uint32_t psel);
+
+void USB_Init(void);
+
+void USBD_Init(uint32_t port);
+
+void setupIrcClocking(void);
+void setupXtalClocking(void);
+void setupClocking(void);
+
+
+static inline void NVIC_EnableIRQ(IRQn_Type IRQn)
+{
+  ISER[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* enable interrupt */
+}
+
+static inline void NVIC_DisableIRQ(IRQn_Type IRQn)
+{
+  ICER[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* disable interrupt */
+}
+
+
+
 
 #endif /* _CLOCK_H */

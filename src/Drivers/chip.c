@@ -1,5 +1,6 @@
-#include <clock.h>
+#include "chip.h"
 #include "regsLPC1769.h"
+#include "GPIO.h"
 
 uint32_t SystemCoreClock;
 
@@ -147,7 +148,7 @@ void PLL_init ( void )
 	PLL0FEED  = 0x55;
 
 	while (!(PLL0STAT & ((1<<25) | (1<<24))));/* Wait for PLLC0_STAT & PLLE0_STAT */
-
+#if 0
 	PLL1CFG   = PLL1CFG_Value;
 	PLL1FEED  = 0xAA;
 	PLL1FEED  = 0x55;
@@ -163,7 +164,7 @@ void PLL_init ( void )
 	PLL1FEED  = 0x55;
 
 	while (!(PLL1STAT & ((1<< 9) | (1<< 8))));/* Wait for PLLC1_STAT & PLLE1_STAT */
-
+#endif
 	PCONP   = PCONP_Value;          /* Power Control for Peripherals      */
 
 	CLKOUTCFG = CLKOUTCFG_Value;    /* Clock Output Configuration         */
@@ -179,4 +180,158 @@ void power_init()
 /*	solo dejo encendidos los perifericos:
 	bit	9	RTC
 	bit	15	GPIO  */
+}
+
+
+
+
+void setupIrcClocking(void)
+{
+	/* Disconnect the Main PLL if it is connected already */
+	if (isMainPLLConnected()) {
+		disablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_CONNECT);
+	}
+
+	/* Disable the PLL if it is enabled */
+	if (isMainPLLEnabled()) {
+		disablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_ENABLE);
+	}
+
+	setCPUClockDiv(0);
+	setMainPLLSource(PLLCLKSRC_IRC);
+
+	/* FCCO = ((44+1) * 2 * 4MHz) / (0+1) = 360MHz */
+	setupPLL(SYSCTL_MAIN_PLL, 44, 0);
+
+	enablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_ENABLE);
+
+	setCPUClockDiv(2);
+	while (!isMainPLLLocked()) {} /* Wait for the PLL to Lock */
+
+	enablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_CONNECT);
+}
+
+void setupXtalClocking(void)
+{
+	/* Disconnect the Main PLL if it is connected already */
+	if (isMainPLLConnected()) {
+		disablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_CONNECT);
+	}
+
+	/* Disable the PLL if it is enabled */
+	if (isMainPLLEnabled()) {
+		disablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_ENABLE);
+	}
+
+	/* Enable the crystal */
+	if (!isCrystalEnabled())
+		enableCrystal();
+	while(!isCrystalEnabled()) {}
+
+	/* Set PLL0 Source to Crystal Oscillator */
+	setCPUClockDiv(0);
+	setMainPLLSource(PLLCLKSRC_MAINOSC);
+
+	/* FCCO = ((15+1) * 2 * 12MHz) / (0+1) = 384MHz */
+	setupPLL(SYSCTL_MAIN_PLL, 15, 0);
+
+	enablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_ENABLE);
+
+	/* 384MHz / (3+1) = 96MHz */
+	setCPUClockDiv(3);
+	while (!isMainPLLLocked()) {} /* Wait for the PLL to Lock */
+
+	enablePLL(SYSCTL_MAIN_PLL, SYSCTL_PLL_CONNECT);
+}
+
+/* Setup system clocking */
+void setupClocking(void)
+{
+	setupXtalClocking();
+
+	/* Setup FLASH access to 4 clocks (100MHz clock) */
+	setFLASHAccess(FLASHTIM_100MHZ_CPU);
+}
+
+
+
+/* Sets up USB PLL, all needed clocks and enables USB PHY on the chip. USB pins which are
+	muxed to different pads are not initialized here. This routine assumes that the XTAL
+	OSC is enabled and running prior to this call. */
+void USB_Init(void)
+{
+	/* Setup USB PLL1 for a 48MHz clock
+	   Input clock rate (FIN) is main oscillator = 12MHz
+	   PLL1 Output = USBCLK = 48MHz = FIN * MSEL, so MSEL = 4.
+	   FCCO = USBCLK = USBCLK * 2 * P. It must be between 156 MHz to 320 MHz.
+	   so P = 2 and FCCO = 48MHz * 2 * 2 = 192MHz */
+	setupPLL(SYSCTL_USB_PLL, 3, 1);	/* Multiply by 4, Divide by 2 */
+
+	/* Use PLL1 output as USB Clock Source */
+	/* Enable PLL1 */
+	enablePLL(SYSCTL_USB_PLL, SYSCTL_PLL_ENABLE);
+
+	/* Wait for PLL1 to lock */
+	while (!isUSBPLLLocked()) {}
+
+	/* Connect PLL1 */
+	enablePLL(SYSCTL_USB_PLL, SYSCTL_PLL_ENABLE | SYSCTL_PLL_CONNECT);
+
+	/* Wait for PLL1 to be connected */
+	while (!isUSBPLLConnected()) {}
+
+	/* Enable AHB clock to the USB block and USB RAM. */
+	PCONP |= PCONP_USB;
+}
+
+void USBD_Init(uint32_t port)
+{
+	/* VBUS is not connected on the NXP LPCXpresso LPC1769, so leave the pin at default setting. */
+	/*Chip_IOCON_PinMux(LPC_IOCON, 1, 30, IOCON_MODE_INACT, IOCON_FUNC2);*/ /* USB VBUS */
+	setPINSEL(1, 30, PINSEL_FUNC2);
+	setPINMODE(1, 30, PINMODE_NONE);
+
+	/* P0.29 D1+, P0.30 D1- */
+	setPINSEL(0, 29, PINSEL_FUNC1);
+	setPINMODE(0, 29, PINMODE_NONE);
+	setPINSEL(0, 30, PINSEL_FUNC1);
+	setPINMODE(0, 30, PINMODE_NONE);
+
+	USBClkCtrl = 0x12;                /* Dev, AHB clock enable */
+	while ((USBClkSt & 0x12) != 0x12);
+}
+
+void disablePLL(SYSCTL_PLL_T PLLNum, uint32_t flags) {
+	uint32_t temp;
+
+	temp = PLL[PLLNum].PLLCON;
+	temp &= ~flags;
+	PLL[PLLNum].PLLCON = temp;
+	feedPLL(PLLNum);
+}
+
+/* Enables or connects a PLL */
+void enablePLL(SYSCTL_PLL_T PLLNum, uint32_t flags) {
+	uint32_t temp;
+
+	temp = PLL[PLLNum].PLLCON;
+	temp |= flags;
+	PLL[PLLNum].PLLCON = temp;
+	feedPLL(PLLNum);
+}
+/* Sets up a PLL */
+void setupPLL(SYSCTL_PLL_T PLLNum, uint32_t msel, uint32_t psel) {
+	uint32_t PLLcfg;
+
+	/* PLL0 and PLL1 are slightly different */
+	if (PLLNum == SYSCTL_MAIN_PLL) {
+		PLLcfg = (msel) | (psel << 16);
+	}
+	else {
+		PLLcfg = (msel) | (psel << 5);
+	}
+
+	PLL[PLLNum].PLLCFG = PLLcfg;
+	PLL[PLLNum].PLLCON = 0x1;
+	feedPLL(PLLNum);
 }
