@@ -19,7 +19,7 @@ void D_IN_init( void )
 	set_dir_output(LED1);
 	set_dir_output(LED2);
 	set_dir_output(LED3);
-	set_dir_output(LED4);
+	set_dir_output(BUZZ);
 
 	write_pin(RGB_R, OFF);
 	write_pin(RGB_G, OFF);
@@ -31,7 +31,7 @@ void D_IN_init( void )
 	write_pin(LED1, OFF);
 	write_pin(LED2, OFF);
 	write_pin(LED3, OFF);
-	write_pin(LED4, BUZZER_OFF);
+	write_pin(BUZZ, BUZZER_OFF);
 
 	// turn off glitch filtering and slew rate control
 	// for both P0.27 & P0.28 (I2C features)

@@ -35,9 +35,9 @@
 #ifndef _DELAY_H
 #define _DELAY_H
 
+#include <chip.h>
 #include "lpc_types.h"
 #include "regsLPC1769.h"
-#include "clock.h"
 /*
   Delay by the provided number of system ticks.
   Any values between 0 and 0x0ffffffff are allowed.

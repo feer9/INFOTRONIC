@@ -1,9 +1,9 @@
 #ifndef DRIVERS_UART_H_
 #define DRIVERS_UART_H_
 
+#include <chip.h>
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
-#include "clock.h"
 
 #define U0_INIT_STATUS OFF
 

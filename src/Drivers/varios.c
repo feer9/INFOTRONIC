@@ -1,4 +1,5 @@
 #include "varios.h"
+#include <string.h>
 
 int32_t ipow(int32_t base, uint8_t exp) {
     static const uint8_t highest_bit_set[] = {

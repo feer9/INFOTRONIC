@@ -7,7 +7,7 @@ extern volatile uint32_t decimas_oled;
 //   fonts info: https://github.com/olikraus/u8g2/wiki/fntlistall
 // general info: https://github.com/olikraus/u8g2/wiki/u8g2reference
 
-// ssd1306 driver state machine
+// ssd1306 driver state machine (ish)
 void sm_ssd1306(u8g2_t *u8g2)
 {
     static int st = 0, next = -2, repes = REPES_VAL;

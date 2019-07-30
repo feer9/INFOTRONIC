@@ -1,13 +1,4 @@
-#include "regsLPC1769.h"
-#include "KitInfo2_BaseBoard.h"
-#include "UART.h"
-#include "LCD.h"
-#include "Teclado.h"
-
-
-
-volatile uint32_t decimas_oled = 0;
-
+#include "chip.h"
 
 // recibe el tiempo en microsegundos
 void SysTick_init(uint32_t us)
@@ -24,17 +15,4 @@ void SysTick_init(uint32_t us)
 	SysTick->CLKSOURCE = 1;
 	SysTick->TICKINT = 1;
 	SysTick->ENABLE = 1;
-}
-
-void SysTick_Handler(void)		// systick cada 2,5ms
-{
-	static int cnt = 40;
-	LCD_send();
-	debounceTeclado();
-
-	if(--cnt == 0) {
-		cnt = 40;
-		if(decimas_oled)
-			decimas_oled--;
-	}
 }

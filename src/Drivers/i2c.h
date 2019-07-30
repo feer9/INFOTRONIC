@@ -8,8 +8,8 @@
 #ifndef DRIVERS_I2C_H_
 #define DRIVERS_I2C_H_
 
+#include <chip.h>
 #include "regsLPC1769.h"
-#include "clock.h"
 #include "KitInfo2_BaseBoard.h"
 
 /** Return values for SLAVE handler

@@ -1,10 +1,10 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include <lpc_types.h>
+#include <chip.h>
+#include "lpc_types.h"
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
-#include "clock.h"
 
 //#define _ANY_TIMER -1
 

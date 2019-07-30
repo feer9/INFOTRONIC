@@ -1,10 +1,10 @@
 #ifndef DRIVERS_ADC_H_
 #define DRIVERS_ADC_H_
 
+#include <chip.h>
 #include "../Aplicacion/Aplicacion.h"
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
-#include "clock.h"
 
 
 // Control Register setting bits

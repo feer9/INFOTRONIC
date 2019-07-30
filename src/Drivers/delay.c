@@ -111,22 +111,3 @@ void delay_system_ticks(uint32_t sys_ticks)
   }
   _delay_system_ticks_sub(sys_ticks);
 }
-
-
-/*
-  Delay by the provided number of micro seconds.
-  Limitation: "us" * System-Freq in MHz must not overflow in 32 bit.
-  Values between 0 and 1.000.000 (1 second) are ok.
-
-  Important: Call SystemCoreClockUpdate() before calling this function.
-*/
-/* testeaaaar
-void delay_us(uint32_t us)
-{
-  uint32_t sys_ticks;
-
-  sys_ticks = SystemCoreClock;
-  sys_ticks /=1000000UL;
-  sys_ticks *= us;
-  delay_system_ticks(sys_ticks);  
-}*/
