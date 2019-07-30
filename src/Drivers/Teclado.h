@@ -22,8 +22,6 @@
 void debounceTeclado(void);
 
 
-void D_IN_toggle(uint8_t n);
-bool D_IN_getStatus(uint8_t n);
 /*
 void SetLEDActual	( void );
 void SetLED			( int8_t );
