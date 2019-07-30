@@ -1,13 +1,26 @@
 #include "GPIO.h"
 
 
-void setPINSEL(uint8_t port, uint8_t pin, uint8_t sel)
+void configurePin(uint8_t port, uint8_t pin, uint32_t mode, uint32_t func)
+{
+		uint32_t tmp;
+		port = port * 2 + pin / 16;
+		pin = ( pin % 16 ) * 2;
+
+		tmp = PINSEL[ port ] & ~(3UL << pin);
+		PINSEL[ port ] = tmp | (func << pin);
+
+		tmp = PINMODE[ port ] & ~(3UL << pin);
+		PINMODE[ port ] = tmp | (mode << pin);
+}
+
+void setPINSEL(uint8_t port, uint8_t pin, uint8_t func)
 {
 	uint32_t tmp;
 	port = port * 2 + pin / 16;				//!< Calcula registro PINSEL
 	pin = ( pin % 16 ) * 2;					//!< Calcula campo de bits
 	tmp = PINSEL[ port ] & ~(3 << pin);		//!< Limpia campo de bits
-	PINSEL[ port ] = tmp | (sel << pin);	//!< Set de bits en campo
+	PINSEL[ port ] = tmp | (func << pin);	//!< Set de bits en campo
 }
 
 void setPINMODE(uint8_t port, uint8_t pin, uint8_t modo)

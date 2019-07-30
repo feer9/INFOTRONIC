@@ -3,9 +3,9 @@
 
 #include "regsLPC1769.h"
 
-
-void		setPINSEL 	( uint8_t, uint8_t, uint8_t );
-void		setPINMODE	( uint8_t, uint8_t, uint8_t );
+void		configurePin(uint8_t port, uint8_t pin, uint32_t mode, uint32_t func );
+void		setPINSEL 	(uint8_t port, uint8_t pin, uint8_t func);
+void		setPINMODE	(uint8_t port, uint8_t pin, uint8_t mode);
 
 void		PIN_init	(void);
 
@@ -104,6 +104,7 @@ static inline void tooglePIN(uint8_t port, uint8_t pin)
 //!< -------- Estados de PINSEL:
 typedef enum {
 PINSEL_GPIO,
+PINSEL_FUNC0 = PINSEL_GPIO,
 PINSEL_FUNC1,
 PINSEL_FUNC2,
 PINSEL_FUNC3,
