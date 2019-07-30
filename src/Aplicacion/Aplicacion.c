@@ -10,6 +10,7 @@
 #include "../Drivers/varios.h"
 #include "../Drivers/UART.h"
 #include "../Drivers/ADC.h"
+#include "../Drivers/power_management.h"
 #include "Aplicacion.h"
 
 /* TODO:
@@ -18,36 +19,48 @@
 	- Opcion para reiniciar un Timer
 */
 
+volatile uint32_t decimas_oled = 0;
 static int8_t sw1_timerId = -1;
 extern uint8_t ledStatus;
 extern LCD_t LCD;
 extern ADC_t adc;
 extern uart_t uart0;
 
-menu_t menu = {
-		.level = 0,			// 0 (menu) , 1 (submenu)
-		.pos = {0,0},		// position in each level
-		.op[0].msg = "1- CHANGE OUTPUT",
-		.op[0].desc = "Turn the state of an output. Hold to enter.",
-		.op[0].sub_op[0].msg = "switch LED0",
-		.op[0].sub_op[1].msg = "switch LED1",
-		.op[0].sub_op[2].msg = "switch LED2",
-		.op[0].sub_op[3].msg = "switch LED3",
-		.op[1].msg = "2- ADC Read",
-		.op[1].desc = "get value of \"Ent Analog 0\". Hold to enter",
-		.op[1].sub_op[0].msg = "AD0.5",
-		.op[2].msg = "3- UART",
-		.op[2].desc = "enable/send through UART0. Hold to enter.",
-		.op[2].sub_op[0].msg = "Send <F0RRo>",
-		.op[2].sub_op[1].msg = "Send time req",
-#if (U0_INIT_STATUS == OFF)
-		.op[2].sub_op[2].msg = "set up",
-#else
-		.op[2].sub_op[2].msg = "set down",
-#endif
+
+
+static menu_t menu = {
+		.curr_level = 0,			/* 0: main menu ; 1: sub menu */
+		.level[0].pos = 0,			/* position in main menu */
+		.level[1].pos = 0,			/* option choosed in current menu*/
+		.level[0].msg = msg_1,		/* "1- CHANGE OUTPUT" */
+		.level[0].desc = desc_1,	/* "Turn the state of an output. Hold to enter." */
+		.level[1].msg = msg_1_1,	/* "switch LED0" */
+		.level[1].desc = desc_1_1,	/* "OFF" */
+
 		.timerId = -1
 };
 
+
+
+
+
+void SysTick_Handler(void)		// systick cada 2,5ms
+{
+	static int cnt = 40;
+	debounceTeclado();
+
+	if(--cnt == 0) {
+		cnt = 40;
+		if(decimas_oled)
+			decimas_oled--;
+	}
+}
+
+void RIT_IRQHandler(void) // Repetitive Interrupt Timer cada 1ms
+{
+	LPC_RITIMER->CTRL |= RIT_CTRL_INT;
+	LCD_send();
+}
 
 
 void ledBlink()
@@ -76,8 +89,10 @@ void restoreScreen()
 	else
 		LCD_clear();
 	LCD.isOn = true;
-	menu.pos[0] = 0;
-	menu.pos[1] = 0;
+	menu.level[0].pos = 0;
+	menu.level[1].pos = 0;
+	strcpy(menu.level[0].msg, msg_1);
+	strcpy(menu.level[0].desc, desc_1);
 }
 
 void showClock()
@@ -96,7 +111,8 @@ void showADC()
 	if (adc.change)
 	{
 		adc.change = 0;
-		LCD_printInt(adc.AD5_val, LCD_ROW_2, 4);
+		LCD_printInt(adc.AD5_val, LCD_ROW_2, 5, 4);
+		LCD_printInt(adc.AD5_val * 100 / 4095, LCD_ROW_2, 11, 3);
 	}
 	adc.timerId = startTimer(200, showADC);
 }
@@ -109,87 +125,100 @@ void stopADC()
 
 void showMenu()
 {
-	//stopTimer(&menu.timerId);
-	if(menu.level == 0)
-	{
-		LCD_printCentered(menu.op[menu.pos[0]].msg , LCD_ROW_1);
-		LCD_scrollMessage(menu.op[menu.pos[0]].desc, LCD_ROW_2);
-	}
-	else if(menu.level == 1)
-	{
-		LCD_stopScroll();
-		if(menu.pos[0] == 0) // digital out
-		{
-			LCD_clear();
-			if(D_IN_getStatus(menu.pos[1]))
-				LCD_printCentered("ON", LCD_ROW_2);
-			else
-				LCD_printCentered("OFF", LCD_ROW_2);
-		}
-		else if(menu.pos[0] == 2) // uart
-		{
-			LCD_clear();
-			if(uart0.status)
-				LCD_printCentered("UART0 is up", LCD_ROW_2);
-			else
-				LCD_printCentered("UART0 is down", LCD_ROW_2);
-		}
-		LCD_printCentered(menu.op[menu.pos[0]].sub_op[menu.pos[1]].msg , LCD_ROW_1);
-	}
-
+//	stopTimer(&menu.timerId);
+	LCD_printCentered(menu.level[menu.curr_level].msg , LCD_ROW_1);
+	LCD_scrollMessage(menu.level[menu.curr_level].desc, LCD_ROW_2);
 //	menu.timerId = startTimer(20000, restoreScreen);
 }
+
+
 
 void enterMenu()
 {
 	sw1_timerId = -1;
-	if(menu.level == 0)
+
+	if(!LCD.isInMenu)
+		return;
+
+	if(menu.curr_level == 0)
 	{
-		if(menu.pos[0] == 1)
+		LCD_clear();
+		LCD_stopScroll();
+		if(menu.level[0].pos == 0) // digital out
+		{
+			menu.level[1].pos = 0;
+			strcpy(menu.level[1].msg, msg_1_1);
+			if(D_IN_getStatus(menu.level[1].pos))
+				strcpy(menu.level[1].desc, desc_1_1);
+			else
+				strcpy(menu.level[1].desc, desc_1_2);
+		}
+		else if(menu.level[0].pos == 1) // adc read
 		{
 			ADC_start();
+			strcpy(menu.level[1].msg, msg_2_1);
+			strcpy(menu.level[1].desc, "");
+			LCD_printDOWN("val:      (   %)");
+			adc.change = 1;
 			showADC();
 		}
-		menu.level++;
+		else if(menu.level[0].pos == 2) // uart
+		{
+			strcpy(menu.level[1].msg, msg_3_1);
+			if(uart0.status)
+				strcpy(menu.level[1].desc, desc_3_1);
+			else
+				strcpy(menu.level[1].desc, desc_3_2);
+		}
+
+		menu.curr_level++;
 	}
-	else if(menu.level == 1)
+
+	else if(menu.curr_level == 1)
 	{
-		switch(menu.pos[0])
+		switch(menu.level[0].pos)
 		{
 		case 0: // DIGITAL
-			D_IN_toggle(menu.pos[1]);
+			D_IN_toggle(menu.level[1].pos);
+			if(D_IN_getStatus(menu.level[1].pos))
+				strcpy(menu.level[1].desc, desc_1_1);
+			else
+				strcpy(menu.level[1].desc, desc_1_2);
 			break;
 		case 1: // ADC
 			break;
 		case 2: // UART
-			if(menu.pos[1] == 0)
+			if(menu.level[1].pos == 0)
 			{
 				if(uart0.status)
 					UART0_sendString("<F0RRo>\r\n");
 			}
-			else if(menu.pos[1] == 1)
+			else if(menu.level[1].pos == 1)
 			{
 				if(uart0.status)
 					UART0_requestTime();
 			}
-			else if(menu.pos[1] == 2)
+			else if(menu.level[1].pos == 2)
 			{
 				if(uart0.status == ON) {
 					UART0_setDown();
-					strcpy(menu.op[2].sub_op[2].msg, "set up");
+					strcpy(menu.level[1].msg, msg_3_3_2);
+					strcpy(menu.level[1].desc, desc_3_2);
 				}
 				else {
 					UART0_setUp();
-					strcpy(menu.op[2].sub_op[2].msg, "set down");
+					strcpy(menu.level[1].msg, msg_3_3_1);
+					strcpy(menu.level[1].desc, desc_3_1);
 				}
 			}
 			break;
 		}
 	}
+
 	showMenu();
 }
 
-void SW1_handler(uint8_t st)
+void SW1_handler(bool st)
 {
 	if(st) // presionado
 	{
@@ -197,41 +226,81 @@ void SW1_handler(uint8_t st)
 	}
 	else   // soltado
 	{
-		if(!isTimerEnd(sw1_timerId)) // si está en curso
+		if(!isTimerEnd(sw1_timerId)) // si el timer está en curso: sw1="next"
 		{
 			stopTimer(&sw1_timerId);
 			if(LCD.isInMenu)
 			{
-				if(menu.level == 0)
+				uint8_t pos;
+				if(menu.curr_level == 0)
 				{
-					menu.pos[0]++;
-					menu.pos[0] %= 3;
+					pos = (menu.level[0].pos + 1) % 3;
+					menu.level[0].pos = pos;
+
+					if(pos == 0) {
+						strcpy(menu.level[0].msg, msg_1);
+						strcpy(menu.level[0].desc, desc_1);
+					}
+					else if(pos == 1) {
+						strcpy(menu.level[0].msg, msg_2);
+						strcpy(menu.level[0].desc, desc_2);
+					}
+					else if(pos == 2) {
+						strcpy(menu.level[0].msg, msg_3);
+						strcpy(menu.level[0].desc, desc_3);
+					}
 				}
-				else if(menu.level == 1)
+				else if(menu.curr_level == 1)
 				{
-					switch(menu.pos[0])
+					switch(menu.level[0].pos)
 					{
 					case 0: // SALIDAS DIGITALES
-						menu.pos[1]++;
-						menu.pos[1] %= 4;
+						pos = (menu.level[1].pos + 1) % 4;
+						menu.level[1].pos = pos;
+
+						if(pos == 0)
+							strcpy(menu.level[1].msg, msg_1_1);
+						else if(pos == 1)
+							strcpy(menu.level[1].msg, msg_1_2);
+						else if(pos == 2)
+							strcpy(menu.level[1].msg, msg_1_3);
+						else if(pos == 3)
+							strcpy(menu.level[1].msg, msg_1_4);
+
+						if(D_IN_getStatus(pos))
+							strcpy(menu.level[1].desc, desc_1_1);
+						else
+							strcpy(menu.level[1].desc, desc_1_2);
+
 						break;
 					case 1: // ADC
 						break;
 					case 2: // UART
-						menu.pos[1]++;
-						menu.pos[1] %= 3;
+						pos = (menu.level[1].pos + 1) % 3;
+						menu.level[1].pos = pos;
+
+						if(pos == 0)
+							strcpy(menu.level[1].msg, msg_3_1);
+						else if(pos == 1)
+							strcpy(menu.level[1].msg, msg_3_2);
+						else if(pos == 2) {
+							if(uart0.status)
+								strcpy(menu.level[1].msg, msg_3_3_1);
+							else
+								strcpy(menu.level[1].msg, msg_3_3_2);
+						}
 						break;
 					}
 				}
 			}
 			showMenu();
+			LCD.isInMenu = true;
+			LCD.isInClock = false;
 		}
-		LCD.isInMenu = true;
-		LCD.isInClock = false;
 	}
 }
 
-void SW2_handler(uint8_t st)
+void SW2_handler(bool st)
 {
 	if(st)
 	{
@@ -240,13 +309,13 @@ void SW2_handler(uint8_t st)
 			LCD_clear();
 		if(LCD.isInMenu)
 		{
-			if(menu.level>0)
+			if(menu.curr_level > 0)
 			{
-				if(menu.pos[0] == 1) // adc
+				if(menu.level[0].pos == 1) // adc
 					stopADC();
 
-				menu.pos[menu.level] = 0;
-				menu.level--;
+				menu.level[menu.curr_level].pos = 0;
+				menu.curr_level--;
 				showMenu();
 			}
 			else
@@ -263,7 +332,7 @@ void SW2_handler(uint8_t st)
 	}
 }
 
-void SW3_handler(uint8_t st)
+void SW3_handler(bool st)
 {
 	if(st)
 	{
@@ -273,9 +342,9 @@ void SW3_handler(uint8_t st)
 			LCD.isOn = false;
 			LCD.isInClock = false;
 			LCD.isInMenu = false;
-			if(menu.level>0 && menu.pos[0] == 1)
+			if(menu.curr_level > 0 && menu.level[0].pos == 1)
 				stopADC();
-			menu.level = 0;
+			menu.curr_level = 0;
 			LCD_clear();
 		}
 		else
@@ -288,7 +357,7 @@ void SW3_handler(uint8_t st)
 	}
 }
 /*
-void SW3_handler(uint8_t st)
+void SW3_handler(bool st)
 {
 	if(st)
 	{
@@ -314,11 +383,40 @@ void SW3_handler(uint8_t st)
 	}
 }
 */
-void SW4_handler(uint8_t st) {}
+void SW4_handler(bool st) {
+//	static PMU_MCUPOWER_T i = PMU_MCU_SLEEP;
+	if(!st)
+	{
+		RTC_setAlarmInSeconds(10);
+//		PMU_Sleep(i);
+//		Power_Sleep();
+//		if(i == PMU_MCU_DEEP_PWRDOWN)
+//			i = PMU_MCU_SLEEP;
+//		else
+//			i++;
+	}
+}
 
 #if _5_ENTRADAS
 void SW5_handler(uint8_t st) {}
 #endif
+
+
+void turnLedsOff(void)
+{
+	set_pin(LEDLPC_R);
+	set_pin(LEDLPC_G);
+	set_pin(LEDLPC_B);
+}
+
+void defaultKeyHandler(bool st)
+{
+	if(st)
+		clear_pin(LEDLPC_B);
+	else
+		clear_pin(LEDLPC_R);
+	startTimer(5, turnLedsOff);
+}
 
 void tramaRecibida(char *msg)
 {

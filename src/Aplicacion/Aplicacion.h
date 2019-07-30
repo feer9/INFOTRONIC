@@ -5,32 +5,40 @@
 
 #define N_OPTIONS 3
 
-#if 0
-#define OPTION0 "CHANGE OUTPUT"
-#define OPTION0_DESC "Turn the state of an output. Hold to enter."
-#define OPTION1 "ADC Read"
-#define OPTION1_DESC "get value of \"Ent Analog 0\". Hold to enter"
-#define OPTION2 "opt2"
-#define OPTION2_DESC "opt2 desc. Hold to enter."
-#endif
+
+#define msg_1		"1- CHANGE OUTPUT"
+#define desc_1		"Turn the state of an output. Hold to enter."
+#define msg_1_1		"switch LED0"
+#define msg_1_2		"switch LED1"
+#define msg_1_3		"switch LED2"
+#define msg_1_4		"switch LED3"
+#define desc_1_1	"       ON "
+#define desc_1_2	"       OFF"
+#define msg_2		"2- ADC Read"
+#define desc_2		"get value of \"Ent Analog 0\". Hold to enter"
+#define msg_2_1		"AD0.5"
+#define desc_2_1	"val:      (   %)"
+#define msg_3		"3- UART"
+#define desc_3		"enable/send through UART0. Hold to enter."
+#define msg_3_1		"Send <F0RRo>"
+#define msg_3_2		"Send time req"
+#define msg_3_3_1	"set down"
+#define msg_3_3_2	"set up"
+#define desc_3_1	" UART0 is up  "
+#define desc_3_2	" UART0 is down"
 
 
-typedef struct {
-	char msg[17];
-//	char desc[];
-} sub_option_t;
 
-typedef struct {
+struct menu_level {
 	char msg[17];
 	char desc[44];
-	sub_option_t sub_op[4];
-} option_t;
+	uint8_t pos;
+} ;
 
 typedef struct {
-	uint8_t level;	// si estoy en menu general (0), o submenú (1)
-	uint8_t pos[2];	// pos[0] pos en el menu gral, pos[1] pos en el submenú actual
+	struct menu_level level[2];
+	uint8_t curr_level;	// si estoy en menu general (0), o submenú (1)
 	int8_t  timerId;
-	option_t op[N_OPTIONS];
 } menu_t;
 
 void showClock(void);
