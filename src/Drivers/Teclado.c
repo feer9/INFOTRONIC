@@ -22,7 +22,7 @@ void debounceTeclado(void)
 #endif
 	static uint8_t debounceActivo = 0;
 	static uint8_t stAnt = 0;
-	static void (*keyHandler[N_TECLAS])(uint8_t) = {
+	static void (*keyHandler[N_TECLAS])(bool) = {
 			SW1_handler,
 			SW2_handler,
 			SW3_handler,
@@ -53,7 +53,9 @@ void debounceTeclado(void)
 					if(contador[i] > ACEPTAReSTADO)
 					{
 						stAnt ^= (0x1 << i);
-						keyHandler[i]((stAnt >> i) & 0x1);
+						bool st = (bool) (stAnt >> i) & 0x1;
+						keyHandler[i](st);
+						defaultKeyHandler(st);
 					}
 					contador[i] = 0;
 					debounceActivo --;

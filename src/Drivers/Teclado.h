@@ -5,7 +5,7 @@
 #include "KitInfo2_BaseBoard.h"
 
 #define		T_DEBOUNCE		20
-#define		ACEPTAReSTADO	((int) (0.7 * T_DEBOUNCE))	// arbitrario
+#define		ACEPTAReSTADO	((int) (0.5 * T_DEBOUNCE))	// arbitrario
 
 // configuro si quiero usar el SW5, el cual no se puede manejar por interrupcion
 #define _5_TECLAS 0
@@ -34,9 +34,10 @@ void ledOFF			( void );
 void ToggleLEDActual( void );
 void ToggleLED		( void );
 */
-void SW1_handler(uint8_t);
-void SW2_handler(uint8_t);
-void SW3_handler(uint8_t);
-void SW4_handler(uint8_t);
+void SW1_handler(bool st);
+void SW2_handler(bool st);
+void SW3_handler(bool st);
+void SW4_handler(bool st);
+void defaultKeyHandler(bool st);
 
 #endif /* TECLADO_H_ */
