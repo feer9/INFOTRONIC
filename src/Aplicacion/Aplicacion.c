@@ -6,11 +6,12 @@
 #include "../Drivers/Timer.h"
 #include "../Drivers/LCD.h"
 #include "../Drivers/RTC.h"
-#include "../Drivers/lpc_types.h"
 #include "../Drivers/varios.h"
 #include "../Drivers/UART.h"
 #include "../Drivers/ADC.h"
 #include "../Drivers/power_management.h"
+#include "../Drivers/digital_outputs.h"
+#include "../Drivers/lpc_types.h"
 #include "Aplicacion.h"
 
 /* TODO:
@@ -148,7 +149,7 @@ void enterMenu()
 		{
 			menu.level[1].pos = 0;
 			strcpy(menu.level[1].msg, msg_1_1);
-			if(D_IN_getStatus(menu.level[1].pos))
+			if(D_OUT_getStatus(menu.level[1].pos))
 				strcpy(menu.level[1].desc, desc_1_1);
 			else
 				strcpy(menu.level[1].desc, desc_1_2);
@@ -179,8 +180,8 @@ void enterMenu()
 		switch(menu.level[0].pos)
 		{
 		case 0: // DIGITAL
-			D_IN_toggle(menu.level[1].pos);
-			if(D_IN_getStatus(menu.level[1].pos))
+			D_OUT_toggle(menu.level[1].pos);
+			if(D_OUT_getStatus(menu.level[1].pos))
 				strcpy(menu.level[1].desc, desc_1_1);
 			else
 				strcpy(menu.level[1].desc, desc_1_2);
@@ -267,7 +268,7 @@ void SW1_handler(bool st)
 						else if(pos == 3)
 							strcpy(menu.level[1].msg, msg_1_4);
 
-						if(D_IN_getStatus(pos))
+						if(D_OUT_getStatus(pos))
 							strcpy(menu.level[1].desc, desc_1_1);
 						else
 							strcpy(menu.level[1].desc, desc_1_2);
@@ -402,20 +403,10 @@ void SW5_handler(uint8_t st) {}
 #endif
 
 
-void turnLedsOff(void)
-{
-	set_pin(LEDLPC_R);
-	set_pin(LEDLPC_G);
-	set_pin(LEDLPC_B);
-}
 
 void defaultKeyHandler(bool st)
 {
-	if(st)
-		clear_pin(LEDLPC_B);
-	else
-		clear_pin(LEDLPC_R);
-	startTimer(5, turnLedsOff);
+	flashLedLpc(LEDLPC_R);
 }
 
 void tramaRecibida(char *msg)

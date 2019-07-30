@@ -2,8 +2,10 @@
 #include "regsLPC1769.h"
 #include "GPIO.h"
 
-uint32_t SystemCoreClock;
 
+const uint32_t OscRateIn = 12000000;
+const uint32_t RTCOscRateIn = 32768;
+uint32_t SystemCoreClock;
 
 
 CCLKSRC_T getCPUClockSource(void)
@@ -287,15 +289,11 @@ void USB_Init(void)
 void USBD_Init(uint32_t port)
 {
 	/* VBUS is not connected on the NXP LPCXpresso LPC1769, so leave the pin at default setting. */
-	/*Chip_IOCON_PinMux(LPC_IOCON, 1, 30, IOCON_MODE_INACT, IOCON_FUNC2);*/ /* USB VBUS */
-	setPINSEL(1, 30, PINSEL_FUNC2);
-	setPINMODE(1, 30, PINMODE_NONE);
+//	configurePin( 1,30 , PINMODE_NONE, PINSEL_FUNC2); /* USB VBUS */
 
 	/* P0.29 D1+, P0.30 D1- */
-	setPINSEL(0, 29, PINSEL_FUNC1);
-	setPINMODE(0, 29, PINMODE_NONE);
-	setPINSEL(0, 30, PINSEL_FUNC1);
-	setPINMODE(0, 30, PINMODE_NONE);
+	configurePin( 0,29 , PINMODE_NONE, PINSEL_FUNC1);
+	configurePin( 0,30 , PINMODE_NONE, PINSEL_FUNC1);
 
 	USBClkCtrl = 0x12;                /* Dev, AHB clock enable */
 	while ((USBClkSt & 0x12) != 0x12);
