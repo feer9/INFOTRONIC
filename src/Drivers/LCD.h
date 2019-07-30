@@ -7,12 +7,13 @@
 #define		LCD_INTERNAL_RESET_ENABLED  1
 #define		LCD_INTERNAL_RESET_DISABLED 0
 
-#define		LCD_BUFFER_SIZE	160
+#define		LCD_BUFFER_SIZE	128
 
 #define 	LCD_ROW_1		0U
 #define 	LCD_ROW_2		1U
-#define		LCD_CONTROL		1U
 #define		LCD_DATA		0U
+#define		LCD_CONTROL		1U
+#define		LCD_DELAY		2U
 
 #define		LCD_LINE_SIZE	16
 #define		LCD_MAX_MSG_SIZE 80
@@ -53,7 +54,8 @@ typedef struct {
 
 #define		LCD_printClockTemplate() LCD_print(" Hour:   :  :   Date:     /  /  ")
 
-#define		LCD_clear()		pushLCD( 0x01 , LCD_CONTROL )
+// la operacion clear display (0x01) y return home (control 0x02) requiere 1.52ms
+#define		LCD_clear()		{pushLCD( 0x01 , LCD_CONTROL ); pushLCD(10, LCD_DELAY);}
 #define		LCD_OFF()		pushLCD( 0x08 , LCD_CONTROL )
 #define		LCD_ON()		pushLCD( 0x0C , LCD_CONTROL )
 
@@ -65,7 +67,7 @@ void		LCD_printUP			(const char* msg);
 void		LCD_printCentered	(const char* msg, uint8_t row);
 void		LCD_print			(const char* msg);
 void 		LCD_printReceived	(const char* msg);
-void		LCD_printInt		(int num, uint8_t row, uint8_t digits);
+void		LCD_printInt		(int num, uint8_t row, uint8_t pos, uint8_t digits);
 void		LCD_displayClock	(void);
 void		LCD_updateClock		(void);
 void		LCD_scrollMessage	(const char* msg, uint8_t line);

@@ -10,13 +10,14 @@ static void makeLine (const char* src, char* dest, \
 
 extern LCD_t LCD;
 
+
 void LCD_scrollMessage(const char* msg, uint8_t line)
 {
 	uint8_t len = (uint8_t) strlen(msg);
 
+	LCD_stopScroll();
 	if(len > 16)
 	{
-		LCD_stopScroll();
 		strncpy((char*) LCD.scroll.string, msg, len);
 		LCD.scroll.len = len;
 		LCD.scroll.line = line;
@@ -37,6 +38,7 @@ inline void LCD_stopScroll()
 	{
 		LCD.scroll.isScrolling = false;
 		stopTimer(&LCD.scroll.timerId);
+	//	pushLCD( 0x06 , LCD_CONTROL);
 	}
 }
 
@@ -175,15 +177,15 @@ static void makeLine(const char* src, char* dest, uint8_t start, uint8_t len)
 	dest[i] = '\0';
 }
 
-void LCD_printInt(int num, uint8_t row, uint8_t digits)
+void LCD_printInt(int num, uint8_t row, uint8_t pos, uint8_t digits)
 {
-	char n[17];
-	intToStr(num, n, digits);
-	LCD_printCentered(n, row);
+	char num_str[17];
+	intToStr(num, num_str, digits);
+	LCD_pushString(num_str, row, pos);
 }
 
 void LCD_WelcomeMessage(void)
 {
 	LCD_printCentered("WELCOME", LCD_ROW_1);
-	LCD_printInt(++LPC_RTC->GPREG2, LCD_ROW_2, 3);
+	LCD_printInt(++LPC_RTC->GPREG2, LCD_ROW_2, 6, 3);
 }

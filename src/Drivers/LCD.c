@@ -30,6 +30,8 @@ LCD_t LCD = {
 		.scroll.timerId = -1
 };
 
+// nota: podria scrollear con el comando 0x07, pero eso desplaza las dos
+// lineas al mismo tiempo, y lo que yo quiero es desplazar una sola
 void LCD_scroll(void)
 {
 	if(LCD.scroll.isScrolling)
@@ -70,12 +72,12 @@ void LCD_init(uint8_t internalReset)
 	setPINSEL(LCD_RS, PINSEL_GPIO);
 	setPINSEL(LCD_E , PINSEL_GPIO);
 
-	set_dir(LCD_D4, GPIO_OUTPUT);
-	set_dir(LCD_D5, GPIO_OUTPUT);
-	set_dir(LCD_D6, GPIO_OUTPUT);
-	set_dir(LCD_D7, GPIO_OUTPUT);
-	set_dir(LCD_RS, GPIO_OUTPUT);
-	set_dir(LCD_E , GPIO_OUTPUT);
+	set_dir_output(LCD_D4);
+	set_dir_output(LCD_D5);
+	set_dir_output(LCD_D6);
+	set_dir_output(LCD_D7);
+	set_dir_output(LCD_RS);
+	set_dir_output(LCD_E );
 
 	clear_pin(LCD_D4);
 	clear_pin(LCD_D5);
@@ -92,38 +94,47 @@ void LCD_init(uint8_t internalReset)
 	LCD_config();
 }
 
+// todo: reduce to the minimum this delays
+
 static void LCD_init4Bits()
 {
 	write_pin(LCD_E, 0);
-	delay_us(25000);
+	write_pin(LCD_RS, 0);
+	// Wait for more than 15 ms after VCC rises to 4.5 V
+	delay_ms(20);
 
-	for(uint8_t i=0; i<3; i++)
-	{
-		write_pin(LCD_E, 1);
+	write_pin(LCD_E, 1);
 
-		write_pin(LCD_D4, 1);
-		write_pin(LCD_D5, 1);
-		write_pin(LCD_D6, 0);
-		write_pin(LCD_D7, 0);
-		write_pin(LCD_RS, 0);
+	write_pin(LCD_D4, 1);
+	write_pin(LCD_D5, 1);
+	write_pin(LCD_D6, 0);
+	write_pin(LCD_D7, 0);
 
-		write_pin(LCD_E, 0);
+	write_pin(LCD_E, 0);
 
-		delay_us(5000);
-	}
+	// Wait for more than 4.1 ms
+	delay_ms(5);
 
-	// Configuracion en 4 bits
+	write_pin(LCD_E, 1);
+	write_pin(LCD_E, 0);
+
+	// Wait for more than 100 μs
+	delay_us(200);
+
+	write_pin(LCD_E, 1);
+	write_pin(LCD_E, 0);
+
+
+	// Set interface to be 4 bits long
 	write_pin(LCD_E,1);
 
 	write_pin(LCD_D4,0);
 	write_pin(LCD_D5,1);
 	write_pin(LCD_D6,0);
 	write_pin(LCD_D7,0);
-	write_pin(LCD_RS,0);
 
 	write_pin(LCD_E,0);
 
-	delay_us(5000);
 }
 
 static void LCD_init4Bits_IR()
@@ -142,66 +153,59 @@ static void LCD_init4Bits_IR()
 
 	write_pin(LCD_E, 0);
 
-	delay_us(5000);
+//	delay_us(5000);
 }
 
 static void LCD_config()
 {
+	// Function Set
 	pushLCD( 0x28 , LCD_CONTROL );	// DL = 0: 4 bits de datos
 									// N = 1 : 2 lineas
 									// F = 0 : 5x7 puntos
 
+	// Display On/Off Control
 	pushLCD( 0x08 , LCD_CONTROL);	// D = 0 : display OFF
 									// C = 0 : Cursor OFF
 									// B = 0 : Blink OFF
 
-	pushLCD( 0x01 , LCD_CONTROL);	// clear display
+	// Clear Display
+	pushLCD( 0x01 , LCD_CONTROL);   // 1.53ms
 
+	pushLCD( 10 , LCD_DELAY );
+
+	// Entry Mode Set
 	pushLCD( 0x06 , LCD_CONTROL);	// I/D = 1 : Incrementa puntero
 									// S = 0   : NO Shift Display
 
-	// Activo el LCD y listo para usar !
+	// Display On
 	pushLCD( 0x0C , LCD_CONTROL);	// D = 1 : display ON
 									// C = 0 : Cursor OFF
 									// B = 0 : Blink OFF
 }
 
-void LCD_send()
-{
-	int dato;
-	uint8_t i;
-
-	for(i=0; i<2; i++)
-	{
-		if((dato = popLCD()) == -1)
-			return;
-
-		if( ((uint8_t) dato ) & 0x80 )
-			write_pin(LCD_RS, 0);
-		else
-			write_pin(LCD_RS, 1);
-
-		write_pin(LCD_E, 1);
-
-		write_pin(LCD_D7, ((uint8_t) dato) >> 3 & 0x01);
-		write_pin(LCD_D6, ((uint8_t) dato) >> 2 & 0x01);
-		write_pin(LCD_D5, ((uint8_t) dato) >> 1 & 0x01);
-		write_pin(LCD_D4, ((uint8_t) dato) >> 0 & 0x01);
-
-		write_pin(LCD_E, 0);
-	}
-}
-
 uint8_t pushLCD(uint8_t dato, uint8_t control)
 {
-	if(LCD.send.queueSize + 1 >= LCD_BUFFER_SIZE)
+	if(LCD.send.queueSize + 2 > LCD_BUFFER_SIZE)
 		return 1;
+
+	if ( control == LCD_DELAY )
+	{
+		for(int i=0; i<dato && LCD.send.queueSize < LCD_BUFFER_SIZE; i++)
+		{
+			LCD.send.buffer [ LCD.send.indexIn ] = 0xF0;
+			LCD.send.indexIn ++;
+			LCD.send.indexIn %= LCD_BUFFER_SIZE;
+			LCD.send.queueSize ++;
+		}
+		return 0;
+	}
 
 	LCD.send.buffer [ LCD.send.indexIn ] = ( dato >> 4 ) & 0x0F;
 	if ( control == LCD_CONTROL )
 		LCD.send.buffer [ LCD.send.indexIn ] |= 0x80;
 
 	LCD.send.indexIn ++;
+	LCD.send.indexIn %= LCD_BUFFER_SIZE;
 
 	LCD.send.buffer [ LCD.send.indexIn ] = dato & 0x0F;
 	if ( control == LCD_CONTROL )
@@ -230,6 +234,34 @@ static int16_t popLCD()
 
 	return dato;
 }
+
+void LCD_send()
+{
+	int16_t s_dato;
+	uint8_t dato, i;
+
+	for(i=0; i<2; i++)
+	{
+		if(((s_dato = popLCD()) == -1) || (((uint8_t) s_dato ) == 0xF0) )
+			return;
+
+		dato = (uint8_t) s_dato;
+		if( dato & 0x80 )
+			write_pin(LCD_RS, 0);
+		else
+			write_pin(LCD_RS, 1);
+
+		write_pin(LCD_E, 1);
+
+		write_pin(LCD_D7, (dato >> 3) & 0x01);
+		write_pin(LCD_D6, (dato >> 2) & 0x01);
+		write_pin(LCD_D5, (dato >> 1) & 0x01);
+		write_pin(LCD_D4, (dato >> 0) & 0x01);
+
+		write_pin(LCD_E, 0);
+	}
+}
+
 
 
 
