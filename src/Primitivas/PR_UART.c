@@ -5,46 +5,82 @@
 
 static int16_t	popRx(void);
 static uint8_t	pushTx(uint8_t data);
-static uint8_t	UART0_pushTx_16(char data[17]);
-void sendPackage(char data[17]);
+static uint8_t	pushTx_16(uint8_t data[17]);
+void sendPackage(uint8_t data[17]);
 
-extern uart_t uart0;
+static uart_t* uart0;
 
-uint8_t UART0_sendChar(char c)
-{
-	if( pushTx(c) != SUCCESS )
-		return ERROR;
-
-	return SUCCESS;
+void UART0_setStruct(uart_t *puart0) {
+	uart0 = puart0;
 }
 
-uint8_t UART0_sendString(char *msg)
+inline bool UART0_isUp(void) {
+	return uart0->status;
+}
+
+inline bool UART0_isRXBuffEmpty(void) {
+	return uart0->bufferRx.isEmpty();
+}
+
+inline bool UART0_isRXBuffFull(void) {
+	return uart0->bufferRx.isFull();
+}
+
+inline bool UART0_isTXBuffEmpty(void) {
+	return uart0->bufferTx.isEmpty();
+}
+
+inline bool UART0_isTXBuffFull(void) {
+	return uart0->bufferTx.isFull();
+}
+
+status UART0_sendChar(char c)
 {
-	uint32_t i;
+	return pushTx(c);
+}
+
+size_t UART0_sendString(char *msg)
+{
+	size_t i;
 
 	for(i=0; msg[i]; i++)
 	{
 		if( pushTx(msg[i]) != SUCCESS )
-			return ERROR;
+			break;
 	}
-	return SUCCESS;
+	return i;
 }
 
-uint8_t UART0_sendRequest(uint8_t id)
+// return n bytes sent
+size_t UART0_send(uint8_t *msg, size_t len)
 {
-	uint8_t ret = 0;
+	uint8_t buf[17] = {0};
+	size_t i, remain = len%16;
+	len -= remain;
+	for(i = 0; i < len; i += 16) {
+		if(pushTx_16(msg+i) != SUCCESS)
+			return i;
+	}
+	memcpy(buf, msg+len, remain);
+	return (pushTx_16(buf) == SUCCESS) ? i+remain : i;
+}
+
+size_t UART0_sendRequest(UART0_requests_t id)
+{
+	size_t ret = 0;
 	switch(id)
 	{
 	case UART0_REQUEST_TIME:
-		ret = UART0_pushTx_16("<RT>");
-		//TODO: si el mensaje es mas corto que 16 caracteres, llenar con 0xFFs
+		ret = UART0_send((uint8_t*)"<RT>", 4);
+		break;
+	default:
 		break;
 	}
 
 	return ret;
 }
 
-inline void UART0_requestTime()
+inline void UART0_requestTime(void)
 {
 	UART0_sendRequest(UART0_REQUEST_TIME);
 }
@@ -56,6 +92,9 @@ void UART0_receive(void)
 	static uint32_t i=0;
 	static bool recibiendoTrama = false;
 	static char msg[LCD_MAX_MSG_SIZE];
+
+	if(!uart0->status)
+		return;
 
 	if ((data = popRx()) != -1)
 	{
@@ -112,14 +151,14 @@ static int16_t popRx(void)
 {
 	int16_t data = -1;
 
-	if(!uart0.bufferRx.isEmpty())
+	if(!uart0->bufferRx.isEmpty())
 	{
-		data = uart0.bufferRx.item[uart0.bufferRx.indexOut];
+		data = uart0->bufferRx.item[uart0->bufferRx.indexOut];
 
-		uart0.bufferRx.indexOut++;
-		uart0.bufferRx.indexOut %= BUFFER_UART_SIZE;
+		uart0->bufferRx.indexOut++;
+		uart0->bufferRx.indexOut %= BUFFER_UART_SIZE;
 
-		uart0.bufferRx.quantity--;
+		uart0->bufferRx.quantity--;
 	}
 
 	return data;
@@ -127,49 +166,49 @@ static int16_t popRx(void)
 
 static uint8_t pushTx(uint8_t data)
 {
-	if(!uart0.TxStart)
+	if(!uart0->TxStart)
 	{
 		U0THR = data;
-		uart0.TxStart = true;
+		uart0->TxStart = true;
 	}
 	else
 	{
-		if(uart0.bufferTx.isFull())
+		if(uart0->bufferTx.isFull())
 			return ERROR;
 
-		uart0.bufferTx.item[uart0.bufferTx.indexIn] = data;
+		uart0->bufferTx.item[uart0->bufferTx.indexIn] = data;
 
-		uart0.bufferTx.indexIn++;
-		uart0.bufferTx.indexIn %= BUFFER_UART_SIZE;
+		uart0->bufferTx.indexIn++;
+		uart0->bufferTx.indexIn %= BUFFER_UART_SIZE;
 
-		uart0.bufferTx.quantity++;
+		uart0->bufferTx.quantity++;
 	}
 
 	return SUCCESS;
 }
 
 
-static uint8_t UART0_pushTx_16(char data[17])
+static uint8_t pushTx_16(uint8_t data[17])
 {
 	uint8_t i;
-	if(! uart0.TxStart )
+	if(! uart0->TxStart )
 	{
 		sendPackage(data);
-		uart0.TxStart = true;
+		uart0->TxStart = true;
 	}
 	else
 	{
-		if(uart0.bufferTx.quantity + 16 > BUFFER_UART_SIZE)
+		if(uart0->bufferTx.quantity + 16 > BUFFER_UART_SIZE)
 			return ERROR;
 
 		for(i=0; i<16; i++)
 		{
-			uart0.bufferTx.item[uart0.bufferTx.indexIn] = data[i];
+			uart0->bufferTx.item[uart0->bufferTx.indexIn] = data[i];
 
-			uart0.bufferTx.indexIn++;
-			uart0.bufferTx.indexIn %= BUFFER_UART_SIZE;
+			uart0->bufferTx.indexIn++;
+			uart0->bufferTx.indexIn %= BUFFER_UART_SIZE;
 		}
-		uart0.bufferTx.quantity += 16;
+		uart0->bufferTx.quantity += 16;
 	}
 
 	return SUCCESS;

@@ -1,7 +1,7 @@
 #ifndef DRIVERS_UART_H_
 #define DRIVERS_UART_H_
 
-#include <chip.h>
+#include "chip.h"
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
 
@@ -11,7 +11,9 @@
 
 #define BUFFER_UART_SIZE 256
 
-typedef enum UART0_requests_t {UART0_REQUEST_NONE, UART0_REQUEST_TIME, UART0_REQUEST_TOP} UART0_requests_t;
+typedef enum {
+	UART0_REQUEST_NONE, UART0_REQUEST_TIME, UART0_REQUEST_TOP
+} UART0_requests_t;
 
 
 // interruption identifiers
@@ -51,32 +53,24 @@ typedef struct {
 }uart_t;
 
 
-extern uart_t uart0;
 
-static inline bool isRxEmpty (void) {
-	return (bool) (uart0.bufferRx.quantity == 0);
-}
-
-static inline bool isTxEmpty (void) {
-	return (bool) (uart0.bufferTx.quantity == 0);
-}
-
-static inline bool isRxFull (void) {
-	return (bool) (uart0.bufferRx.quantity == BUFFER_UART_SIZE);
-}
-
-static inline bool isTxFull (void) {
-	return (bool) (uart0.bufferTx.quantity == BUFFER_UART_SIZE);
-}
 
 
 void		UART0_init(uint8_t);
+void		UART0_setStruct(uart_t *puart0);
 void		UART0_setUp(void);
 void		UART0_setDown(void);
-uint8_t		UART0_sendString(char *msg);
-uint8_t 	UART0_sendChar(char c);
+bool		UART0_isUp(void);
+bool		UART0_isRXBuffEmpty(void);
+bool		UART0_isRXBuffFull(void);
+bool		UART0_isTXBuffEmpty(void);
+bool		UART0_isTXBuffFull(void);
+
+size_t		UART0_send(uint8_t *msg, size_t len);
+size_t		UART0_sendString(char *msg);
+status 		UART0_sendChar(char c);
 void		UART0_receive(void);
-uint8_t		UART0_sendRequest(uint8_t id);
+size_t		UART0_sendRequest(UART0_requests_t id);
 void		UART0_requestTime(void);
 
 

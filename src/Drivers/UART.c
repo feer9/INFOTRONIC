@@ -5,7 +5,15 @@ static status  pushRxPackage(uint8_t size);
 //static int16_t	popTx  (void);
 static void     sendOn (void);
 
-uart_t uart0 = {
+
+
+static bool isRxEmpty(void);
+static bool isTxEmpty(void);
+static bool isRxFull(void);
+static bool isTxFull(void);
+
+
+static uart_t uart0 = {
 		.bufferRx.indexIn     = 0,
 		.bufferRx.indexOut    = 0,
 		.bufferRx.quantity    = 0,
@@ -22,6 +30,22 @@ uart_t uart0 = {
 		.status         = U0_INIT_STATUS
 };
 
+
+inline bool isRxEmpty (void) {
+	return (bool) (uart0.bufferRx.quantity == 0);
+}
+
+inline bool isTxEmpty (void) {
+	return (bool) (uart0.bufferTx.quantity == 0);
+}
+
+inline bool isRxFull (void) {
+	return (bool) (uart0.bufferRx.quantity == BUFFER_UART_SIZE);
+}
+
+inline bool isTxFull (void) {
+	return (bool) (uart0.bufferTx.quantity == BUFFER_UART_SIZE);
+}
 
 void UART0_IRQHandler()
 {
@@ -140,16 +164,22 @@ void UART0_init(uint8_t st)//,uint32_t baudrate)
 {
 	PCONP |=  PCONP_UART0;
 
-	setPCLKDiv(PCLKSEL_UART0, PCLKDIV_4);
+	setPCLKDiv(PCLKSEL_UART0, PCLKDIV_1);
 
 	// 8-bit ; 1 stop bit ; parity enabled ; odd parity (impar) ; break control disabled ; DLAB = 1
 	U0LCR = 0b10001011;
 
-	// Configuracion a 115200 baudios
-	U0DLM = 0;
-	U0DLL = 9;
+	// Configuracion a 115200 baudios con PCLK_UART0 = 25MHz
+//	U0DLM = 0;
+//	U0DLL = 9;
 	// DivAddVal = 1 ; MulVal = 2
-	U0FDR = 0x01 | (0x02 << 4);
+//	U0FDR = 0x01 | (0x02 << 4);
+
+	// Configuracion a 115200 baudios con PCLK_UART0 = 96MHz
+	U0DLM = 0;
+	U0DLL = 34;
+	// DivAddVal = 8 ; MulVal = 15
+	U0FDR = 0x08 | (0x0F << 4);
 
 	// enable FIFO Rx & Tx
 	U0FCR = 0x07;
@@ -166,6 +196,8 @@ void UART0_init(uint8_t st)//,uint32_t baudrate)
 	U0LCR &= ~(0x01 << 7);
 	// habilito interrupciones por RBR, THRE y RX Line Status
 	U0IER = 0x07;
+
+	UART0_setStruct(&uart0);
 
 	if(st)
 		UART0_setUp();
