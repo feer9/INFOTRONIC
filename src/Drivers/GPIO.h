@@ -3,6 +3,7 @@
 
 #include "regsLPC1769.h"
 
+// PINMODE_x, PINSEL_FUNCy
 void		configurePin(uint8_t port, uint8_t pin, uint32_t mode, uint32_t func );
 void		setPINSEL 	(uint8_t port, uint8_t pin, uint8_t func);
 void		setPINMODE	(uint8_t port, uint8_t pin, uint8_t mode);
@@ -39,8 +40,8 @@ static inline void tooglePIN(uint8_t port, uint8_t pin)
 /* only valid if state equals 1 or 0 */
 // #define __write_pin__(port,pin,state)	(*(FIOCLR - state + 8*port) |= (1<<pin))
 
-#define __write_pin__(port,pin,state)	((state) ?	(FIO[port].SET = (1UL << pin)) : \
-									 				(FIO[port].CLR = (1UL << pin)))
+#define __write_pin__(port,pin,state)	((state) ?	(FIO[port].SET = (1UL << (pin))) : \
+									 				(FIO[port].CLR = (1UL << (pin))))
 #define write_pin(...) \
 		__write_pin__(__VA_ARGS__)
 

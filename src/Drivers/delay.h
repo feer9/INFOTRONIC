@@ -35,7 +35,7 @@
 #ifndef _DELAY_H
 #define _DELAY_H
 
-#include <chip.h>
+#include "chip.h"
 #include "lpc_types.h"
 #include "regsLPC1769.h"
 /*

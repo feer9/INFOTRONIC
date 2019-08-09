@@ -2,7 +2,7 @@
 #define REGSLPC1769_H_
 
 
-#include <lpc_types.h>
+#include "lpc_types.h"
 
 
 
@@ -628,7 +628,7 @@ typedef struct
 	__RW uint32_t ADTRM;
 } LPC_ADC_t;
 
-#define		ADC			( ( LPC_ADC_t * ) 0x40034000UL )
+#define		LPC_ADC			( ( LPC_ADC_t * ) 0x40034000UL )
 
 //!< ////////////////  END ADC  /////////////////////
 
@@ -642,7 +642,7 @@ typedef struct {				/*!< RITIMER Structure      */
 	__RW uint32_t  COUNTER;		/*!< 32-bit counter         */
 } LPC_RITIMER_T;
 
-#define LPC_RITIMER_BASE 0x400B0000
+#define LPC_RITIMER_BASE 0x400B0000UL
 #define LPC_RITIMER      ((LPC_RITIMER_T *) LPC_RITIMER_BASE)
 
 /**	Set by H/W when the counter value equals the masked compare value */

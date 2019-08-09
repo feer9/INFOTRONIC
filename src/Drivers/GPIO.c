@@ -1,6 +1,6 @@
 #include "GPIO.h"
 
-
+// PINMODE_x, PINSEL_FUNCy
 void configurePin(uint8_t port, uint8_t pin, uint32_t mode, uint32_t func)
 {
 		uint32_t tmp;

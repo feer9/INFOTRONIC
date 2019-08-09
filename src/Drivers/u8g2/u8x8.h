@@ -180,8 +180,12 @@ uint8_t u8x8_pgm_read_esp(const uint8_t * addr);   /* u8x8_8x8.c */
 #  endif
 #endif
 
+#include <cr_section_macros.h>
 #ifndef U8X8_PROGMEM
-#  define U8X8_PROGMEM
+#  define U8X8_PROGMEM  __RODATA(MFlash512)
+#endif
+#ifndef PROGMEM
+#  define PROGMEM  __RODATA(MFlash512)
 #endif
 
 #ifdef ARDUINO

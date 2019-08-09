@@ -1,7 +1,7 @@
 #ifndef DRIVERS_RTC_H_
 #define DRIVERS_RTC_H_
 
-#include <chip.h>
+#include "chip.h"
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
 

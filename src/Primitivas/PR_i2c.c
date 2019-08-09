@@ -30,6 +30,9 @@ void I2C2_IRQHandler()
 
 void I2C_Config(I2C_ID_T id, uint32_t clockrate, I2C_EVENTHANDLER_T event)
 {
+	if(id < 0 || id >= I2C_NUM_INTERFACE)
+		return;
+
 	I2C_Init(id);
 	I2C_SetClockRate(id, clockrate);
 
@@ -40,31 +43,23 @@ void I2C_Config(I2C_ID_T id, uint32_t clockrate, I2C_EVENTHANDLER_T event)
 	}
 	else if (id == I2C1)
 	{
-		setPINSEL(SDA1, PINSEL_FUNC3);
-		setPINSEL(SCL1, PINSEL_FUNC3);
-
-		setPINMODE(SDA1, PINMODE_NONE);
-		setPINMODE(SCL1, PINMODE_NONE);
+		configurePin(SDA1, PINMODE_NONE, PINSEL_FUNC3);
+		configurePin(SCL1, PINMODE_NONE, PINSEL_FUNC3);
 
 		set_MODE_OD(SDA1, 1);
 		set_MODE_OD(SCL1, 1);
 	}
 	else if(id == I2C2)
 	{
-		setPINSEL(SDA2, PINSEL_FUNC2);
-		setPINSEL(SCL2, PINSEL_FUNC2);
-
-		setPINMODE(SDA2, PINMODE_NONE);
-		setPINMODE(SCL2, PINMODE_NONE);
+		configurePin(SDA2, PINMODE_NONE, PINSEL_FUNC2);
+		configurePin(SCL2, PINMODE_NONE, PINSEL_FUNC2);
 
 		set_MODE_OD(SDA2, 1);
 		set_MODE_OD(SCL2, 1);
 	}
-	else
-	{
-		return;
-	}
 
 	I2C_SetMasterEventHandler(id, event);
-	ISER0 = NVIC_I2C0 << (int)id; // really?...
+	NVIC_ClearPendingIRQ(I2C_IRQn + (IRQn_Type) id);
+	NVIC_EnableIRQ(I2C_IRQn + (IRQn_Type) id);
 }
+

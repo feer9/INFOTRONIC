@@ -2,7 +2,6 @@
 #include "LCD.h"
 
 
-extern LCD_t LCD;
 
 void RTC_init()
 {
@@ -40,7 +39,7 @@ void RTC_IRQHandler(void)
 	if(LPC_RTC->ILR & _BIT(0))
 	{
 		LPC_RTC->ILR = _BIT(0);
-		if(LCD.isInClock && LCD.isOn)
+		if(LCD_isInClock() && LCD_isOn())
 			LCD_updateClock();
 	}
 
@@ -49,7 +48,7 @@ void RTC_IRQHandler(void)
 	{
 		LPC_RTC->ILR = _BIT(1);
 		LPC_RTC->AMR = 0xFFUL; // desactivo alarma
-		uint32_t dummy = PCON;
+	//	uint32_t dummy = PCON;
 		PCON |= (1UL << 8);
 
 		toggle_pin(LEDLPC_B);
@@ -58,7 +57,7 @@ void RTC_IRQHandler(void)
 
 void RTC_resetTime()
 {
-	LPC_RTC->YEAR  = 2019;
+	LPC_RTC->YEAR  = 2020;
 	LPC_RTC->MONTH = 0;
 	LPC_RTC->DOY   = 0;
 	LPC_RTC->DOM   = 0;
@@ -68,7 +67,7 @@ void RTC_resetTime()
 	LPC_RTC->SEC   = 0;
 
 	// Guardo la fecha en que actualicé el rtc para ajustar la calibracion
-	LPC_RTC->GPREG0 = 20190000;
+	LPC_RTC->GPREG0 = 20200000;
 	LPC_RTC->GPREG1 = 000000;
 	LPC_RTC->GPREG2 = 0;
 	LPC_RTC->GPREG3 = 0;

@@ -5,7 +5,7 @@
 #include "KitInfo2_BaseBoard.h"
 
 #define		T_DEBOUNCE		20
-#define		ACEPTAReSTADO	((int) (0.5 * T_DEBOUNCE))	// arbitrario
+#define		ACEPTAReSTADO	((int) (T_DEBOUNCE * 0.5))	// arbitrario
 
 // configuro si quiero usar el SW5, el cual no se puede manejar por interrupcion
 #define _5_TECLAS 0

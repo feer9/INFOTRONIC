@@ -317,6 +317,7 @@ ResetISR(void) {
     }
 }
 
+#if defined (__USE_CMSIS) || defined (__USE_LPCOPEN)
 /* Set up and initialize hardware prior to call to main */
 void SystemInit(void)
 {
@@ -348,6 +349,7 @@ void SystemInit(void)
 //	Board_SystemInit();
 #endif
 }
+#endif /* defined (__USE_CMSIS) || defined (__USE_LPCOPEN) */
 
 //*****************************************************************************
 // Default exception handlers. Override the ones here by defining your own

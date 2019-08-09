@@ -20,7 +20,7 @@ void debounceTeclado(void)
 	static uint8_t t[N_TECLAS] = {0,0,0,0};
 	static uint8_t contador[N_TECLAS] = {0,0,0,0};
 #endif
-	static uint8_t debounceActivo = 0;
+	static uint8_t debounceActivo = 0; //FIXME: debounceActivo remains at a high number with no reason
 	static uint8_t stAnt = 0;
 	static void (*keyHandler[N_TECLAS])(bool) = {
 			SW1_handler,
@@ -76,45 +76,6 @@ void debounceTeclado(void)
 #endif
 
 }
-
-// Configuración de interrupciones externas
-void ExtInt_init(void)
-{
-	set_dir(KEY0, ENTRADA);
-	set_dir(KEY1, ENTRADA);
-	set_dir(KEY2, ENTRADA);
-	set_dir(KEY3, ENTRADA);
-	setPINSEL(KEY0, PINSEL_GPIO);
-	setPINSEL(KEY1, PINSEL_GPIO);
-	setPINSEL(KEY2, PINSEL_GPIO);
-	setPINSEL(KEY3, PINSEL_GPIO);
-
-	EXTMODE  |=  (0x0FUL << 0);			// Todas por flanco
-	EXTPOLAR &= ~(0x0FUL << 0);			// Todas por flanco descendente
-
-	// Habilito interrupcion en GPIOs del kit
-	// Falling edge
-	IO2IntEnF |= (1UL << SW4_PIN);		// SW4
-	IO0IntEnF |= (1UL << SW3_PIN); 		// SW3
-	IO0IntEnF |= (1UL << SW2_PIN);		// SW2
-	IO2IntEnF |= (1UL << SW1_PIN);		// SW1
-
-	// Rising edge
-	IO2IntEnR |= (1UL << SW4_PIN);		// SW4
-	IO0IntEnR |= (1UL << SW3_PIN);		// SW3
-	IO0IntEnR |= (1UL << SW2_PIN);		// SW2
-	IO2IntEnR |= (1UL << SW1_PIN);		// SW1
-
-	ISER0      = NVIC_EINT3;			// Habilito Interrupcion externa 3
-
-	// Limpio flags de interrupciones
-	IO2IntClr |= (1UL << SW4_PIN);		// SW4
-	IO0IntClr |= (1UL << SW3_PIN);		// SW3
-	IO0IntClr |= (1UL << SW2_PIN);		// SW2
-	IO2IntClr |= (1UL << SW1_PIN);		// SW1
-	EXTINT    |= (1UL << EINT3);
-}
-
 
 void EINT3_IRQHandler (void)
 {
@@ -181,7 +142,6 @@ void EINT3_IRQHandler (void)
 	debounceTeclado();				// Comienzo el debounce
 }
 
-
 static uint8_t readSW(uint8_t n)
 {
 	switch(n)
@@ -205,4 +165,42 @@ static void enableReleaseKeyInt(uint8_t i)
 	case 3: IO2IntEnR |= (1UL << SW4_PIN); break; // SW4
 	default: break;
 	}
+}
+
+// Configuración de interrupciones externas
+void ExtInt_init(void)
+{
+	set_dir(KEY0, ENTRADA);
+	set_dir(KEY1, ENTRADA);
+	set_dir(KEY2, ENTRADA);
+	set_dir(KEY3, ENTRADA);
+	setPINSEL(KEY0, PINSEL_GPIO);
+	setPINSEL(KEY1, PINSEL_GPIO);
+	setPINSEL(KEY2, PINSEL_GPIO);
+	setPINSEL(KEY3, PINSEL_GPIO);
+
+	EXTMODE  |=  (0x0FUL << 0);			// Todas por flanco
+	EXTPOLAR &= ~(0x0FUL << 0);			// Todas por flanco descendente
+
+	// Habilito interrupcion en GPIOs del kit
+	// Falling edge
+	IO2IntEnF |= (1UL << SW4_PIN);		// SW4
+	IO0IntEnF |= (1UL << SW3_PIN); 		// SW3
+	IO0IntEnF |= (1UL << SW2_PIN);		// SW2
+	IO2IntEnF |= (1UL << SW1_PIN);		// SW1
+
+	// Rising edge
+	IO2IntEnR |= (1UL << SW4_PIN);		// SW4
+	IO0IntEnR |= (1UL << SW3_PIN);		// SW3
+	IO0IntEnR |= (1UL << SW2_PIN);		// SW2
+	IO2IntEnR |= (1UL << SW1_PIN);		// SW1
+
+	ISER0      = NVIC_EINT3;			// Habilito Interrupcion externa 3
+
+	// Limpio flags de interrupciones
+	IO2IntClr |= (1UL << SW4_PIN);		// SW4
+	IO0IntClr |= (1UL << SW3_PIN);		// SW3
+	IO0IntClr |= (1UL << SW2_PIN);		// SW2
+	IO2IntClr |= (1UL << SW1_PIN);		// SW1
+	EXTINT    |= (1UL << EINT3);
 }

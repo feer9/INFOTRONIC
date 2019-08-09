@@ -71,7 +71,8 @@ void turnLedsLpcOff(void)
 
 void flashLedLpc(uint8_t port, uint8_t pin)
 {
-	clear_pin(port,pin);
-	startTimer(5, turnLedsLpcOff);
+	static timer_id_t t = -1;
+	write_pin(port,pin, LEDLPC_ON);
+	startTimer(&t, 5, turnLedsLpcOff);
 }
 

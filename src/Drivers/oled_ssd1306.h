@@ -5,8 +5,8 @@
  *      Author: feer
  */
 
-#ifndef SSD1306_H_
-#define SSD1306_H_
+#ifndef OLED_SSD1306_H_
+#define OLED_SSD1306_H_
 
 #include "lpc_types.h"
 #include "u8g2/u8g2.h"
@@ -31,7 +31,11 @@ uint8_t u8x8_gpio_and_delay_sw_lpc1769(u8x8_t *u8x8, uint8_t msg, uint8_t arg_in
 uint8_t u8x8_gpio_and_delay_lpc1769(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
 uint8_t u8x8_byte_i2c_lpc1769(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
 
-void sm_ssd1306(u8g2_t *u8g2);
+void ssd1306_loop(void);
 void ssd1306_init(u8g2_t *u8g2);
+void ssd1306_setPointer(u8g2_t *p);
+void ssd1306_off(void);
+void ssd1306_on(void);
+bool ssd1306_getStatus(void);
 
-#endif /* SSD1306_H_ */
+#endif /* OLED_SSD1306_H_ */

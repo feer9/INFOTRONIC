@@ -1,8 +1,12 @@
-#ifndef _CLOCK_H
-#define _CLOCK_H
+#ifndef _CHIP_H
+#define _CHIP_H
 
-#include "regsLPC1769.h"
 #include "lpc_types.h"
+#include "regsLPC1769.h"
+
+#ifndef CHIP_LPC175X_6X
+#define CHIP_LPC175X_6X
+#endif
 
 //////////////Registros del CLOCK y de sistema/////////////////
 //#define		LPC_SYSCTL_BASE		0x400FC000
@@ -377,6 +381,8 @@ void setupIrcClocking(void);
 void setupXtalClocking(void);
 void setupClocking(void);
 
+void chip_init(void);
+
 
 static inline void NVIC_EnableIRQ(IRQn_Type IRQn)
 {
@@ -388,7 +394,25 @@ static inline void NVIC_DisableIRQ(IRQn_Type IRQn)
   ICER[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* disable interrupt */
 }
 
+static inline void NVIC_ClearPendingIRQ(IRQn_Type IRQn)
+{
+  ICPR[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* disable interrupt */
+}
+
+static inline void NVIC_SetPendingIRQ(IRQn_Type IRQn)
+{
+  ISPR[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* disable interrupt */
+}
+
+static inline void SysTick_enableInterrupts(void)
+{
+	SysTick->TICKINT = 1;
+}
+
+static inline void SysTick_disableInterrupts(void)
+{
+	SysTick->TICKINT = 0;
+}
 
 
-
-#endif /* _CLOCK_H */
+#endif /* _CHIP_H */

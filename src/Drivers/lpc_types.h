@@ -34,20 +34,24 @@ typedef 	unsigned char 	uint8_t;
 
 //typedef enum {false = 0, true = !false} bool;
 typedef enum {RESET = 0, SET = !RESET} flagStatus, intStatus, setState;
-typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
+typedef enum {ERROR = 0, SUCCESS = !ERROR} status;
 
 
 /* _BIT(n) sets the bit at position "n"
  * _BIT(n) is intended to be used in "OR" and "AND" expressions:
  * e.g., "(_BIT(3) | _BIT(7))".
  */
+#ifndef _BIT
 #define _BIT(n) (1UL << (n))
+#endif
 
 /* _SBF(f,v) sets the bit field starting at position "f" to value "v".
  * _SBF(f,v) is intended to be used in "OR" and "AND" expressions:
  * e.g., "((_SBF(5,7) | _SBF(12,0xF)) & 0xFFFF)"
  */
+#ifndef _SBF
 #define _SBF(f, v) ((v) << (f))
+#endif
 
 /* _BITMASK constructs a symbol with 'field_width' least significant
  * bits set.
@@ -76,7 +80,9 @@ typedef enum {SUCCESS = 0, ERROR = !SUCCESS} status;
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 
-typedef void (*callback_t)(void);
-
+typedef volatile int8_t* pTimer_id_t;
+typedef int8_t timer_id_t;
+typedef void (*timer_cb_t)(void);
+typedef void (*timer_cb2_t)(void*);
 
 #endif /* _TYPES_H_ */
