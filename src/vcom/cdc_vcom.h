@@ -44,6 +44,7 @@ extern "C"
  */
 
 #define VCOM_RX_BUF_SZ      512
+#define VCOM_TX_BUF_SZ      64
 #define VCOM_TX_CONNECTED   _BIT(8)		/* connection state is for both RX/Tx */
 #define VCOM_TX_BUSY        _BIT(0)
 #define VCOM_RX_DONE        _BIT(0)
@@ -60,6 +61,8 @@ typedef struct VCOM_DATA {
 	uint8_t *rx_buff;
 	uint16_t rx_rd_count;
 	uint16_t rx_count;
+	uint8_t *tx_buff;
+	uint16_t tx_count;
 	volatile uint16_t tx_flags;
 	volatile uint16_t rx_flags;
 } VCOM_DATA_T;
@@ -118,7 +121,7 @@ uint32_t vcom_write (uint8_t *pBuf, uint32_t buf_len);
 
 
 ErrorCode_t usbd_init(void);
-void vcom_usbd(void);
+void usbd_cdc_vcom(void);
 
 /**
  * @}

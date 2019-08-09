@@ -31,11 +31,12 @@
 
 
 #include "../Drivers/chip.h"
+#include "../Drivers/GPIO.h"
+#include "../Drivers/KitInfo2_BaseBoard.h"
 #include <stdio.h>
 #include <string.h>
 #include "app_usbd_cfg.h"
 #include "cdc_vcom.h"
-#include "../Drivers/digital_outputs.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -47,6 +48,7 @@
 
 static USBD_HANDLE_T g_hUsb;
 static uint8_t g_rxBuff[256];
+//uint8_t g_txBuff[256];
 
 extern const  USBD_HW_API_T hw_api;
 extern const  USBD_CORE_API_T core_api;
@@ -75,6 +77,7 @@ static void usb_pin_clk_init(void)
 	USB_Init();
 	/* enable USB 1 port on the board */
 	USBD_Init(1);
+	SystemCoreClockUpdate();
 }
 
 /*****************************************************************************
@@ -166,23 +169,29 @@ ErrorCode_t usbd_init(void)
 //	DEBUGSTR("USB CDC class based virtual Comm port example!\r\n");
 
 
-
-void vcom_usbd(void)
+void usbd_cdc_vcom(void)
 {
 	static uint32_t prompt = 0;
 	uint32_t rdCnt = 0;
+	static uint32_t toSend = 0;
 
 	/* Check if host has connected and opened the VCOM port */
-	if ((vcom_connected() != 0) && (prompt == 0)) {
+	if ((prompt == 0) && (vcom_connected() != 0)) {
 		vcom_write((uint8_t*) "Hello World!!\r\n", 15);
 		prompt = 1;
 	}
 	/* If VCOM port is opened echo whatever we receive back to host. */
 	if (prompt) {
 		rdCnt = vcom_bread(&g_rxBuff[0], 256);
-		if (rdCnt) {
-			vcom_write(&g_rxBuff[0], rdCnt);
-			flashLedLpc(3,26); // blue lpc led
+		if(rdCnt != 0) {
+			toSend += rdCnt;
+		}
+		if (toSend != 0) {
+			write_pin(3,26, LEDLPC_ON); // blue lpc led
+			toSend -= vcom_write(&g_rxBuff[0], toSend);
+		}
+		else {
+			write_pin(3,26, LEDLPC_OFF);
 		}
 	}
 }

@@ -55,9 +55,23 @@ static ErrorCode_t VCOM_bulk_in_hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t ev
 {
 	VCOM_DATA_T *pVcom = (VCOM_DATA_T *) data;
 
-	if (event == USB_EVT_IN) {
-		pVcom->tx_flags &= ~VCOM_TX_BUSY;
+	switch(event) {
+	case USB_EVT_IN:
+	//	pVcom->tx_flags &= ~VCOM_TX_BUSY;
+		if(pVcom->tx_count > 0)
+		{
+			pVcom->tx_count -= USBD_API->hw->WriteEP(pVcom->hUsb, USB_CDC_IN_EP, pVcom->tx_buff, pVcom->tx_count);
+		}
+		else
+		{
+			pVcom->tx_flags &= ~VCOM_TX_BUSY;
+		}
+		break;
+	default:
+		while(1);
+		break;
 	}
+
 	return LPC_OK;
 }
 
@@ -68,7 +82,13 @@ static ErrorCode_t VCOM_bulk_out_hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t e
 
 	switch (event) {
 	case USB_EVT_OUT:
-		pVcom->rx_count = USBD_API->hw->ReadEP(hUsb, USB_CDC_OUT_EP, pVcom->rx_buff);
+		if(pVcom->rx_count > (VCOM_RX_BUF_SZ - 64)) {
+		//	pVcom->rx_count = 0;  // Avoid buffer overflow (by discarding data)
+			pVcom->rx_flags |= VCOM_RX_BUF_FULL;
+		}
+		else {
+			pVcom->rx_count += USBD_API->hw->ReadEP(hUsb, USB_CDC_OUT_EP, &pVcom->rx_buff[pVcom->rx_count]);
+		}
 		if (pVcom->rx_flags & VCOM_RX_BUF_QUEUED) {
 			pVcom->rx_flags &= ~VCOM_RX_BUF_QUEUED;
 			if (pVcom->rx_count != 0) {
@@ -91,6 +111,7 @@ static ErrorCode_t VCOM_bulk_out_hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t e
 		break;
 
 	default:
+		while(1);
 		break;
 	}
 
@@ -108,6 +129,62 @@ static ErrorCode_t VCOM_SetLineCode(USBD_HANDLE_T hCDC, CDC_LINE_CODING *line_co
 	return LPC_OK;
 }
 
+// hang on each of this callbacks to notice it's being used
+static ErrorCode_t CDC_BulkIN_Hdlr(USBD_HANDLE_T a, void* b, uint32_t c)
+{
+	while(1);
+	return LPC_OK;
+}
+static ErrorCode_t CDC_BulkOUT_Hdlr(USBD_HANDLE_T a, void* b, uint32_t c)
+{
+	while(1);
+	return LPC_OK;
+}
+static ErrorCode_t CDC_InterruptEP_Hdlr(USBD_HANDLE_T a, void* b, uint32_t c) // optional
+{
+	while(1);
+	return LPC_OK;
+}
+//static ErrorCode_t CDC_Ep0_Hdlr(USBD_HANDLE_T a, void* b, uint32_t c) // optional overrideable
+//{
+//	return LPC_OK; // recibí USB_EVT_RESET; USB_EVT_SETUP
+//}
+static ErrorCode_t SendEncpsCmd(USBD_HANDLE_T a, uint8_t* b, uint16_t c)
+{
+	while(1);
+	return LPC_OK;
+}
+static ErrorCode_t GetEncpsResp(USBD_HANDLE_T a, uint8_t** b, uint16_t* c)
+{
+	while(1);
+	return LPC_OK;
+}
+static ErrorCode_t SetCommFeature(USBD_HANDLE_T a, uint16_t b, uint8_t* c, uint16_t d)
+{
+	while(1);
+	return LPC_OK;
+}
+static ErrorCode_t GetCommFeature(USBD_HANDLE_T a, uint16_t b, uint8_t** c, uint16_t* d)
+{
+	while(1);
+	return LPC_OK;
+}
+static ErrorCode_t ClrCommFeature(USBD_HANDLE_T a, uint16_t b)
+{
+	while(1);
+	return LPC_OK;
+}
+static ErrorCode_t SetCtrlLineState(USBD_HANDLE_T a, uint16_t b)
+{
+	// llamada al conectar el cable usb, no parece ser importante
+	return ERR_USBD_UNHANDLED;
+}
+static ErrorCode_t SendBreak(USBD_HANDLE_T a, uint16_t b)
+{
+	while(1);
+	return LPC_OK;
+}
+
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
@@ -120,12 +197,25 @@ ErrorCode_t vcom_init(USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT
 	uint32_t ep_indx;
 
 	g_vCOM.hUsb = hUsb;
-	memset((void *) &cdc_param, 0, sizeof(USBD_CDC_INIT_PARAM_T));
+//	memset((void *) &cdc_param, 0, sizeof(USBD_CDC_INIT_PARAM_T));
 	cdc_param.mem_base = pUsbParam->mem_base;
 	cdc_param.mem_size = pUsbParam->mem_size;
 	cdc_param.cif_intf_desc = (uint8_t *) find_IntfDesc(pDesc->high_speed_desc, CDC_COMMUNICATION_INTERFACE_CLASS);
 	cdc_param.dif_intf_desc = (uint8_t *) find_IntfDesc(pDesc->high_speed_desc, CDC_DATA_INTERFACE_CLASS);
+	cdc_param.CIC_GetRequest = NULL;
+	cdc_param.CIC_SetRequest = NULL;
+	cdc_param.CDC_BulkIN_Hdlr = CDC_BulkIN_Hdlr;
+	cdc_param.CDC_BulkOUT_Hdlr = CDC_BulkOUT_Hdlr;
+	cdc_param.SendEncpsCmd = SendEncpsCmd;
+	cdc_param.GetEncpsResp = GetEncpsResp;
+	cdc_param.SetCommFeature = SetCommFeature;
+	cdc_param.GetCommFeature = GetCommFeature;
+	cdc_param.ClrCommFeature = ClrCommFeature;
+	cdc_param.SetCtrlLineState = SetCtrlLineState;
+	cdc_param.SendBreak = SendBreak;
 	cdc_param.SetLineCode = VCOM_SetLineCode;
+	cdc_param.CDC_InterruptEP_Hdlr = CDC_InterruptEP_Hdlr;
+	cdc_param.CDC_Ep0_Hdlr = NULL;//CDC_Ep0_Hdlr;
 
 	ret = USBD_API->cdc->init(hUsb, &cdc_param, &g_vCOM.hCdc);
 
@@ -135,6 +225,10 @@ ErrorCode_t vcom_init(USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT
 		cdc_param.mem_base += VCOM_RX_BUF_SZ;
 		cdc_param.mem_size -= VCOM_RX_BUF_SZ;
 
+		g_vCOM.tx_buff = (uint8_t *) cdc_param.mem_base;
+		cdc_param.mem_base += VCOM_TX_BUF_SZ;
+		cdc_param.mem_size -= VCOM_TX_BUF_SZ;
+
 		/* register endpoint interrupt handler */
 		ep_indx = (((USB_CDC_IN_EP & 0x0F) << 1) + 1);
 		ret = USBD_API->core->RegisterEpHandler(hUsb, ep_indx, VCOM_bulk_in_hdlr, &g_vCOM);
@@ -142,7 +236,6 @@ ErrorCode_t vcom_init(USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT
 			/* register endpoint interrupt handler */
 			ep_indx = ((USB_CDC_OUT_EP & 0x0F) << 1);
 			ret = USBD_API->core->RegisterEpHandler(hUsb, ep_indx, VCOM_bulk_out_hdlr, &g_vCOM);
-
 		}
 		/* update mem_base and size variables for cascading calls. */
 		pUsbParam->mem_base = cdc_param.mem_base;
@@ -159,12 +252,19 @@ uint32_t vcom_bread(uint8_t *pBuf, uint32_t buf_len)
 	uint16_t cnt = 0;
 	/* read from the default buffer if any data present */
 	if (pVcom->rx_count) {
+		/* enter critical section */
+		NVIC_DisableIRQ(USB_IRQn);
+
 		cnt = (pVcom->rx_count < buf_len) ? pVcom->rx_count : buf_len;
 		memcpy(pBuf, pVcom->rx_buff, cnt);
 		pVcom->rx_rd_count += cnt;
 
-		/* enter critical section */
-		NVIC_DisableIRQ(USB_IRQn);
+		if((pVcom->rx_flags & VCOM_RX_BUF_FULL) &&
+				(pVcom->rx_count - cnt < 64)) {
+			pVcom->rx_flags &= ~VCOM_RX_BUF_FULL;
+			pVcom->rx_count += USBD_API->hw->ReadEP(pVcom->hUsb, USB_CDC_OUT_EP,
+										&pVcom->rx_buff[pVcom->rx_count - cnt]);
+		}
 		if (pVcom->rx_rd_count >= pVcom->rx_count) {
 			pVcom->rx_flags &= ~VCOM_RX_BUF_FULL;
 			pVcom->rx_rd_count = pVcom->rx_count = 0;
@@ -216,14 +316,34 @@ uint32_t vcom_write(uint8_t *pBuf, uint32_t len)
 	VCOM_DATA_T *pVcom = &g_vCOM;
 	uint32_t ret = 0;
 
-	if ( (pVcom->tx_flags & VCOM_TX_CONNECTED) && ((pVcom->tx_flags & VCOM_TX_BUSY) == 0) ) {
-		pVcom->tx_flags |= VCOM_TX_BUSY;
+	if ( pVcom->tx_flags & VCOM_TX_CONNECTED ) {
 
-		/* enter critical section */
-		NVIC_DisableIRQ(USB_IRQn);
-		ret = USBD_API->hw->WriteEP(pVcom->hUsb, USB_CDC_IN_EP, pBuf, len);
-		/* exit critical section */
-		NVIC_EnableIRQ(USB_IRQn);
+		if( (pVcom->tx_flags & VCOM_TX_BUSY) == 0 ) {
+
+			pVcom->tx_flags |= VCOM_TX_BUSY;
+
+			/* enter critical section */
+			NVIC_DisableIRQ(USB_IRQn);
+			ret = USBD_API->hw->WriteEP(pVcom->hUsb, USB_CDC_IN_EP, pBuf, len);
+			/* exit critical section */
+			NVIC_EnableIRQ(USB_IRQn);
+		}
+		else
+		{
+			if (len + (pVcom->tx_count) > VCOM_TX_BUF_SZ) {
+				len = VCOM_TX_BUF_SZ - pVcom->tx_count;
+			}
+			if(len)
+			{
+				/* enter critical section */
+				NVIC_DisableIRQ(USB_IRQn);
+				memcpy(&pVcom->tx_buff[pVcom->tx_count], pBuf, len);
+				pVcom->tx_count += len;
+				ret = len;//pVcom->tx_count;
+				/* exit critical section */
+				NVIC_EnableIRQ(USB_IRQn);
+			}
+		}
 	}
 
 	return ret;
