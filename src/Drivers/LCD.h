@@ -11,8 +11,8 @@
 
 #define 	LCD_ROW_1		0U
 #define 	LCD_ROW_2		1U
-#define		LCD_DATA		0U
-#define		LCD_CONTROL		1U
+#define		LCD_CONTROL		0U	// RS pin = 0
+#define		LCD_DATA		1U	// RS pin = 1
 #define		LCD_DELAY		2U
 
 #define		LCD_LINE_SIZE	16
@@ -38,19 +38,19 @@ typedef struct {
 	__RW uint8_t	index;
 	__RW bool		isScrolling;
 	__RW uint8_t	line;
-	__RW int8_t		timerId;
+	__RW timer_id_t	timerId;
 } LCD_scroll_t;
 
 typedef struct {
 	__RW bool		isOn;
 	__RW bool		isInClock;
 	__RW bool		isInMenu;
-	__RW int8_t		restore_timerId;
+	__RW timer_id_t	restore_timerId;
 
 	LCD_buffer_t	send;
 	LCD_scroll_t	scroll;
 
-} LCD_t;
+} lcd_t;
 
 #define		LCD_printClockTemplate() LCD_print(" Hour:   :  :   Date:     /  /  ")
 
@@ -73,9 +73,17 @@ void		LCD_updateClock		(void);
 void		LCD_scrollMessage	(const char* msg, uint8_t line);
 void		LCD_stopScroll		(void);
 
-void		LCD_send			(void);
-uint8_t		pushLCD				(uint8_t dato, uint8_t control);
-void		LCD_init			(uint8_t);
-void		LCD_scroll			(void);
+void		LCD_send				(void);
+status		pushLCD					(uint8_t dato, uint8_t control);
+void		LCD_init				(lcd_t *lcdp, uint8_t internalReset);
+void		LCD_scroll				(void);
+bool		LCD_isOn		(void);
+bool		LCD_isInClock	(void);
+bool		LCD_isInMenu	(void);
+void		LCD_setOff		(void);
+void		LCD_setOn		(void);
+void		LCD_setClockOff	(void);
+void		LCD_setClockOn	(void);
+void		LCD_showNothing	(void);
 
 #endif //_LCD_H

@@ -1,14 +1,32 @@
-#include <string.h>
+#include "../Drivers/chip.h"
 #include "../Drivers/varios.h"
 #include "../Drivers/LCD.h"
-#include "../Drivers/lpc_types.h"
 #include "../Drivers/Timer.h"
+#include "../Drivers/UART.h"
 #include "../Aplicacion/Aplicacion.h"
+#include <string.h>
 
 static void makeLine (const char* src, char* dest, \
 						uint8_t start, uint8_t len);
 
-extern LCD_t LCD;
+static lcd_t *lcd = NULL;
+
+void set_lcd_pointer(lcd_t *lcdp) { lcd = lcdp; }
+
+inline bool LCD_isOn      (void) { return lcd->isOn;      }
+inline bool LCD_isInClock (void) { return lcd->isInClock; }
+inline bool LCD_isInMenu  (void) { return lcd->isInMenu;  }
+
+inline void LCD_setOff() { lcd->isOn = false; }
+inline void LCD_setOn () { lcd->isOn = true ; }
+inline void LCD_setClockOff() { lcd->isInClock = false; }
+inline void LCD_setClockOn () { lcd->isInClock = true ; }
+inline void LCD_showNothing() {
+	LCD_stopScroll();
+	lcd->isOn = true;
+	lcd->isInClock = false;
+	lcd->isInMenu = false;
+}
 
 
 void LCD_scrollMessage(const char* msg, uint8_t line)
@@ -18,11 +36,11 @@ void LCD_scrollMessage(const char* msg, uint8_t line)
 	LCD_stopScroll();
 	if(len > 16)
 	{
-		strncpy((char*) LCD.scroll.string, msg, len);
-		LCD.scroll.len = len;
-		LCD.scroll.line = line;
-		LCD.scroll.index = 0;
-		LCD.scroll.isScrolling = true;
+		strncpy((char*) lcd->scroll.string, msg, len);
+		lcd->scroll.len = len;
+		lcd->scroll.line = line;
+		lcd->scroll.index = 0;
+		lcd->scroll.isScrolling = true;
 
 		LCD_scroll();
 	}
@@ -34,10 +52,10 @@ void LCD_scrollMessage(const char* msg, uint8_t line)
 
 inline void LCD_stopScroll()
 {
-	if(LCD.scroll.isScrolling)
+	if(lcd->scroll.isScrolling)
 	{
-		LCD.scroll.isScrolling = false;
-		stopTimer(&LCD.scroll.timerId);
+		lcd->scroll.isScrolling = false;
+		stopTimer(&lcd->scroll.timerId);
 	//	pushLCD( 0x06 , LCD_CONTROL);
 	}
 }
@@ -144,20 +162,20 @@ void LCD_updateClock()
 
 void LCD_printReceived(const char* msg)
 {
-	LCD.isOn = true;
-	LCD.isInClock = false;
-	LCD.isInMenu = false;
-	if(LCD.scroll.isScrolling) {
-		LCD.scroll.isScrolling = false;
-		stopTimer(&LCD.scroll.timerId);
+	lcd->isOn = true;
+	lcd->isInClock = false;
+	lcd->isInMenu = false;
+	if(lcd->scroll.isScrolling) {
+		lcd->scroll.isScrolling = false;
+		stopTimer(&lcd->scroll.timerId);
 	}
 	LCD_clear();
 	LCD_printCentered("UART0 Received:", LCD_ROW_1);
 	LCD_scrollMessage(msg, LCD_ROW_2);
 
-	if(LCD.restore_timerId >= 0)
-		stopTimer(&LCD.restore_timerId);
-	LCD.restore_timerId = startTimer(10000,showClock);
+	if(lcd->restore_timerId >= 0)
+		stopTimer(&lcd->restore_timerId);
+	startTimer(&lcd->restore_timerId, 10000,showClock);
 }
 
 // copia src en dest, empezando en start, y llenando con espacios
@@ -186,6 +204,11 @@ void LCD_printInt(int num, uint8_t row, uint8_t pos, uint8_t digits)
 
 void LCD_WelcomeMessage(void)
 {
+	lcd->isOn = true;
 	LCD_printCentered("WELCOME", LCD_ROW_1);
+
+	if(LPC_RTC->GPREG2 == 0)
+		startTimer(NULL, 5000, UART0_requestTime);
+
 	LCD_printInt(++LPC_RTC->GPREG2, LCD_ROW_2, 6, 3);
 }
