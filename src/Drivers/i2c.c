@@ -38,8 +38,10 @@ static struct i2c_interface i2c[I2C_NUM_INTERFACE] = {
 	{LPC_I2C2, PCONP_I2C2, I2C_EventHandler, NULL, NULL, NULL, 0}
 };
 
+static struct i2c_slave_interface i2c_slave[I2C_NUM_INTERFACE][I2C_SLAVE_NUM_INTERFACE] = {0};
 
-static struct i2c_slave_interface i2c_slave[I2C_NUM_INTERFACE][I2C_SLAVE_NUM_INTERFACE];
+static volatile uint32_t i2c_busy_timeouts = 0;
+static const uint32_t i2c_busy_limit = 999999; // adapt value to hardware setup and I2C clock rate
 
 
 /*****************************************************************************
@@ -145,13 +147,19 @@ static I2C_SLAVE_ID lookupSlaveIndex(LPC_I2C_T *pI2C, uint8_t slaveAddr)
 }
 
 /* Master transfer state change handler handler */
-int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
+static int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
 {
 	uint32_t cclr = I2C_CON_FLAGS;
 	int curState = getCurState(pI2C);
 
+	if(xfer->ignoreNAK && (curState == 0x20 || curState == 0x30 || curState == 0x48))
+		curState -= 0x08;
+
 	switch (curState) {
 	case 0x08:		/* Start condition on bus */
+		if (xfer->status == I2C_STATUS_START) {
+			xfer->status = I2C_STATUS_BUSY;
+		}
 	case 0x10:		/* Repeated start condition */
 		pI2C->DAT = (xfer->slaveAddr << 1) | (xfer->txSz == 0);
 		break;
@@ -160,9 +168,6 @@ int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
 	case 0x18:		/* SLA+W sent and ACK received */
 	case 0x28:		/* DATA sent and ACK received */
 
-#if 0 // ignore NAK on data transfer
-	case 0x20: case 0x30: case 0x48:
-#endif
 		if (!xfer->txSz) {
 			cclr &= ~(xfer->rxSz ? I2C_CON_STA : I2C_CON_STO);
 		}
@@ -186,7 +191,6 @@ int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
 		}
 		break;
 
-#if 1
 	/* NAK Handling */
 	case 0x20:		/* SLA+W sent NAK received */
 	case 0x30:		/* DATA sent NAK received */
@@ -194,7 +198,6 @@ int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
 		xfer->status = I2C_STATUS_NAK;
 		cclr &= ~I2C_CON_STO;
 		break;
-#endif
 
 	case 0x38:		/* Arbitration lost */
 		xfer->status = I2C_STATUS_ARBLOST;
@@ -221,7 +224,7 @@ int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
 }
 
 /* Find the slave address of SLA+W or SLA+R */
-I2C_SLAVE_ID getSlaveIndex(LPC_I2C_T *pI2C)
+static I2C_SLAVE_ID getSlaveIndex(LPC_I2C_T *pI2C)
 {
 	switch (getCurState(pI2C)) {
 	case 0x60:
@@ -238,7 +241,7 @@ I2C_SLAVE_ID getSlaveIndex(LPC_I2C_T *pI2C)
 }
 
 /* Slave state machine handler */
-int handleSlaveXferState(LPC_I2C_T *pI2C, I2C_XFER_T *xfer)
+static int handleSlaveXferState(LPC_I2C_T *pI2C, I2C_XFER_T *xfer)
 {
 	uint32_t cclr = I2C_CON_FLAGS;
 	int ret = RET_SLAVE_BUSY;
@@ -303,66 +306,6 @@ int handleSlaveXferState(LPC_I2C_T *pI2C, I2C_XFER_T *xfer)
  * Public functions
  ****************************************************************************/
 
-volatile uint32_t i2c_busy_timeouts = 0;
-const uint32_t i2c_busy_limit = 9999; // adapt value to hardware setup and I2C clock rate
-
-
-/* Chip event handler interrupt based */
-void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
-{
-	uint32_t busy_counter = 0;
-	struct i2c_interface *iic = &i2c[id];
-	volatile I2C_STATUS_T *stat;
-
-	/* Only WAIT event needs to be handled */
-	if (event != I2C_EVENT_WAIT) {
-		return;
-	}
-
-	stat = &iic->mXfer->status;
-	/* Wait for the status to change */
-	while (*stat == I2C_STATUS_BUSY) {
-		busy_counter++;
-		if (busy_counter > i2c_busy_limit) {
-			// I2C bus hang-up identified...
-			i2c_busy_timeouts++;
-			*stat = I2C_STATUS_BUSERR;
-			i2c[id].ip->CONSET = I2C_CON_STO; // set stop bit for forced access to the I2C bus
-			break;
-		}
-	}
-
-}
-
-/* Chip polling event handler */
-void I2C_EventHandlerPolling(I2C_ID_T id, I2C_EVENT_T event)
-{
-	uint32_t busy_counter = 0;
-	struct i2c_interface *iic = &i2c[id];
-	volatile I2C_STATUS_T *stat;
-
-	/* Only WAIT event needs to be handled */
-	if (event != I2C_EVENT_WAIT) {
-		return;
-	}
-
-	stat = &iic->mXfer->status;
-	/* Call the state change handler till xfer is done */
-	while (*stat == I2C_STATUS_BUSY) {
-		if (I2C_IsStateChanged(id)) {
-			I2C_MasterStateHandler(id);
-		}
-		busy_counter++;
-		if (busy_counter > i2c_busy_limit) {
-		   // I2C bus hang-up identified...
-		   i2c_busy_timeouts++;
-		   *stat = I2C_STATUS_BUSERR;
-		   i2c[id].ip->CONSET = I2C_CON_STO; // set stop bit for forced access to the I2C bus
-		   break;
-		}
-	}
-}
-
 /* Initializes the LPC_I2C peripheral with specified parameter */
 void I2C_Init(I2C_ID_T id)
 {
@@ -413,33 +356,119 @@ I2C_EVENTHANDLER_T I2C_GetMasterEventHandler(I2C_ID_T id)
 	return i2c[id].mEvent;
 }
 
+/* Chip event handler interrupt based */
+void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
+{
+	struct i2c_interface *iic = &i2c[id];
+	volatile I2C_STATUS_T *stat;
+	uint32_t busy_counter = 0;
+
+	switch(event)
+	{
+	case I2C_EVENT_WAIT:		/**< I2C Wait event */
+		stat = &iic->mXfer->status;
+		/* Wait for the status to change */
+		while (*stat == I2C_STATUS_START || *stat == I2C_STATUS_BUSY)
+		{
+			// Interrupt based transfers must pass through here since
+			// IRQ won't be called until MasterTransfer() returns
+			if (I2C_IsStateChanged(id))
+				I2C_MasterStateHandler(id);
+
+			if(!iic->mXfer->polling && (*stat != I2C_STATUS_START))
+				break;
+
+			busy_counter++;
+			if (busy_counter > i2c_busy_limit)
+			{
+				// I2C bus hang-up identified...
+				i2c_busy_timeouts++;
+				*stat = I2C_STATUS_BUSERR;
+				// set stop bit for forced access to the I2C bus
+				iic->ip->CONSET = I2C_CON_STO;
+			}
+		}
+		break;
+
+	case I2C_EVENT_DONE:		/**< Done event that wakes up Wait event */
+		if(iic->mXfer->cb)
+			iic->mXfer->cb(iic->mXfer);
+
+		// if interrupt was disabled by polling transfer, reenable it
+		if(iic->mXfer->polling) {
+			NVIC_ClearPendingIRQ(I2C_IRQn + (IRQn_Type) id);
+			NVIC_EnableIRQ(I2C_IRQn + (IRQn_Type) id);
+		}
+
+		/* Start slave if one is active */
+		if (SLAVE_ACTIVE(iic)) {
+			if (iic->mXfer->status != I2C_STATUS_BUSERR) {
+				/* Wait for stop condition to appear on bus */
+				while (!isI2CBusFree(iic->ip)) {}
+			}
+			startSlaverXfer(iic->ip);
+		}
+
+		iic->mEvent(id, I2C_EVENT_UNLOCK);
+		break;
+
+	case I2C_EVENT_LOCK:		/**< Re-entrency lock event for I2C transfer */
+		iic->flags |= 1;
+		break;
+
+	case I2C_EVENT_UNLOCK:		/**< Re-entrency unlock event for I2C transfer */
+		iic->mXfer = 0;
+		iic->flags &= ~1;
+		break;
+
+	default:
+		break;
+	}
+}
+
 /* Transmit and Receive data in master mode */
 int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 {
 	struct i2c_interface *iic = &i2c[id];
 
+	if(!(iic->flags & 0x01)) // if not locked
+	{
+		xfer->status = I2C_STATUS_START;
+		iic->mXfer = xfer;
+		iic->mEvent(id, I2C_EVENT_LOCK);
+
+		/* If slave xfer not in progress */
+		if (!iic->sXfer) {
+			startMasterXfer(iic->ip);
+		}
+		iic->mEvent(id, I2C_EVENT_WAIT);
+	}
+	else {
+		xfer->status = I2C_STATUS_LOCKED;
+	}
+
+	return (int) xfer->status;
+}
+
+/* Transmit and Receive data in master mode */
+int I2C_MasterTransferPolling(I2C_ID_T id, I2C_XFER_T *xfer)
+{
+	struct i2c_interface *iic = &i2c[id];
+
+	xfer->polling = true;
+	while(iic->flags & 0x01) {} // wait for free interface
+
 	iic->mEvent(id, I2C_EVENT_LOCK);
-	xfer->status = I2C_STATUS_BUSY;
+	NVIC_DisableIRQ(I2C_IRQn + (IRQn_Type) id);
 	iic->mXfer = xfer;
+	iic->mXfer->status = I2C_STATUS_START;
 
 	/* If slave xfer not in progress */
 	if (!iic->sXfer) {
 		startMasterXfer(iic->ip);
 	}
 	iic->mEvent(id, I2C_EVENT_WAIT);
-	iic->mXfer = 0;
 
-	if (xfer->status != I2C_STATUS_BUSERR) {
-		/* Wait for stop condition to appear on bus */
-		while (!isI2CBusFree(iic->ip)) {}
-	}
-
-	/* Start slave if one is active */
-	if (SLAVE_ACTIVE(iic)) {
-		startSlaverXfer(iic->ip);
-	}
-
-	iic->mEvent(id, I2C_EVENT_UNLOCK);
 	return (int) xfer->status;
 }
 
@@ -450,7 +479,7 @@ int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint8_t 
 	xfer.slaveAddr = slaveAddr;
 	xfer.txBuff = buff;
 	xfer.txSz = len;
-	while (I2C_MasterTransfer(id, &xfer) == I2C_STATUS_ARBLOST) {}
+	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
 	return len - xfer.txSz;
 }
 
@@ -465,8 +494,22 @@ int I2C_MasterCmdRead(I2C_ID_T id, uint8_t slaveAddr, uint8_t cmd, uint8_t *buff
 	xfer.txSz = 1;
 	xfer.rxBuff = buff;
 	xfer.rxSz = len;
-	while (I2C_MasterTransfer(id, &xfer) == I2C_STATUS_ARBLOST) {}
+	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
 	return len - xfer.rxSz;
+}
+
+int I2C_MasterCmd2Read(I2C_ID_T id, uint8_t slaveAddr, uint8_t *cmdBuff, int cmdLen,
+										uint8_t *rxBuff, int rxLen, i2c_cb_t callback)
+{
+	I2C_XFER_T xfer = {0};
+	xfer.slaveAddr = slaveAddr;
+	xfer.txBuff = cmdBuff;
+	xfer.txSz = cmdLen;
+	xfer.rxBuff = rxBuff;
+	xfer.rxSz = rxLen;
+	xfer.cb = callback;
+	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
+	return rxLen - xfer.rxSz;
 }
 
 /* Sequential master read */
@@ -476,7 +519,7 @@ int I2C_MasterRead(I2C_ID_T id, uint8_t slaveAddr, uint8_t *buff, int len)
 	xfer.slaveAddr = slaveAddr;
 	xfer.rxBuff = buff;
 	xfer.rxSz = len;
-	while (I2C_MasterTransfer(id, &xfer) == I2C_STATUS_ARBLOST) {}
+	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
 	return len - xfer.rxSz;
 }
 
@@ -495,20 +538,21 @@ void I2C_MasterStateHandler(I2C_ID_T id)
 		// clears i2c[id].mXfer. In this case don't call
 		// handleMasterXferState() as it dereferences mXfer
 		// and this leads to a hard fault.
-		i2c[id].ip->CONCLR = I2C_CON_SI; // clear interrupt bit to stop isr from being called repeatedly
-		return;
+		// Clear interrupt bit to stop isr from being called repeatedly.
+		LPC_I2Cx(id)->CONCLR = I2C_CON_SI | I2C_CON_AA | I2C_CON_STA;
 	}
-	if (!handleMasterXferState(i2c[id].ip, i2c[id].mXfer)) {
+	else if (handleMasterXferState(i2c[id].ip, i2c[id].mXfer) == 0) // if xfer ended
+	{
 		i2c[id].mEvent(id, I2C_EVENT_DONE);
 	}
 }
 
 /* Setup slave function */
 void I2C_SlaveSetup(I2C_ID_T id,
-						 I2C_SLAVE_ID sid,
-						 I2C_XFER_T *xfer,
-						 I2C_EVENTHANDLER_T event,
-						 uint8_t addrMask)
+					I2C_SLAVE_ID sid,
+					I2C_XFER_T *xfer,
+					I2C_EVENTHANDLER_T event,
+					uint8_t addrMask)
 {
 	struct i2c_interface *iic = &i2c[id];
 	struct i2c_slave_interface *si2c = &i2c_slave[id][sid];
@@ -538,6 +582,8 @@ void I2C_SlaveStateHandler(I2C_ID_T id)
 
 		I2C_SLAVE_ID sid = getSlaveIndex(iic->ip);
 		si2c = &i2c_slave[id][sid];
+		if(!si2c->xfer || !si2c->event)
+			return;
 		iic->sXfer = si2c->xfer;
 		iic->sEvent = si2c->event;
 	}
