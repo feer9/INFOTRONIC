@@ -7,8 +7,8 @@ void TIMER0_init(uint32_t us)
 {
 	PCONP |= PCONP_TIMER0;						// Enciendo Timer 0
 	setPCLKDiv(PCLKSEL_TIMER0, PCLKDIV_1);   	// Clock for timer = Core clock
-	T0->PR = (100 * us) - 1;					// Prescaler = 10ns * PR
-//	T0->PR = 99999;								// Prescaler para 1ms
+	T0->PR = ((SystemCoreClock / 1e6) * us) - 1;// Prescaler
+//	T0->PR = 99999;								// Prescaler para 1ms con PCLK_T0 = 100MHz
 	T0->TCR = 2;								// Apago y reseteo el temporizador
 	T0->MR1 = 0xFFFFFFFF;						// Configuro match 1 para detectar overflow
 	T0->MCR _SET_BIT(MR1I);						// Interrumpe si se produce overflow

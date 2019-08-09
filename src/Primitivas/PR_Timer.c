@@ -1,9 +1,8 @@
-#include <Timer.h>
-
+#include "../Drivers/Timer.h"
 
 //static m_timers_t	timer_init (void);
-static int8_t		seekAvailableTimer (void);
-static int8_t		nextTimer (void);
+static timer_id_t	seekAvailableTimer (void);
+static timer_id_t	nextTimer (void);
 
 static m_timers_t t = { 0 };
 /*{
@@ -21,36 +20,49 @@ static m_timers_t t = { 0 };
 
 // devuelve 0 si el timer está activo
 //          1 si terminó (NO está activo)
-//          2 id invalida
-uint8_t isTimerEnd(int8_t id)
+//          -1 id invalida
+inline int8_t isTimerEnd(timer_id_t id)
 {
-	if(id >= 0 && id < N_TIMERS)
-		return !t.timer[id].state;
-
-	return 2;
+	return (id >= 0 && id < N_TIMERS) ?	!t.timer[id].state : -1;
 }
 
-// TODO: que el callback sea funcion + dato (void*)
-// TODO: opcion para timer repetitivo
-// time: tiempo en ms , handler: funcion de callback, puede ser NULL
-// devuelve el id del timer que se inició o -1 en caso de error
-int8_t startTimer (uint32_t time, callback_t handler)
-{
-	int8_t i;
 
-	i = seekAvailableTimer();
-	if(i != -1) // si hay timers disponibles
+// t_id: variable donde se guardará la id del timer iniciado, debe ser inicializada en -1
+// time: tiempo en ms , handler: funcion de callback, puede ser NULL
+// devuelve SUCCESS si lo pudo iniciar o ERROR caso contrario
+int8_t startTimer (pTimer_id_t t_id, uint32_t time, timer_cb_t handler)
+{
+	timer_id_t aux = seekAvailableTimer();
+
+	if(aux != -1) // si hay timers disponibles
 	{
-		uint8_t id = (uint8_t) i;
+		if(t_id)
+		{
+			if(*t_id >= 0 && *t_id < N_TIMERS) {
+				// checkeo que la referencia del timer corresponda a ese timer
+				// ya que caso contrario ésta fue modificada
+				if(t.timer[*t_id].id != t_id)
+					return ERROR;
+				if(t.timer[*t_id].state == true)
+					stopTimer(t_id);
+			}
+			*t_id = aux;
+		}
+
+		uint8_t id = (uint8_t) aux;
 		t.timer[id].MR = T0->TC + time;
 		t.timer[id].timeSet = time;
+		t.timer[id].id = t_id;
+		t.timer[id].looping = false;
 		t.timer[id].handler = handler;
+		t.timer[id].handler2 = NULL;
+		t.timer[id].data = NULL;
 
 		if(!(t.active))			// si no habia ninguno prendido
 		{
 			T0->MR0 = t.timer[id].MR;	// Seteo temporizacion
 			T0->MCR _SET_BIT(MR0I);		// Interrumpe en match0
-			t.MR0isOn = id;
+			t.MR0isOn = aux;
 			T0->TCR = 1;				// Enciendo el temporizador
 			ISER0 = NVIC_TIMER0;		// Habilito Interrupcion TIMER0
 		}
@@ -61,48 +73,64 @@ int8_t startTimer (uint32_t time, callback_t handler)
 			if(t.timer[id].MR < T0->MR0)
 			{
 				T0->MR0 = t.timer[id].MR;
-				t.MR0isOn = id;
+				t.MR0isOn = aux;
 			}
 		}
-		if(t.timer[id].state == OFF)
+		if(t.timer[id].state == false)
 		{
-			t.timer[id].state = ON;
+			t.timer[id].state = true;
 			t.active ++;
 		}
 	}
+#ifdef DEBUG
 	else while(1); // no deberia pasar, todos los timers en uso
+#endif
 
-	return i;
+	return (aux == -1) ? ERROR : SUCCESS;
+}
+
+int8_t startTimer2(pTimer_id_t t_id, uint32_t time, timer_cb2_t handler, void *data)
+{
+	if(startTimer(t_id, time, NULL) == SUCCESS) {
+		t.timer[*t_id].handler2 = handler;
+		t.timer[*t_id].data = data;
+		return SUCCESS;
+	}
+	return ERROR;
 }
 
 // funcion que vuelve a iniciar la cuenta atrás del timer [id]
 // id: numero de timer
-// retorna SUCCESS si lo reinició, ERROR si no estaba encendido (no tiene datos para encenderlo)
-uint8_t restartTimer(int8_t id)
+// retorna SUCCESS si lo reinició, ERROR si no estaba encendido
+uint8_t restartTimer(timer_id_t id)
 {
-	if(id < 0 || !t.timer[id].state)
+	if(id < 0 || id >= N_TIMERS || !t.timer[id].state)
 		return ERROR;
 
 	t.timer[id].MR = T0->TC + t.timer[id].timeSet;
 
-	if(t.MR0isOn == id)
-		T0->MR0 = t.timer[id].MR;
+	t.MR0isOn = nextTimer();
+	T0->MR0 = t.timer[t.MR0isOn].MR;
 
 	return SUCCESS;
 }
 
 // devuelve SUCCESS si detuvo el timer, ERROR si no estaba encendido
-uint8_t stopTimer(__RW int8_t *id)
+uint8_t stopTimer(pTimer_id_t id)
 {
 	int8_t n = *id;
-	*id = -1;
 
-	if(n >= 0 && n < N_TIMERS && t.timer[n].state == ON)
+	if(t.timer[n].id != NULL)
 	{
-		t.timer[n].state = 0;
-		t.timer[n].MR = 0;
-		t.timer[n].timeSet  = 0;
-		t.timer[n].handler = NULL;
+		if(n == *t.timer[n].id) // checkeo el valor de id
+			*id = -1;
+		else
+			return ERROR;
+	}
+
+	if(n >= 0 && n < N_TIMERS && t.timer[n].state == true)
+	{
+		memset(&t.timer[n], 0, sizeof (struct timer));
 		t.active --;
 		if(!t.active) // apago t0do
 		{
@@ -113,7 +141,7 @@ uint8_t stopTimer(__RW int8_t *id)
 		}
 		else
 		{
-			t.MR0isOn = (uint8_t) nextTimer();
+			t.MR0isOn = nextTimer();
 			T0->MR0 = t.timer[t.MR0isOn].MR;
 		}
 		return SUCCESS;
@@ -121,10 +149,26 @@ uint8_t stopTimer(__RW int8_t *id)
 	return ERROR;
 }
 
+uint8_t timerLoop(pTimer_id_t id, bool loop_state)
+{
+	if(*id < 0 || *id >= N_TIMERS || !t.timer[*id].state)
+		return ERROR;
+
+	t.timer[*id].looping = loop_state;
+	return SUCCESS;
+}
+
+bool timer_isLooping(pTimer_id_t id)
+{
+	if(*id < 0 || *id >= N_TIMERS)
+		return false;
+	return t.timer[*id].looping;
+}
+
 /**  END FUNCIONES DE USUARIO  */
 
 
-//TODO: las proximas funciones podrian (o no) estar en Drivers
+// las proximas funciones podrian (o no) estar en Drivers
 /*
 static m_timers_t timer_init(void)
 {
@@ -142,21 +186,27 @@ static m_timers_t timer_init(void)
 }*/
 
 // busca el primer timer que no este en uso
-static int8_t seekAvailableTimer(void)
+static timer_id_t seekAvailableTimer(void)
 {
-	int8_t i = -1;
+	uint8_t n;
 
 	if(t.active < N_TIMERS)
-		for(i=0 ; i<N_TIMERS ; i++)
-			if( !t.timer[i].state )
-				break;
+	{
+		for(n=0 ; n<N_TIMERS ; n++)
+		{
+			if( !t.timer[n].state )
+			{
+				return (timer_id_t) n;
+			}
+		}
+	}
 
-	return i;
+	return -1; // not found
 }
 
 // TODO: creo que esta funcion no contempla overflow
 // busca el timer activo más próximo a terminar
-static int8_t nextTimer()
+static timer_id_t nextTimer()
 {
 	uint32_t nextMR;
 	uint8_t nextPos;
@@ -179,20 +229,33 @@ static int8_t nextTimer()
 			nextPos =  i;
 		}
 	}
-	return (int8_t) nextPos;
+	return (timer_id_t) nextPos;
 }
 
 void timerEnded(void)
 {
-	int8_t id;
-	callback_t callback;
-	do
-	{
-		id = (int8_t) t.MR0isOn;
-		callback = t.timer[id].handler;
-		stopTimer(&id);
-		if(callback != NULL)
-			callback();
+	do {
+		timer_id_t   id = t.MR0isOn;
+		timer_cb_t   cb = t.timer[id].handler;
+		timer_cb2_t cb2 = t.timer[id].handler2;
+		void*      data = t.timer[id].data;
+		if(t.timer[id].looping) {
+			// restart timer
+			t.timer[id].MR = T0->TC + t.timer[id].timeSet;
+
+			t.MR0isOn = nextTimer();
+			T0->MR0 = t.timer[t.MR0isOn].MR;
+		}
+		else {
+			if(t.timer[id].id)
+				stopTimer(t.timer[id].id);
+			else
+				stopTimer(&id);
+		}
+		if(cb)
+			cb();
+		else if(cb2)
+			cb2(data);
 	}
 	// mientras haya temporizaciones corriendo, y el match ya haya pasado
 	while ( (T0->TCR & 0x01) && (T0->TC >= T0->MR0) );
