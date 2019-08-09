@@ -1,23 +1,47 @@
-#include "../Drivers/ssd1306.h"
+#include "../Drivers/oled_ssd1306.h"
 
 extern volatile uint32_t decimas_oled;
+static u8g2_t *u8g2;
+static bool oled_status = false;
 
 #define REPES_VAL 6
 
 //   fonts info: https://github.com/olikraus/u8g2/wiki/fntlistall
 // general info: https://github.com/olikraus/u8g2/wiki/u8g2reference
 
-// ssd1306 driver state machine (ish)
-void sm_ssd1306(u8g2_t *u8g2)
+inline void ssd1306_on(void)
 {
-    static int st = 0, next = -2, repes = REPES_VAL;
-    static bool keep_going = true;
-    static bool inverted = false;
+	u8x8_SendF(&u8g2->u8x8, "c", 0xaf); // turn on OLED Display
+	oled_status = true;
+}
 
+inline void ssd1306_off(void)
+{
+	u8x8_SendF(&u8g2->u8x8, "c", 0xae); // turn off OLED Display
+	oled_status = false;
+}
 
-	if(keep_going && !decimas_oled) {
+inline bool ssd1306_getStatus(void)
+{
+	return oled_status;
+}
+
+void ssd1306_setPointer(u8g2_t *p)
+{
+	u8g2 = p;
+}
+
+void ssd1306_loop(void)
+{
+	static int st = 0, next = -2, repes = REPES_VAL;
+	static bool keep_going = true;
+	static bool inverted = false;
+
+	if(!oled_status)
+		return;
+
+	if(keep_going && !decimas_oled)
 		st = next++;
-	}
 
 	// algunas pruebas para mostrar huevadas en la pantalla
 	switch(st) {

@@ -1,5 +1,5 @@
+#include "Aplicacion.h"
 #include "../Drivers/chip.h"
-#include "../Drivers/regsLPC1769.h"
 #include "../Drivers/KitInfo2_BaseBoard.h"
 #include "../Drivers/Timer.h"
 #include "../Drivers/RTC.h"
@@ -7,20 +7,19 @@
 #include "../Drivers/UART.h"
 #include "../Drivers/ADC.h"
 #include "../Drivers/digital_outputs.h"
+#include "../Drivers/rit.h"
 #include "../vcom/cdc_vcom.h"
 
 
 void ExtInt_init	( void );
 void SysTick_init	( uint32_t us );
-void RIT_init		( uint32_t ms );
+
+static u8g2_t u8g2;
+static lcd_t lcd;
 
 void kit_init ( void )
 {
-//	PLL_init();
-	power_init();
-//	setupIrcClocking();
-	setupClocking();
-	SystemCoreClockUpdate();
+	chip_init();
 
 	PIN_init();
 	D_OUT_init();
@@ -31,13 +30,24 @@ void kit_init ( void )
 	RTC_init();
 	ExtInt_init();
 
-	TIMER0_init(1000);  // 1ms
-	RIT_init(200);		// 200us
-	SysTick_init(2500); // 2.5ms
+	APP_setGlobalSymbols(&lcd, &u8g2);
+
+	TIMER0_init(1000);   // 1ms
+	SysTick_init(10000); // 10ms
+	RIT_init(200);		 // 200us
 
 #ifdef DEBUG
-	LCD_init(LCD_INTERNAL_RESET_DISABLED);
+	LCD_init(&lcd, LCD_INTERNAL_RESET_DISABLED);
 #else
-	LCD_init(LCD_INTERNAL_RESET_ENABLED);
+	LCD_init(&lcd, LCD_INTERNAL_RESET_ENABLED);
 #endif
+	ssd1306_init(&u8g2);
+	ssd1306_off();
+
+	RIT_enableInterrupts();
+	SysTick_enableInterrupts();
+
+	ledBlink(true);
+	LCD_WelcomeMessage();
+	startTimer(NULL, 1000, showClock); // reloj en 1s
 }
