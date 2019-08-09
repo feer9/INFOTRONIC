@@ -6,15 +6,20 @@
  */
 
 #include "chip.h"
+#include "rit.h"
 
 // receive time in miliseconds
 void RIT_init(uint32_t us)
 {
-	PCONP |= PCONP_RIT;     // habilito el periferico
+	// ensure interrupts are disabled
+	ICER0 = NVIC_RIT;
 
-	// pos de RIT en PCLKSEL1 = [27:26]
-	uint32_t tmp = PCLKSEL1 &= ~(3U << 26);			// limpio el campo del RIT
-	PCLKSEL1 = tmp | ((uint32_t)PCLKDIV_8 << 26);	// seteo el divisor de clock CCLK / 8 = 12,5MHz
+	// enable peripheral
+	PCONP |= PCONP_RIT;
+
+	// RIT position in PCLKSEL1 = [27:26]
+	uint32_t tmp = PCLKSEL1 &= ~(3U << 26);			// clear RIT PCLKSEL field
+	PCLKSEL1 = tmp | ((uint32_t)PCLKDIV_8 << 26);	// set clock divisor: CCLK / 8 = 12,5MHz
 
 	LPC_RITIMER->COMPVAL = ((SystemCoreClock / 8) / 1e6) * us;
 	// (CCLK / 8) -> 1s   =>  that / 1000000 -> 1us
@@ -28,7 +33,14 @@ void RIT_init(uint32_t us)
 
 	// clear interrupt flag
 	LPC_RITIMER->CTRL |= RIT_CTRL_INT;
+}
 
-	// enables interrupt
+inline void RIT_enableInterrupts(void)
+{
 	ISER0 = NVIC_RIT;
+}
+
+inline void RIT_disableInterrupts(void)
+{
+	ICER0 = NVIC_RIT;
 }
