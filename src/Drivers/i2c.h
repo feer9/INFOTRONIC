@@ -12,6 +12,15 @@
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
 #include <cr_section_macros.h>
+#include <string.h>
+
+// next to usb memory area
+#define I2C_STACK_MEM_BASE		((uint8_t*)0x2007C800UL)
+#define I2C_STACK_MEM_SIZE		0x0800
+#define I2C_BUF_TX_BASE			I2C_STACK_MEM_BASE
+#define I2C_BUF_TX_SZ			0x0400
+#define I2C_BUF_TX_TOP			(I2C_STACK_MEM_BASE + I2C_BUF_TX_SZ)
+#define I2C_PENDING_LIST_SZ		0x20
 
 /** Return values for SLAVE handler
   Chip drivers will usally be designed to match their events with this value */
@@ -157,14 +166,17 @@ typedef enum {
 
 /** I2C transfer status */
 typedef enum {
-	I2C_STATUS_DONE,	/**< Transfer done successfully */
-	I2C_STATUS_NAK,		/**< NAK received during transfer */
-	I2C_STATUS_ARBLOST,	/**< Aribitration lost during transfer */
-	I2C_STATUS_BUSERR,	/**< Bus error in I2C transfer */
-	I2C_STATUS_BUSY,	/**< I2C is busy doing transfer, it is the normal
-							return value for interrupt based transfer */
-	I2C_STATUS_LOCKED,	/**< I2C is busy with other transfer */
-	I2C_STATUS_START	/**< Waiting for start to complete */
+	I2C_STATUS_DONE,		/**< Transfer done successfully */
+	I2C_STATUS_NAK,			/**< NAK received during transfer */
+	I2C_STATUS_ARBLOST,		/**< Aribitration lost during transfer */
+	I2C_STATUS_BUSERR,		/**< Bus error in I2C transfer */
+	I2C_STATUS_BUSY,		/**< I2C is busy doing transfer, it is the normal
+								return value for interrupt based transfer */
+	// todo: busy is a terrible status name, change it....
+	I2C_STATUS_SCHEDULED,	/**< */
+	I2C_STATUS_BUF_FULL,	/**< */
+//	I2C_STATUS_LOCKED,		/**< I2C is busy with other transfer */
+	I2C_STATUS_START		/**< Waiting for start to complete */
 } I2C_STATUS_T;
 
 /** I2C master events */
@@ -179,17 +191,19 @@ typedef enum {
 
 /** Master transfer data structure definitions */
 typedef struct I2C_XFER {
-	uint8_t       slaveAddr;/**< 7-bit I2C Slave address */
-	const uint8_t *txBuff;	/**< Pointer to array of bytes to be transmitted */
-	int            txSz;	/**< Number of bytes in transmit array,
-							   if 0 only receive transfer will be carried on */
-	uint8_t       *rxBuff;	/**< Pointer memory where bytes received from I2C be stored */
-	int            rxSz;	/**< Number of bytes to received,
-							   if 0 only transmission we be carried on */
+	uint8_t           slaveAddr;	/**< 7-bit I2C Slave address */
+	const uint8_t     *txBuff;		/**< Pointer to array of bytes to be transmitted */
+	uint16_t           txSz;		/**< Number of bytes in transmit array,
+								   	   if 0 only receive transfer will be carried on */
+	uint16_t           txTotal;		/**< Number of total bytes to transmit */
+
+	uint8_t           *rxBuff;		/**< Pointer memory where bytes received from I2C be stored */
+	int                rxSz;		/**< Number of bytes to received,
+									   if 0 only transmission we be carried on */
 	void (*cb) (struct I2C_XFER *this);
-	I2C_STATUS_T   status;	/**< Status of the current I2C transfer */
-	bool           polling;
-	bool           ignoreNAK;
+	I2C_STATUS_T       status;		/**< Status of the current I2C transfer */
+	bool               polling;
+	bool               ignoreNAK;
 } I2C_XFER_T;
 
 typedef void (*i2c_cb_t) (struct I2C_XFER *this);
