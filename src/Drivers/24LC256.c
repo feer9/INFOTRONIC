@@ -6,18 +6,39 @@
  */
 #include "24LC256.h"
 
-// 7 upper bits address
+// 7 upper bits device address
 #define EEPROM_ADDRESS 0x50
+// top memory address; memory size
+#define EEPROM_ADDRESS_TOP 0x08000
+
+typedef struct {
+	bool ready;
+	bool busy; // todo: implement
+	I2C_XFER_T *xfer;
+	const uint8_t *txBuff;
+	uint16_t txSz;
+	uint16_t rxSz;
+	uint16_t address;
+	void (*callback) (status);
+	uint16_t naks;
+} eeprom_t;
+
+static void     tx_callback(I2C_XFER_T *xfer);
+static void     rx_callback(I2C_XFER_T *xfer);
+static void status_callback(I2C_XFER_T *xfer);
+static void      tx_handler(void);
+static void      rx_handler(void);
+static int            write(void);
+static int             read(void);
 
 static uint8_t curr_address[2];
-static uint8_t buff[66];
-static int err = 0;
 
-static I2C_XFER_T xfer = {
+static I2C_XFER_T g_eeprom_xfer = {
 		EEPROM_ADDRESS,		/* slaveAddr */
 		curr_address,		/* txBuff */
 		0,					/* txSz */
-		buff,				/* rxBuff */
+		0,					/* txTotal */
+		NULL,				/* rxBuff */
 		0,					/* rxSz */
 		NULL,				/* cb */
 		I2C_STATUS_DONE,	/* status */
@@ -25,122 +46,193 @@ static I2C_XFER_T xfer = {
 		false           	/* ignoreNAK */
 };
 
-static void tx_callback(I2C_XFER_T *xfer)
+static eeprom_t eeprom = { false, false, &g_eeprom_xfer, NULL, 0,0,0,NULL,0};
+
+static void test_status()
+{
+	I2C_MasterSend(I2C, EEPROM_ADDRESS, curr_address, 2, status_callback);
+}
+
+static void status_callback(I2C_XFER_T *xfer)
 {
 	I2C_STATUS_T event = xfer->status;
-	int ret;
 	switch(event)
 	{
 	case I2C_STATUS_DONE:
-		if(xfer->txSz == 0) { // t0do ok
-			ret = vcom_write(&buff[2], 64);
-			LCD_showNothing();
-			LCD_clear();
-			LCD_scrollMessage("Successfully sent 64 bytes to EEPROM", 0);
-			LCD_pushString("wrote to usb: ", 1, 0);
-			LCD_printInt(ret, 1, 14, 2);
-			//startTimer(NULL, 5000, showClock);
-		}
-		else
-			err++;
+		eeprom.ready = true;
+		tx_handler();
+		rx_handler();
 		break;
-	case I2C_STATUS_NAK:		/**< NAK received during transfer */
-	case I2C_STATUS_ARBLOST:	/**< Aribitration lost during transfer */
-	case I2C_STATUS_BUSERR:		/**< Bus error in I2C transfer */
-	case I2C_STATUS_BUSY:		/**< I2C is busy doing transfer */
-	case I2C_STATUS_START:
-	case I2C_STATUS_LOCKED:
+	case I2C_STATUS_NAK:
+	default:
+		eeprom.naks++;
+		eeprom.ready = false;
+		if(eeprom.naks < 100)
+			startTimer(NULL, 1, test_status);
+		else if(eeprom.callback)
+			eeprom.callback(ERROR);
 		break;
 	}
+}
+
+static void tx_callback(I2C_XFER_T *xfer)
+{
+	I2C_STATUS_T event = xfer->status;
+	int sent = xfer->txTotal ? ((xfer->txTotal - 2) - xfer->txSz) : 0;
+
+	eeprom.txBuff += sent;
+	eeprom.xfer->txBuff = eeprom.txBuff;
+	// since xfer doesn't record the reference to the original tx buffer
+	eeprom.txSz -= sent;
+	eeprom.address = (eeprom.address + sent) % EEPROM_ADDRESS_TOP;
+
+	switch(event)
+	{
+	case I2C_STATUS_DONE:
+
+		tx_handler();
+		break;
+
+	case I2C_STATUS_NAK:		/**< NAK received during transfer */
+	default:
+
+		eeprom.naks++;
+		eeprom.ready = false;
+		startTimer(NULL, 1, test_status);
+		break;
+	}
+
+	if(!eeprom.txSz && eeprom.callback)
+		eeprom.callback((event == I2C_STATUS_DONE) ? SUCCESS : ERROR);
 }
 
 static void rx_callback(I2C_XFER_T *xfer)
 {
 	I2C_STATUS_T event = xfer->status;
-	int ret;
+
+	eeprom.xfer->rxBuff = xfer->rxBuff;
+	eeprom.address = (eeprom.address + (eeprom.rxSz - xfer->rxSz)) % EEPROM_ADDRESS_TOP;
+	eeprom.rxSz = xfer->rxSz;
+
 	switch(event)
 	{
 	case I2C_STATUS_DONE:
-		if((xfer->rxBuff == &buff[66]) && (xfer->rxSz == 0)) { // t0do ok
-			ret = vcom_write(&buff[2], 64);
-			LCD_showNothing();
-			LCD_clear();
-			LCD_printInt(buff[2+0], 0,  0, 2);
-			LCD_printInt(buff[2+1], 0,  2, 2);
-			LCD_printInt(buff[2+2], 0,  4, 2);
-			LCD_printInt(buff[2+3], 0,  6, 2);
-			LCD_printInt(buff[2+4], 0, 10, 2);
-			LCD_printInt(buff[2+5], 0, 12, 2);
-			LCD_printInt(buff[2+6], 0, 14, 2);
-			LCD_pushString("wrote to usb: ", 1, 0);
-			LCD_printInt(ret, 1, 14, 2);
-			//startTimer(NULL, 5000, showClock);
-		}
-		else
-			err++;
+
+		rx_handler();
 		break;
+
 	case I2C_STATUS_NAK:		/**< NAK received during transfer */
-	case I2C_STATUS_ARBLOST:	/**< Aribitration lost during transfer */
-	case I2C_STATUS_BUSERR:		/**< Bus error in I2C transfer */
-	case I2C_STATUS_BUSY:		/**< I2C is busy doing transfer */
-	case I2C_STATUS_START:
-	case I2C_STATUS_LOCKED:
+	default:
+
+		eeprom.naks++;
+		eeprom.ready = false;
+		startTimer(NULL, 1, test_status);
 		break;
+	}
+
+	if(!eeprom.rxSz && eeprom.callback)
+		eeprom.callback((event == I2C_STATUS_DONE) ? SUCCESS : ERROR);
+}
+
+static void rx_handler(void)
+{
+	if(eeprom.rxSz) {
+
+		if(eeprom.ready) {
+			read();
+		}
+		else {
+			startTimer(NULL, 2, test_status);
+		}
+	}
+	else if(!eeprom.txSz) {
+		eeprom.busy = false;
 	}
 }
 
-int EEPROM_read(uint16_t address)
+static void tx_handler(void)
 {
-	if(I2C_IsMasterActive(I2C))
-		return -1;
+	if(eeprom.txSz) {
 
-//	if(!vcom_connected())
-//		return -1;
-
-	memset(buff, 0, sizeof buff);
-
-	curr_address[0] = (uint8_t) (address >> 8);
-	curr_address[1] = (uint8_t) (address & 0x0F);
-
-	xfer.txBuff = curr_address;
-	xfer.txSz = 2;
-	xfer.rxBuff = &buff[2];
-	xfer.rxSz = 64;
-	xfer.cb = rx_callback;
-
-	int ret;
-	while ((ret = I2C_MasterTransfer(I2C, &xfer)) == I2C_STATUS_ARBLOST);
-
-//	I2C_MasterCmd2Read(I2C, EEPROM_ADDRESS, curr_address, 2,
-//									&buff[2], 64, rx_callback);
-
-	return 0;
+		if(eeprom.ready) {
+			write();
+			eeprom.ready = false;
+		}
+		else {
+			startTimer(NULL, 2, test_status);
+		}
+	}
+	else if(!eeprom.txSz) {
+			eeprom.busy = false;
+	}
 }
 
-
-int EEPROM_write(uint16_t address, int cant)
+static int read()
 {
-	if(I2C_IsMasterActive(I2C) || cant > 64)
-		return -1;
+	curr_address[0] = (uint8_t) (eeprom.address >> 8);
+	curr_address[1] = (uint8_t) (eeprom.address & 0x0F);
 
-	buff[0] = (uint8_t) (address >> 8);
-	buff[1] = (uint8_t) (address & 0x0F);
+	eeprom.xfer->txBuff = curr_address;
+	eeprom.xfer->txSz = 2;
+	eeprom.xfer->rxSz = eeprom.rxSz;
+	eeprom.xfer->cb = rx_callback;
 
-	xfer.txBuff = buff;
-	xfer.txSz = 2 + cant;
-	xfer.rxBuff = NULL;
-	xfer.rxSz = 0;
-	xfer.cb = tx_callback;
-
-	int ret;
-	while ((ret = I2C_MasterTransfer(I2C, &xfer)) == I2C_STATUS_ARBLOST);
-
-//	I2C_MasterSend(I2C, EEPROM_ADDRESS, buff, 2+cant);
-
-	return 0;
+	return I2C_MasterTransfer(I2C, eeprom.xfer);
 }
 
-uint8_t *EEPROM_getBuff(void)
+static int write()
 {
-	return &buff[2];
+	uint16_t sz = (eeprom.txSz > 64) ? 64 : eeprom.txSz;
+	uint16_t max_sz = 64 - (eeprom.address % 64);
+	if(sz > max_sz) sz = max_sz;
+
+	curr_address[0] = (uint8_t) (eeprom.address >> 8);
+	curr_address[1] = (uint8_t) (eeprom.address & 0x00FF);
+
+	eeprom.xfer->txSz = sz;
+	eeprom.xfer->rxSz = 0;
+	eeprom.xfer->cb = tx_callback;
+
+	return I2C_MasterCmdTransfer(I2C, curr_address, 2, eeprom.xfer);
+}
+
+/********** end of private code **********/
+
+
+status EEPROM_read(uint16_t address, uint8_t *buff, uint16_t sz)
+{
+	if(eeprom.busy || address >= EEPROM_ADDRESS_TOP)
+		return ERROR;
+
+	eeprom.busy = true;
+	eeprom.rxSz = sz;
+	eeprom.xfer->rxBuff = buff;
+	eeprom.address = address;
+	eeprom.naks = 0;
+
+	rx_handler();
+	return SUCCESS;
+}
+
+status EEPROM_write(uint16_t address, const uint8_t *buff, uint16_t sz)
+{
+	if(eeprom.busy || address >= EEPROM_ADDRESS_TOP)
+		return ERROR;
+
+	eeprom.busy = true;
+	eeprom.txSz = sz;
+	eeprom.txBuff =  eeprom.xfer->txBuff = buff;
+	eeprom.address = address;
+	eeprom.naks = 0;
+
+	tx_handler();
+	return SUCCESS;
+}
+
+status EEPROM_setCallback(void (*cb) (status))
+{
+	if(eeprom.busy)
+		return ERROR;
+	eeprom.callback = cb;
+	return SUCCESS;
 }

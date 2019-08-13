@@ -393,21 +393,50 @@ void toggle_off_lcd()
 	LCD_clear();
 }
 
+static uint8_t g_eeprom_buf[512];
+
+static void e2prom_rx_cb(status st) {
+	bool rx_ok = true;
+	LCD_showNothing();
+	LCD_clear();
+	if(st == SUCCESS) {
+		for(int i=0; i< sizeof g_eeprom_buf; i++) {
+			if(g_eeprom_buf[i] != (uint8_t) (i & 0x1F)) {
+				rx_ok = false;
+				break;
+			}
+		}
+	}
+	else {
+		rx_ok = false;
+	}
+	if(rx_ok)
+		LCD_scrollMessage("Successfully received 512 bytes from EEPROM", 0);
+	else
+		LCD_scrollMessage("Error while receiving from EEPROM", 0);
+}
+
+static void e2prom_tx_cb(status st) {
+	LCD_showNothing();
+	LCD_clear();
+	if(st == SUCCESS) {
+		LCD_scrollMessage("Successfully sent 512 bytes to EEPROM", 0);
+	}
+	else {
+		LCD_scrollMessage("Error while sending to EEPROM", 0);
+	}
+}
+
 void SW3_handler(bool st)
 {
-	if(st)
+	if(!st)
 	{
-		toggle_off_lcd();
-		uint8_t *buff = EEPROM_getBuff();
-		memset(buff, 0, 64);
-		buff[0] = (uint8_t)(LPC_RTC->YEAR / 100);
-		buff[1] = (uint8_t)(LPC_RTC->YEAR % 100);
-		buff[2] = (uint8_t)(LPC_RTC->MONTH);
-		buff[3] = (uint8_t)(LPC_RTC->DOM);
-		buff[4] = (uint8_t)(LPC_RTC->HOUR);
-		buff[5] = (uint8_t)(LPC_RTC->MIN);
-		buff[6] = (uint8_t)(LPC_RTC->SEC);
-		EEPROM_write(0x0000, 64);
+	//	toggle_off_lcd();
+		for(int i=0; i< sizeof g_eeprom_buf; i++) {
+			g_eeprom_buf[i] = (uint8_t) (i & 0x1F);
+		}
+		EEPROM_setCallback(e2prom_tx_cb);
+		EEPROM_write(0x0000, g_eeprom_buf, sizeof g_eeprom_buf);
 	}
 }
 
@@ -423,7 +452,9 @@ void SW4_handler(bool st) {
 //			i = PMU_MCU_SLEEP;
 //		else
 //			i++;
-		EEPROM_read(0x0000);
+		memset(g_eeprom_buf, 0, sizeof g_eeprom_buf);
+		EEPROM_setCallback(e2prom_rx_cb);
+		EEPROM_read(0x0000, g_eeprom_buf, sizeof g_eeprom_buf);
 	}
 
 }
