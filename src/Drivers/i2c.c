@@ -55,7 +55,10 @@ static struct i2c_slave_interface i2c_slave[I2C_NUM_INTERFACE][I2C_SLAVE_NUM_INT
 static volatile uint32_t i2c_busy_timeouts = 0;
 static const uint32_t i2c_busy_limit = 999999; // adapt value to hardware setup and I2C clock rate
 
-//static uint8_t *g_pTxBuff = g_i2c_txBuff;
+// debug
+static uint32_t i2c_overflows = 0;
+static uint32_t i2c_max_pendings = 0;
+static uint32_t i2c_max_buffer_filled = 0;
 
 /*****************************************************************************
  * Private functions
@@ -358,6 +361,7 @@ static void updateIndexes(I2C_ID_T id, uint16_t txBuff_indexIn, uint16_t txBuffB
 	iic->txBuff_indexIn = txBuff_indexIn;
 	iic->pendingList_indexIn = (iic->pendingList_indexIn + 1) % I2C_PENDING_LIST_SZ;
 	iic->txBuffCount += txBuffBytes;
+	i2c_max_buffer_filled = MAX(i2c_max_buffer_filled, iic->txBuffCount); // debug
 
 	// EXIT CRITICAL SECTION
 	critical_section(id, false);
@@ -463,6 +467,7 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 			NVIC_EnableIRQ(I2C_IRQn + (IRQn_Type) id);
 		}
 		else {
+			i2c_max_pendings = MAX(i2c_max_pendings, iic->pending); // debug
 			iic->pending--;
 			iic->txBuff_indexOut = (iic->txBuff_indexOut + iic->mXfer->txTotal) % I2C_BUF_TX_SZ;
 			iic->txBuffCount -= iic->mXfer->txTotal;
@@ -501,7 +506,7 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 	}
 }
 
-static uint32_t i2c_overflows = 0; // debug
+// TODO: implement option to copy or not tx buffer
 /* Transmit and Receive data in master mode */
 int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 {
@@ -511,12 +516,12 @@ int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
 			(iic->txBuffCount + xfer->txSz > I2C_BUF_TX_SZ ) ) {
 		xfer->status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++;
+		i2c_overflows++; // debug
 	}
 	else
 	{
 		// save status to avoid changes by any interrupt without disabling them
-		uint8_t txBuff_indexIn = iic->txBuff_indexIn;
+		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
 		iic->pending++;
 
@@ -545,7 +550,7 @@ int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
 
-		updateIndexes(id, txBuff_indexIn, xfer->txSz);
+		updateIndexes(id, txBuff_indexIn, xfer->txTotal);
 	}
 
 	return (int) xfer->status;
@@ -559,13 +564,13 @@ int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
 			(iic->txBuffCount + xfer->txSz + cmdLen > I2C_BUF_TX_SZ ) ) {
 		xfer->status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++;
+		i2c_overflows++; // debug
 	}
 	else
 	{
 		// save status to avoid changes by any interrupt without disabling them
-		uint8_t txBuff_indexIn = iic->txBuff_indexIn;
-		uint8_t bindex_aux = txBuff_indexIn;
+		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
+		uint16_t bindex_aux = txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
 		iic->pending++;
 
@@ -597,7 +602,7 @@ int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
 
-		updateIndexes(id, bindex_aux, xfer->txSz);
+		updateIndexes(id, bindex_aux, xfer->txTotal);
 	}
 
 	return (int) xfer->status;
@@ -613,13 +618,13 @@ int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, ui
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
 			(iic->txBuffCount + cmdLen + dataLen > I2C_BUF_TX_SZ ) ) {
 		status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++;
+		i2c_overflows++; // debug
 	}
 	else
 	{
 		// save status to avoid changes by any interrupt without disabling them
-		uint8_t txBuff_indexIn = iic->txBuff_indexIn;
-		uint8_t bindex_aux = txBuff_indexIn;
+		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
+		uint16_t bindex_aux = txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
 		iic->pending++;
 
@@ -660,7 +665,7 @@ int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, ui
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
 
-		updateIndexes(id, bindex_aux, xfer->txSz);
+		updateIndexes(id, bindex_aux, xfer->txTotal);
 	}
 
 	return (int) status;
@@ -675,12 +680,12 @@ int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
 			(iic->txBuffCount + len > I2C_BUF_TX_SZ ) ) {
 		status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++;
+		i2c_overflows++; // debug
 	}
 	else
 	{
 		// save status to avoid changes by any interrupt without disabling them
-		uint8_t txBuff_indexIn = iic->txBuff_indexIn;
+		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
 		iic->pending++;
 
@@ -718,7 +723,7 @@ int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t
 		}
 
 		txBuff_indexIn = (txBuff_indexIn + len) % I2C_BUF_TX_SZ;
-		updateIndexes(id, txBuff_indexIn, xfer->txSz);
+		updateIndexes(id, txBuff_indexIn, xfer->txTotal);
 	}
 
 	return (int) status;
@@ -752,13 +757,12 @@ int I2C_MasterTransferPolling(I2C_ID_T id, I2C_XFER_T *xfer)
 }
 
 /* Master tx only */
-int I2C_MasterSendPolling(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len, i2c_cb_t callback)
+int I2C_MasterSendPolling(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len)
 {
 	I2C_XFER_T xfer = {0};
 	xfer.slaveAddr = slaveAddr;
 	xfer.txBuff = buff;
 	xfer.txSz = len;
-	xfer.cb = callback;
 	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
 	return len - xfer.txSz;
 }
@@ -779,7 +783,7 @@ int I2C_MasterCmdReadPolling(I2C_ID_T id, uint8_t slaveAddr, uint8_t cmd, uint8_
 }
 
 int I2C_MasterCmd2ReadPolling(I2C_ID_T id, uint8_t slaveAddr, uint8_t *cmdBuff, int cmdLen,
-										uint8_t *rxBuff, int rxLen, i2c_cb_t callback)
+										uint8_t *rxBuff, int rxLen)
 {
 	I2C_XFER_T xfer = {0};
 	xfer.slaveAddr = slaveAddr;
@@ -787,7 +791,6 @@ int I2C_MasterCmd2ReadPolling(I2C_ID_T id, uint8_t slaveAddr, uint8_t *cmdBuff, 
 	xfer.txSz = cmdLen;
 	xfer.rxBuff = rxBuff;
 	xfer.rxSz = rxLen;
-	xfer.cb = callback;
 	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
 	return rxLen - xfer.rxSz;
 }

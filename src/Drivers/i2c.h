@@ -18,7 +18,7 @@
 #define I2C_STACK_MEM_BASE		((uint8_t*)0x2007C800UL)
 #define I2C_STACK_MEM_SIZE		0x0800
 #define I2C_BUF_TX_BASE			I2C_STACK_MEM_BASE
-#define I2C_BUF_TX_SZ			0x0400
+#define I2C_BUF_TX_SZ			0x0800
 #define I2C_BUF_TX_TOP			(I2C_STACK_MEM_BASE + I2C_BUF_TX_SZ)
 #define I2C_PENDING_LIST_SZ		0x20
 
@@ -288,7 +288,7 @@ int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_
  * @return	Number of bytes successfully transfered
  */
 int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len, i2c_cb_t callback);
-int I2C_MasterSendPolling(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len, i2c_cb_t callback);
+int I2C_MasterSendPolling(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len);
 
 int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, uint16_t cmdLen,
 							const uint8_t *data, uint16_t dataLen, i2c_cb_t callback);
@@ -305,7 +305,7 @@ int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, ui
 int I2C_MasterCmdReadPolling(I2C_ID_T id, uint8_t slaveAddr, uint8_t cmd, uint8_t *buff, int len);
 
 int I2C_MasterCmd2ReadPolling(I2C_ID_T id, uint8_t slaveAddr, uint8_t *cmdBuff, int cmdLen,
-										uint8_t *rxBuff, int rxLen, i2c_cb_t callback);
+										uint8_t *rxBuff, int rxLen);
 /**
  * @brief	Get pointer to current function handling the events
  * @param	id			: I2C peripheral ID (I2C0, I2C1 ... etc)
