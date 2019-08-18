@@ -8,6 +8,11 @@
 #define LPC_I2Cx(id)      ((i2c.ip))
 #define SLAVE_ACTIVE(iic) (((iic)->flags & 0xFF00) != 0)
 
+#define optPolling(opt)		( (opt)       & 1U)
+#define optIgnoreNak(opt)	(((opt) >> 1) & 1U)
+#define optCopyTxCmd(opt)	(((opt) >> 2) & 1U)
+#define optCopyTxData(opt)	(((opt) >> 3) & 1U)
+
 static const PCLKSEL_T I2C_PeriphClk[I2C_NUM_INTERFACE] = {
 		PCLKSEL_I2C0,
 		PCLKSEL_I2C1,
@@ -26,7 +31,7 @@ struct i2c_interface {
 	uint8_t     *pendingTxBuff;			/*  */
 	__RW uint16_t txBuffCount;			/*  */
 	__RW uint16_t txBuff_indexIn;		/*  */
-	__RW uint16_t txBuff_indexOut;		/*  */
+//	__RW uint16_t txBuff_indexOut;		/*  */
 	__RW uint8_t  pending;
 	__RW uint8_t  pendingList_indexIn;	/*  */
 	__RW uint8_t  pendingList_indexOut;	/*  */
@@ -39,13 +44,15 @@ struct i2c_slave_interface {
 	I2C_EVENTHANDLER_T event;
 };
 
-__DATA(RamAHB32) static uint8_t g_i2c_txBuff[2048];
+__DATA(RamAHB32) static uint8_t g_i2c_txBuff[I2C_BUF_TX_SZ];
+#define I2C_BUF_TX_BASE			(&g_i2c_txBuff)
+#define I2C_BUF_TX_TOP			(I2C_STACK_MEM_BASE + I2C_BUF_TX_SZ)
 
 /* I2C interfaces */
 // since I only use one i2c interface, why waste my memory?
 __DATA(RamAHB32) static struct i2c_interface i2c = /*[I2C_NUM_INTERFACE] = {*/
 /*	{LPC_I2C0, PCONP_I2C0, I2C_EventHandler, NULL, NULL, NULL, 0, NULL,            0,0,0,0,0,0},*/
-	{LPC_I2C1, PCONP_I2C1, I2C_EventHandler, NULL, NULL, NULL, 0, g_i2c_txBuff,    0,0,0,0,0,0};//,
+	{LPC_I2C1, PCONP_I2C1, I2C_EventHandler, NULL, NULL, NULL, 0, g_i2c_txBuff,      0,0,0,0,0};//,
 /*	{LPC_I2C2, PCONP_I2C2, I2C_EventHandler, NULL, NULL, NULL, 0, NULL,            0,0,0,0,0,0}*/
 //};
 
@@ -56,9 +63,9 @@ static volatile uint32_t i2c_busy_timeouts = 0;
 static const uint32_t i2c_busy_limit = 999999; // adapt value to hardware setup and I2C clock rate
 
 // debug
-static uint32_t i2c_overflows = 0;
-static uint32_t i2c_max_pendings = 0;
-static uint32_t i2c_max_buffer_filled = 0;
+//static uint32_t i2c_overflows = 0;
+//static uint32_t i2c_max_pendings = 0;
+//static uint32_t i2c_max_buffer_filled = 0;
 
 /*****************************************************************************
  * Private functions
@@ -184,8 +191,10 @@ static int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
 {
 	uint32_t cclr = I2C_CON_FLAGS;
 	int curState = getCurState(pI2C);
+	const uint8_t **buff;
+	uint16_t *sz;
 
-	if(xfer->ignoreNAK && (curState == 0x20 || curState == 0x30 || curState == 0x48))
+	if(optIgnoreNak(xfer->options) && (curState == 0x20 || curState == 0x30 || curState == 0x48))
 		curState -= 0x08;
 
 	switch (curState) {
@@ -194,20 +203,30 @@ static int handleMasterXferState(LPC_I2C_T *pI2C, I2C_XFER_T  *xfer)
 			xfer->status = I2C_STATUS_BUSY;
 		}
 	case 0x10:		/* Repeated start condition */
-		pI2C->DAT = (xfer->slaveAddr << 1) | (xfer->txSz == 0);
+		pI2C->DAT = (xfer->slaveAddr << 1) | (xfer->txDataSz == 0 && xfer->txCmdSz == 0);
 		break;
 
 	/* Tx handling */
 	case 0x18:		/* SLA+W sent and ACK received */
 	case 0x28:		/* DATA sent and ACK received */
+		// set actual tx buffer into common pointer
+		if(xfer->txCmdSz) {
+			buff = &xfer->txCmdBuff;
+			sz = &xfer->txCmdSz;
+		} else {
+			buff = &xfer->txDataBuff;
+			sz = &xfer->txDataSz;
+		}
 
-		if (!xfer->txSz || !xfer->txBuff) {
+		if ( !(*buff) || !(*sz) ) {
 			cclr &= ~(xfer->rxSz ? I2C_CON_STA : I2C_CON_STO);
 		}
 		else {
-			pI2C->DAT = *xfer->txBuff++;
-			if(xfer->txBuff == I2C_BUF_TX_TOP) xfer->txBuff = g_i2c_txBuff;
-			xfer->txSz--;
+			pI2C->DAT = **buff;
+			if (++(*buff) == I2C_BUF_TX_TOP)
+				*buff = g_i2c_txBuff;
+			--(*sz);
+			++xfer->sent;
 		}
 		break;
 
@@ -279,8 +298,9 @@ static I2C_SLAVE_ID getSlaveIndex(LPC_I2C_T *pI2C)
 /* Slave state machine handler */
 static int handleSlaveXferState(LPC_I2C_T *pI2C, I2C_XFER_T *xfer)
 {
-	uint32_t cclr = I2C_CON_FLAGS;
 	int ret = RET_SLAVE_BUSY;
+#if 0
+	uint32_t cclr = I2C_CON_FLAGS;
 
 	xfer->status = I2C_STATUS_BUSY;
 	switch (getCurState(pI2C)) {
@@ -335,9 +355,9 @@ static int handleSlaveXferState(LPC_I2C_T *pI2C, I2C_XFER_T *xfer)
 	pI2C->CONSET = cclr ^ I2C_CON_FLAGS;
 	pI2C->CONCLR = cclr;
 
+#endif
 	return ret;
 }
-
 static void appendToBuffer(uint8_t *buffer, uint16_t index, const uint8_t *data, uint16_t len)
 {
 	if(index + len < I2C_BUF_TX_SZ) {
@@ -361,7 +381,7 @@ static void updateIndexes(I2C_ID_T id, uint16_t txBuff_indexIn, uint16_t txBuffB
 	iic->txBuff_indexIn = txBuff_indexIn;
 	iic->pendingList_indexIn = (iic->pendingList_indexIn + 1) % I2C_PENDING_LIST_SZ;
 	iic->txBuffCount += txBuffBytes;
-	i2c_max_buffer_filled = MAX(i2c_max_buffer_filled, iic->txBuffCount); // debug
+//	i2c_max_buffer_filled = MAX(i2c_max_buffer_filled, iic->txBuffCount); // debug
 
 	// EXIT CRITICAL SECTION
 	critical_section(id, false);
@@ -443,7 +463,7 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 				iic->ip->CONSET = I2C_CON_STO;
 			}
 
-			if((!iic->mXfer->polling) && (*stat != I2C_STATUS_START))
+			if( !optPolling(iic->mXfer->options) && (*stat != I2C_STATUS_START))
 				break;
 
 			// Interrupt based transfers must pass through here since
@@ -462,15 +482,15 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 		}
 
 		// if interrupt was disabled by polling transfer, reenable it
-		if(iic->mXfer->polling) {
+		if(optPolling(iic->mXfer->options)) {
 			NVIC_ClearPendingIRQ(I2C_IRQn + (IRQn_Type) id);
 			NVIC_EnableIRQ(I2C_IRQn + (IRQn_Type) id);
 		}
 		else {
-			i2c_max_pendings = MAX(i2c_max_pendings, iic->pending); // debug
+//			i2c_max_pendings = MAX(i2c_max_pendings, iic->pending); // debug
 			iic->pending--;
-			iic->txBuff_indexOut = (iic->txBuff_indexOut + iic->mXfer->txTotal) % I2C_BUF_TX_SZ;
-			iic->txBuffCount -= iic->mXfer->txTotal;
+		//	iic->txBuff_indexOut = (iic->txBuff_indexOut + iic->mXfer->buffered) % I2C_BUF_TX_SZ; // es necesario?
+			iic->txBuffCount -= iic->mXfer->buffered;
 			iic->pendingList_indexOut = (iic->pendingList_indexOut + 1) % I2C_PENDING_LIST_SZ;
 		}
 
@@ -506,71 +526,23 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 	}
 }
 
-// TODO: implement option to copy or not tx buffer
 /* Transmit and Receive data in master mode */
 int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 {
 	struct i2c_interface *iic = &i2c;
-	xfer->txTotal = xfer->txSz;
+	uint16_t buffSzReq = 0;
+	if(xfer->options & I2C_OPT_COPY_TXCMD ) buffSzReq += xfer->txCmdSz;
+	if(xfer->options & I2C_OPT_COPY_TXDATA) buffSzReq += xfer->txDataSz;
 
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
-			(iic->txBuffCount + xfer->txSz > I2C_BUF_TX_SZ ) ) {
+			(iic->txBuffCount + buffSzReq > I2C_BUF_TX_SZ ) ) {
 		xfer->status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++; // debug
+//		i2c_overflows++; // debug
 	}
 	else
 	{
 		// save status to avoid changes by any interrupt without disabling them
 		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
-		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
-		iic->pending++;
-
-		if(!(iic->flags & 0x01)) {// if not locked
-			xfer->status = I2C_STATUS_START;
-			iic->mEvent(id, I2C_EVENT_LOCK);
-		}
-		else {
-			xfer->status = I2C_STATUS_SCHEDULED;
-		}
-
-		if(xfer->txSz) {
-			// copy buffers
-			appendToBuffer(iic->pendingTxBuff, txBuff_indexIn, xfer->txBuff, xfer->txSz);
-			xfer->txBuff = &iic->pendingTxBuff[txBuff_indexIn];
-			txBuff_indexIn = (iic->txBuff_indexIn + xfer->txSz) % I2C_BUF_TX_SZ;
-		}
-		memcpy(&iic->mXferList[pendingList_indexIn], xfer, sizeof (I2C_XFER_T));
-
-		if(xfer->status == I2C_STATUS_START) {
-			iic->mXfer = &iic->mXferList[pendingList_indexIn];
-			/* If slave xfer not in progress */
-			if (!iic->sXfer) {
-				startMasterXfer(iic->ip);
-			}
-			iic->mEvent(id, I2C_EVENT_WAIT);
-		}
-
-		updateIndexes(id, txBuff_indexIn, xfer->txTotal);
-	}
-
-	return (int) xfer->status;
-}
-
-// transfer a command followed by the content of xfer (R/W)
-int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_XFER_T *xfer)
-{
-	struct i2c_interface *iic = &i2c;
-
-	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
-			(iic->txBuffCount + xfer->txSz + cmdLen > I2C_BUF_TX_SZ ) ) {
-		xfer->status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++; // debug
-	}
-	else
-	{
-		// save status to avoid changes by any interrupt without disabling them
-		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
-		uint16_t bindex_aux = txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
 		iic->pending++;
 
@@ -583,14 +555,20 @@ int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_
 		}
 
 		// copy buffers
-		appendToBuffer(iic->pendingTxBuff, bindex_aux, cmd, cmdLen);
-		bindex_aux = (bindex_aux + cmdLen) % I2C_BUF_TX_SZ;
-		if(xfer->txSz) {
-			appendToBuffer(iic->pendingTxBuff, bindex_aux, xfer->txBuff, xfer->txSz);
-			bindex_aux = (bindex_aux + xfer->txSz) % I2C_BUF_TX_SZ;
+		if(xfer->txCmdSz && (xfer->options & I2C_OPT_COPY_TXCMD)) {
+			appendToBuffer(iic->pendingTxBuff, txBuff_indexIn, xfer->txCmdBuff, xfer->txCmdSz);
+			xfer->txCmdBuff = &iic->pendingTxBuff[txBuff_indexIn];
+			txBuff_indexIn = (iic->txBuff_indexIn + xfer->txCmdSz) % I2C_BUF_TX_SZ;
 		}
-		xfer->txBuff = &iic->pendingTxBuff[txBuff_indexIn];
-		xfer->txSz = xfer->txTotal = (xfer->txSz + cmdLen);
+
+		if(xfer->txDataSz && (xfer->options & I2C_OPT_COPY_TXDATA)) {
+			appendToBuffer(iic->pendingTxBuff, txBuff_indexIn, xfer->txDataBuff, xfer->txDataSz);
+			xfer->txDataBuff = &iic->pendingTxBuff[txBuff_indexIn];
+			txBuff_indexIn = (iic->txBuff_indexIn + xfer->txDataSz) % I2C_BUF_TX_SZ;
+		}
+
+		xfer->buffered = buffSzReq;
+		xfer->sent = 0;
 		memcpy(&iic->mXferList[pendingList_indexIn], xfer, sizeof (I2C_XFER_T));
 
 		if(xfer->status == I2C_STATUS_START) {
@@ -602,23 +580,31 @@ int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
 
-		updateIndexes(id, bindex_aux, xfer->txTotal);
+		updateIndexes(id, txBuff_indexIn, buffSzReq);
 	}
 
 	return (int) xfer->status;
 }
 
+
 // Send command followed by some data
-int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, uint16_t cmdLen,
-							const uint8_t *data, uint16_t dataLen, i2c_cb_t callback)
+int I2C_MasterSendCmdData(  I2C_ID_T id,
+							uint8_t slaveAddr,
+							const uint8_t *cmd, uint16_t cmdLen,
+							const uint8_t *data, uint16_t dataLen,
+							i2c_cb_t callback,
+							uint8_t options)
 {
 	struct i2c_interface *iic = &i2c;
 	I2C_STATUS_T status = I2C_STATUS_START;
+	uint16_t buffSzReq = 0;
+	if(options & I2C_OPT_COPY_TXCMD ) buffSzReq += cmdLen;
+	if(options & I2C_OPT_COPY_TXDATA) buffSzReq += dataLen;
 
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
-			(iic->txBuffCount + cmdLen + dataLen > I2C_BUF_TX_SZ ) ) {
+			(iic->txBuffCount + buffSzReq > I2C_BUF_TX_SZ ) ) {
 		status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++; // debug
+//		i2c_overflows++; // debug
 	}
 	else
 	{
@@ -635,26 +621,32 @@ int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, ui
 			status = I2C_STATUS_SCHEDULED;
 		}
 
-		// copy buffers
-		appendToBuffer(iic->pendingTxBuff, bindex_aux, cmd, cmdLen);
-		bindex_aux = (bindex_aux + cmdLen) % I2C_BUF_TX_SZ;
-
-		appendToBuffer(iic->pendingTxBuff, bindex_aux, data, dataLen);
-		bindex_aux = (bindex_aux + dataLen) % I2C_BUF_TX_SZ;
-
 		I2C_XFER_T *xfer = &iic->mXferList[pendingList_indexIn];
+		memset((void*) xfer, 0, sizeof (I2C_XFER_T));
+		xfer->txCmdBuff = cmd;
+		xfer->txDataBuff = data;
+
+		// copy buffers
+		if(options & I2C_OPT_COPY_TXCMD ) {
+			appendToBuffer(iic->pendingTxBuff, bindex_aux, cmd, cmdLen);
+			xfer->txCmdBuff = &iic->pendingTxBuff[bindex_aux];
+			bindex_aux = (bindex_aux + cmdLen) % I2C_BUF_TX_SZ;
+		}
+
+		if(options & I2C_OPT_COPY_TXDATA) {
+			appendToBuffer(iic->pendingTxBuff, bindex_aux, data, dataLen);
+			xfer->txDataBuff = &iic->pendingTxBuff[bindex_aux];
+			bindex_aux = (bindex_aux + dataLen) % I2C_BUF_TX_SZ;
+		}
 
 		xfer->slaveAddr = slaveAddr;
-		xfer->txBuff = &iic->pendingTxBuff[txBuff_indexIn];
-		xfer->txSz = xfer->txTotal = (cmdLen + dataLen);
-
-		xfer->rxBuff = NULL;
-		xfer->rxSz = 0;
+		xfer->txCmdSz = cmdLen;
+		xfer->txDataSz = dataLen;
+		xfer->buffered = buffSzReq;
 
 		xfer->cb = callback;
 		xfer->status = status;
-		xfer->polling = false;
-		xfer->ignoreNAK = false;
+		xfer->options = options;
 
 		if(status == I2C_STATUS_START) {
 			iic->mXfer = xfer;
@@ -665,22 +657,29 @@ int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, ui
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
 
-		updateIndexes(id, bindex_aux, xfer->txTotal);
+		updateIndexes(id, bindex_aux, buffSzReq);
 	}
 
 	return (int) status;
 }
 
 // Send 'len' bytes from 'buff'
-int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len, i2c_cb_t callback)
+int I2C_MasterSend( I2C_ID_T id,
+					uint8_t slaveAddr,
+					const uint8_t *buff, uint16_t len,
+					i2c_cb_t callback,
+					uint8_t options )
 {
 	struct i2c_interface *iic = &i2c;
 	I2C_STATUS_T status = I2C_STATUS_START;
+	uint16_t buffSzReq = 0;
+	if(options && (I2C_OPT_COPY_TXDATA | I2C_OPT_COPY_TXCMD))
+		buffSzReq = len;
 
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
-			(iic->txBuffCount + len > I2C_BUF_TX_SZ ) ) {
+			(iic->txBuffCount + buffSzReq > I2C_BUF_TX_SZ ) ) {
 		status = I2C_STATUS_BUF_FULL;
-		i2c_overflows++; // debug
+//		i2c_overflows++; // debug
 	}
 	else
 	{
@@ -689,29 +688,31 @@ int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
 		iic->pending++;
 
-		if(!(iic->flags & 0x01)) {// if not locked
+		if(!(iic->flags & 0x01)) { // if not locked
 			iic->mEvent(id, I2C_EVENT_LOCK);
 		}
 		else {
 			status = I2C_STATUS_SCHEDULED;
 		}
 
-		// copy buffer
-		appendToBuffer(iic->pendingTxBuff, txBuff_indexIn, buff, len);
-
 		I2C_XFER_T *xfer = &iic->mXferList[pendingList_indexIn];
+		memset((void*) xfer, 0, sizeof (I2C_XFER_T));
+
+		if(buffSzReq) {
+			// copy buffer
+			appendToBuffer(iic->pendingTxBuff, txBuff_indexIn, buff, len);
+			xfer->txDataBuff = &iic->pendingTxBuff[txBuff_indexIn];
+		}
+		else {
+			xfer->txDataBuff = buff;
+		}
+		xfer->txDataSz = len;
+		xfer->buffered = buffSzReq;
 
 		xfer->slaveAddr = slaveAddr;
-		xfer->txBuff = &iic->pendingTxBuff[txBuff_indexIn];
-		xfer->txSz = xfer->txTotal = len;
-
-		xfer->rxBuff = NULL;
-		xfer->rxSz = 0;
-
 		xfer->cb = callback;
 		xfer->status = status;
-		xfer->polling = false;
-		xfer->ignoreNAK = false;
+		xfer->options = options;
 
 		if(status == I2C_STATUS_START) {
 			iic->mXfer = xfer;
@@ -723,7 +724,7 @@ int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t
 		}
 
 		txBuff_indexIn = (txBuff_indexIn + len) % I2C_BUF_TX_SZ;
-		updateIndexes(id, txBuff_indexIn, xfer->txTotal);
+		updateIndexes(id, txBuff_indexIn, buffSzReq);
 	}
 
 	return (int) status;
@@ -734,7 +735,7 @@ int I2C_MasterTransferPolling(I2C_ID_T id, I2C_XFER_T *xfer)
 {
 	struct i2c_interface *iic = &i2c;
 
-	xfer->polling = true;
+	xfer->options |= I2C_OPT_POLLING;
 	/* Wait for free interface */
 	while(iic->flags & 0x01) {}
 
@@ -761,10 +762,10 @@ int I2C_MasterSendPolling(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, u
 {
 	I2C_XFER_T xfer = {0};
 	xfer.slaveAddr = slaveAddr;
-	xfer.txBuff = buff;
-	xfer.txSz = len;
+	xfer.txDataBuff = buff;
+	xfer.txDataSz = len;
 	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
-	return len - xfer.txSz;
+	return len - xfer.txDataSz;
 }
 
 /* Transmit one byte and receive an array of bytes after a repeated start condition is generated in Master mode.
@@ -774,8 +775,8 @@ int I2C_MasterCmdReadPolling(I2C_ID_T id, uint8_t slaveAddr, uint8_t cmd, uint8_
 {
 	I2C_XFER_T xfer = {0};
 	xfer.slaveAddr = slaveAddr;
-	xfer.txBuff = &cmd;
-	xfer.txSz = 1;
+	xfer.txCmdBuff = &cmd;
+	xfer.txCmdSz = 1;
 	xfer.rxBuff = buff;
 	xfer.rxSz = len;
 	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
@@ -787,8 +788,8 @@ int I2C_MasterCmd2ReadPolling(I2C_ID_T id, uint8_t slaveAddr, uint8_t *cmdBuff, 
 {
 	I2C_XFER_T xfer = {0};
 	xfer.slaveAddr = slaveAddr;
-	xfer.txBuff = cmdBuff;
-	xfer.txSz = cmdLen;
+	xfer.txCmdBuff = cmdBuff;
+	xfer.txCmdSz = cmdLen;
 	xfer.rxBuff = rxBuff;
 	xfer.rxSz = rxLen;
 	while (I2C_MasterTransferPolling(id, &xfer) == I2C_STATUS_ARBLOST) {}
@@ -824,7 +825,7 @@ void I2C_MasterStateHandler(I2C_ID_T id)
 		// Clear interrupt bit to stop isr from being called repeatedly.
 		LPC_I2Cx(id)->CONCLR = I2C_CON_SI | I2C_CON_AA | I2C_CON_STA;
 	}
-	else if (handleMasterXferState(i2c.ip, i2c.mXfer) == 0) // if xfer ended
+	else if (handleMasterXferState(LPC_I2Cx(id), i2c.mXfer) == 0) // if xfer ended
 	{
 		i2c.mEvent(id, I2C_EVENT_DONE);
 	}

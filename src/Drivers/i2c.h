@@ -15,12 +15,10 @@
 #include <string.h>
 
 // next to usb memory area
-#define I2C_STACK_MEM_BASE		((uint8_t*)0x2007C800UL)
-#define I2C_STACK_MEM_SIZE		0x0800
-#define I2C_BUF_TX_BASE			I2C_STACK_MEM_BASE
-#define I2C_BUF_TX_SZ			0x0800
-#define I2C_BUF_TX_TOP			(I2C_STACK_MEM_BASE + I2C_BUF_TX_SZ)
-#define I2C_PENDING_LIST_SZ		0x20
+//#define I2C_STACK_MEM_BASE		((uint8_t*)0x2007C800UL)
+//#define I2C_STACK_MEM_SIZE		0x0800
+#define I2C_BUF_TX_SZ			0x0080
+#define I2C_PENDING_LIST_SZ		0x0020
 
 /** Return values for SLAVE handler
   Chip drivers will usally be designed to match their events with this value */
@@ -189,21 +187,32 @@ typedef enum {
 	I2C_EVENT_SLAVE_TX,	/**< Slave transmit event */
 } I2C_EVENT_T;
 
+#define I2C_OPT_POLLING		1U
+#define I2C_OPT_IGNORE_NAK	2U
+#define I2C_OPT_COPY_TXCMD	4U
+#define I2C_OPT_COPY_TXDATA	8U
+
 /** Master transfer data structure definitions */
 typedef struct I2C_XFER {
-	uint8_t           slaveAddr;	/**< 7-bit I2C Slave address */
-	const uint8_t     *txBuff;		/**< Pointer to array of bytes to be transmitted */
-	uint16_t           txSz;		/**< Number of bytes in transmit array,
-								   	   if 0 only receive transfer will be carried on */
-	uint16_t           txTotal;		/**< Number of total bytes to transmit */
 
-	uint8_t           *rxBuff;		/**< Pointer memory where bytes received from I2C be stored */
-	int                rxSz;		/**< Number of bytes to received,
+	const uint8_t     *txCmdBuff;	/**< Pointer to array of command bytes to be transmitted */
+	const uint8_t     *txDataBuff;	/**< Pointer to array of data bytes to be transmitted */
+	      uint8_t     *rxBuff;		/**< Pointer memory where bytes received from I2C be stored */
+
+	uint16_t           txCmdSz;		/**< Number of bytes in command transmit array,*/
+	uint16_t           txDataSz;	/**< Number of bytes in data transmit array,
+								   	   if both txSz = 0 only receive transfer will be carried on */
+	uint16_t           buffered;	/**< Internally set. It holds the number of buffered bytes */
+	uint16_t           sent;		/**< Number of bytes sent */
+
+	uint16_t           rxSz;		/**< Number of bytes to be received,
 									   if 0 only transmission we be carried on */
-	void (*cb) (struct I2C_XFER *this);
+
+	void (*cb) (struct I2C_XFER *);	/**< Callback function that will be executed on transfer end */
+
+	uint8_t            slaveAddr;	/**< 7-bit I2C Slave address */
 	I2C_STATUS_T       status;		/**< Status of the current I2C transfer */
-	bool               polling;
-	bool               ignoreNAK;
+	uint8_t            options;		/**< OR'ed I2C_OPT_x flags */
 } I2C_XFER_T;
 
 typedef void (*i2c_cb_t) (struct I2C_XFER *this);
@@ -276,7 +285,6 @@ uint32_t I2C_GetClockRate(I2C_ID_T id);
  */
 int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer);
 int I2C_MasterTransferPolling(I2C_ID_T id, I2C_XFER_T *xfer);
-int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_XFER_T *xfer);
 
 /**
  * @brief	Transmit data to I2C slave using I2C Master mode
@@ -287,11 +295,14 @@ int I2C_MasterCmdTransfer(I2C_ID_T id, const uint8_t *cmd, uint16_t cmdLen, I2C_
  * @param	callback	: It will be called when transfer ends
  * @return	Number of bytes successfully transfered
  */
-int I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len, i2c_cb_t callback);
+int I2C_MasterSend( I2C_ID_T id, uint8_t slaveAddr,
+					const uint8_t *buff, uint16_t len,
+					i2c_cb_t callback,
+					uint8_t options);
 int I2C_MasterSendPolling(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uint16_t len);
 
 int I2C_MasterSendCmdData(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *cmd, uint16_t cmdLen,
-							const uint8_t *data, uint16_t dataLen, i2c_cb_t callback);
+							const uint8_t *data, uint16_t dataLen, i2c_cb_t callback, uint8_t options);
 
 /**
  * @brief	Transfer a command to slave and receive data from slave after a repeated start
