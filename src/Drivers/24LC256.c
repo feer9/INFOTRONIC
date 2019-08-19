@@ -12,15 +12,15 @@
 #define EEPROM_ADDRESS_TOP 0x08000
 
 typedef struct {
-	bool ready;
-	bool busy; // todo: implement
 	I2C_XFER_T *xfer;
 	const uint8_t *txBuff;
 	uint16_t txSz;
 	uint16_t rxSz;
 	uint16_t address;
-	void (*callback) (status);
 	uint16_t naks;
+	void (*callback) (status);
+	bool ready;
+	bool busy;
 } eeprom_t;
 
 static void     tx_callback(I2C_XFER_T *xfer);
@@ -34,23 +34,15 @@ static int             read(void);
 static uint8_t curr_address[2];
 
 static I2C_XFER_T g_eeprom_xfer = {
-		EEPROM_ADDRESS,		/* slaveAddr */
-		curr_address,		/* txBuff */
-		0,					/* txSz */
-		0,					/* txTotal */
-		NULL,				/* rxBuff */
-		0,					/* rxSz */
-		NULL,				/* cb */
-		I2C_STATUS_DONE,	/* status */
-		false,				/* polling */
-		false           	/* ignoreNAK */
+		.slaveAddr = EEPROM_ADDRESS
 };
 
-static eeprom_t eeprom = { false, false, &g_eeprom_xfer, NULL, 0,0,0,NULL,0};
+
+static eeprom_t eeprom = { &g_eeprom_xfer, NULL, 0,0,0,0, NULL, false, false };
 
 static void test_status()
 {
-	I2C_MasterSend(I2C, EEPROM_ADDRESS, curr_address, 2, status_callback);
+	I2C_MasterSend(I2C, EEPROM_ADDRESS, curr_address, 2, status_callback, 0);
 }
 
 static void status_callback(I2C_XFER_T *xfer)
@@ -60,6 +52,7 @@ static void status_callback(I2C_XFER_T *xfer)
 	{
 	case I2C_STATUS_DONE:
 		eeprom.ready = true;
+		eeprom.naks = 0;
 		tx_handler();
 		rx_handler();
 		break;
@@ -67,7 +60,7 @@ static void status_callback(I2C_XFER_T *xfer)
 	default:
 		eeprom.naks++;
 		eeprom.ready = false;
-		if(eeprom.naks < 100)
+		if(eeprom.naks < 10)
 			startTimer(NULL, 1, test_status);
 		else if(eeprom.callback)
 			eeprom.callback(ERROR);
@@ -78,10 +71,10 @@ static void status_callback(I2C_XFER_T *xfer)
 static void tx_callback(I2C_XFER_T *xfer)
 {
 	I2C_STATUS_T event = xfer->status;
-	int sent = xfer->txTotal ? ((xfer->txTotal - 2) - xfer->txSz) : 0;
+	int sent = xfer->sent ? ((xfer->sent - 2) - xfer->txDataSz) : 0;
 
 	eeprom.txBuff += sent;
-	eeprom.xfer->txBuff = eeprom.txBuff;
+	eeprom.xfer->txDataBuff = eeprom.txBuff;
 	// since xfer doesn't record the reference to the original tx buffer
 	eeprom.txSz -= sent;
 	eeprom.address = (eeprom.address + sent) % EEPROM_ADDRESS_TOP;
@@ -170,10 +163,10 @@ static void tx_handler(void)
 static int read()
 {
 	curr_address[0] = (uint8_t) (eeprom.address >> 8);
-	curr_address[1] = (uint8_t) (eeprom.address & 0x0F);
+	curr_address[1] = (uint8_t) (eeprom.address & 0x00FF);
 
-	eeprom.xfer->txBuff = curr_address;
-	eeprom.xfer->txSz = 2;
+	eeprom.xfer->txCmdBuff = curr_address;
+	eeprom.xfer->txCmdSz = 2;
 	eeprom.xfer->rxSz = eeprom.rxSz;
 	eeprom.xfer->cb = rx_callback;
 
@@ -189,11 +182,13 @@ static int write()
 	curr_address[0] = (uint8_t) (eeprom.address >> 8);
 	curr_address[1] = (uint8_t) (eeprom.address & 0x00FF);
 
-	eeprom.xfer->txSz = sz;
+	eeprom.xfer->txCmdBuff = curr_address;
+	eeprom.xfer->txCmdSz = 2;
+	eeprom.xfer->txDataSz = sz;
 	eeprom.xfer->rxSz = 0;
 	eeprom.xfer->cb = tx_callback;
 
-	return I2C_MasterCmdTransfer(I2C, curr_address, 2, eeprom.xfer);
+	return I2C_MasterTransfer(I2C, eeprom.xfer);
 }
 
 /********** end of private code **********/
@@ -221,7 +216,7 @@ status EEPROM_write(uint16_t address, const uint8_t *buff, uint16_t sz)
 
 	eeprom.busy = true;
 	eeprom.txSz = sz;
-	eeprom.txBuff =  eeprom.xfer->txBuff = buff;
+	eeprom.txBuff =  eeprom.xfer->txDataBuff = buff;
 	eeprom.address = address;
 	eeprom.naks = 0;
 
