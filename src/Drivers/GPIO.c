@@ -1,40 +1,40 @@
 #include "GPIO.h"
 
 // PINMODE_x, PINSEL_FUNCy
-void configurePin(uint8_t port, uint8_t pin, uint32_t mode, uint32_t func)
+void gpio_configPin(uint8_t port, uint8_t pin, PINMODE_STATE_T mode, PINSEL_STATE_T func)
 {
 		uint32_t tmp;
 		port = port * 2 + pin / 16;
 		pin = ( pin % 16 ) * 2;
 
 		tmp = PINSEL[ port ] & ~(3UL << pin);
-		PINSEL[ port ] = tmp | (func << pin);
+		PINSEL[ port ] = tmp | (((uint32_t)func) << pin);
 
 		tmp = PINMODE[ port ] & ~(3UL << pin);
-		PINMODE[ port ] = tmp | (mode << pin);
+		PINMODE[ port ] = tmp | (((uint32_t)mode) << pin);
 }
 
-void setPINSEL(uint8_t port, uint8_t pin, uint8_t func)
+void gpio_pinsel(uint8_t port, uint8_t pin, PINSEL_STATE_T func)
 {
 	uint32_t tmp;
-	port = port * 2 + pin / 16;				//!< Calcula registro PINSEL
-	pin = ( pin % 16 ) * 2;					//!< Calcula campo de bits
-	tmp = PINSEL[ port ] & ~(3 << pin);		//!< Limpia campo de bits
-	PINSEL[ port ] = tmp | (func << pin);	//!< Set de bits en campo
+	port = port * 2 + pin / 16;							//!< Calcula registro PINSEL
+	pin = ( pin % 16 ) * 2;								//!< Calcula campo de bits
+	tmp = PINSEL[ port ] & ~(3 << pin);					//!< Limpia campo de bits
+	PINSEL[ port ] = tmp | (((uint32_t)func) << pin);	//!< Set de bits en campo
 }
 
-void setPINMODE(uint8_t port, uint8_t pin, uint8_t modo)
+void gpio_pinmode(uint8_t port, uint8_t pin, PINMODE_STATE_T mode)
 {
 	uint32_t tmp;
-	port = port * 2 + pin / 16;				//!< Calcula registro PINMODE
-	pin = ( pin % 16 ) * 2;					//!< Calcula campo de bits
-	tmp = PINMODE[ port ] & ~(3 << pin);	//!< Limpia campo de bits
-	PINMODE[ port ] = tmp | (modo << pin);	//!< Set de bits en campo
+	port = port * 2 + pin / 16;							//!< Calcula registro PINMODE
+	pin = ( pin % 16 ) * 2;								//!< Calcula campo de bits
+	tmp = PINMODE[ port ] & ~(3 << pin);				//!< Limpia campo de bits
+	PINMODE[ port ] = tmp | (((uint32_t)mode) << pin);	//!< Set de bits en campo
 }
 
 // clear registers when debugging
 // (not cleared at software restart)
-void PIN_init()
+void gpio_init()
 {
 #ifdef DEBUG
 	PINSEL0 = 0;

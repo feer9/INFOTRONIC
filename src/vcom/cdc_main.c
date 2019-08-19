@@ -30,9 +30,9 @@
  */
 
 
-#include "../Drivers/chip.h"
-#include "../Drivers/GPIO.h"
-#include "../Drivers/KitInfo2_BaseBoard.h"
+#include "chip.h"
+#include "Drivers/GPIO.h"
+#include "KitInfo2_BaseBoard.h"
 #include <stdio.h>
 #include <string.h>
 #include "app_usbd_cfg.h"
@@ -187,11 +187,11 @@ void usbd_cdc_vcom(void)
 			toSend += rdCnt;
 		}
 		if (toSend != 0) {
-			write_pin(3,26, LEDLPC_ON); // blue lpc led
+			gpio_writePin(3,26, LEDLPC_ON); // blue lpc led
 			toSend -= vcom_write(&g_rxBuff[0], toSend);
 		}
 		else {
-			write_pin(3,26, LEDLPC_OFF);
+			gpio_writePin(3,26, LEDLPC_OFF);
 		}
 	}
 }

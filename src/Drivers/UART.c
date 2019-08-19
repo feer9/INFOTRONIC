@@ -12,7 +12,7 @@ static bool isTxEmpty(void);
 static bool isRxFull(void);
 static bool isTxFull(void);
 
-
+// todo: reduce uart buffer size
 static uart_t uart0 = {
 		.bufferRx.indexIn     = 0,
 		.bufferRx.indexOut    = 0,
@@ -187,10 +187,10 @@ void UART0_init(uint8_t st)//,uint32_t baudrate)
 	U0FCR |= U0FCR_TRIGGER_LEVEL_2;
 
 	// Tx0: P0,2 ; Rx0: P0,3
-	set_dir(Tx0, SALIDA);
-	set_dir(Rx0, ENTRADA);
-	setPINMODE(Tx0, PINMODE_PULLUP);
-	setPINMODE(Rx0, PINMODE_PULLUP);
+	gpio_pinDir_output(Tx0);
+	gpio_pinDir_input (Rx0);
+	gpio_pinmode(Tx0, PINMODE_PULLUP);
+	gpio_pinmode(Rx0, PINMODE_PULLUP);
 
 	// DLAB = 0 para acceder a IER
 	U0LCR &= ~(0x01 << 7);
@@ -208,8 +208,8 @@ void UART0_init(uint8_t st)//,uint32_t baudrate)
 void UART0_setUp()
 {
 	PCONP |= PCONP_UART0;
-	setPINSEL(Tx0, PINSEL_FUNC1);
-	setPINSEL(Rx0, PINSEL_FUNC1);
+	gpio_pinsel(Tx0, PINSEL_FUNC1);
+	gpio_pinsel(Rx0, PINSEL_FUNC1);
 	ISER0 = NVIC_UART0;
 	uart0.status = ON;
 }
@@ -217,8 +217,8 @@ void UART0_setUp()
 void UART0_setDown()
 {
 	ICER0 = NVIC_UART0;
-	setPINSEL(Tx0, PINSEL_GPIO);
-	setPINSEL(Rx0, PINSEL_GPIO);
+	gpio_pinsel(Tx0, PINSEL_GPIO);
+	gpio_pinsel(Rx0, PINSEL_GPIO);
 	PCONP &= ~PCONP_UART0;
 	uart0.status = OFF;
 }

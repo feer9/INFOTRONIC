@@ -146,11 +146,11 @@ static uint8_t readSW(uint8_t n)
 {
 	switch(n)
 	{
-	case 1: return read_pin(KEY0, ACTIVO_BAJO);	// SW1
-	case 2:	return read_pin(KEY1, ACTIVO_BAJO);	// SW2
-	case 3:	return read_pin(KEY2, ACTIVO_BAJO);	// SW3
-	case 4:	return read_pin(KEY3, ACTIVO_BAJO);	// SW4
-	case 5: return read_pin(KEY4, ACTIVO_BAJO);	// SW5
+	case 1: return gpio_readPinState(KEY0, GPIO_ACTIVE_LOW);	// SW1
+	case 2:	return gpio_readPinState(KEY1, GPIO_ACTIVE_LOW);	// SW2
+	case 3:	return gpio_readPinState(KEY2, GPIO_ACTIVE_LOW);	// SW3
+	case 4:	return gpio_readPinState(KEY3, GPIO_ACTIVE_LOW);	// SW4
+	case 5: return gpio_readPinState(KEY4, GPIO_ACTIVE_LOW);	// SW5
 	default: return 0;
 	}
 }
@@ -170,14 +170,14 @@ static void enableReleaseKeyInt(uint8_t i)
 // Configuración de interrupciones externas
 void ExtInt_init(void)
 {
-	set_dir(KEY0, ENTRADA);
-	set_dir(KEY1, ENTRADA);
-	set_dir(KEY2, ENTRADA);
-	set_dir(KEY3, ENTRADA);
-	setPINSEL(KEY0, PINSEL_GPIO);
-	setPINSEL(KEY1, PINSEL_GPIO);
-	setPINSEL(KEY2, PINSEL_GPIO);
-	setPINSEL(KEY3, PINSEL_GPIO);
+	gpio_pinDir_input(KEY0);
+	gpio_pinDir_input(KEY1);
+	gpio_pinDir_input(KEY2);
+	gpio_pinDir_input(KEY3);
+	gpio_pinsel(KEY0, PINSEL_GPIO);
+	gpio_pinsel(KEY1, PINSEL_GPIO);
+	gpio_pinsel(KEY2, PINSEL_GPIO);
+	gpio_pinsel(KEY3, PINSEL_GPIO);
 
 	EXTMODE  |=  (0x0FUL << 0);			// Todas por flanco
 	EXTPOLAR &= ~(0x0FUL << 0);			// Todas por flanco descendente

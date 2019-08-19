@@ -223,8 +223,8 @@ void USBD_Init(uint32_t port)
 //	configurePin( 1,30 , PINMODE_NONE, PINSEL_FUNC2); /* USB VBUS */
 
 	/* P0.29 D1+, P0.30 D1- */
-	configurePin( 0,29 , PINMODE_NONE, PINSEL_FUNC1);
-	configurePin( 0,30 , PINMODE_NONE, PINSEL_FUNC1);
+	gpio_configPin( 0,29 , PINMODE_NONE, PINSEL_FUNC1);
+	gpio_configPin( 0,30 , PINMODE_NONE, PINSEL_FUNC1);
 
 	USBClkCtrl = 0x12;                /* Dev, AHB clock enable */
 	while ((USBClkSt & 0x12) != 0x12);

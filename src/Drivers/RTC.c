@@ -51,7 +51,7 @@ void RTC_IRQHandler(void)
 	//	uint32_t dummy = PCON;
 		PCON |= (1UL << 8);
 
-		toggle_pin(LEDLPC_B);
+		gpio_togglePin(LEDLPC_B);
 	}
 }
 

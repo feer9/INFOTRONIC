@@ -1,6 +1,6 @@
 #include "Aplicacion.h"
-#include "../Drivers/chip.h"
-#include "../Drivers/KitInfo2_BaseBoard.h"
+#include "chip.h"
+#include "KitInfo2_BaseBoard.h"
 #include "../Drivers/Timer.h"
 #include "../Drivers/RTC.h"
 #include "../Drivers/LCD.h"
@@ -21,7 +21,7 @@ void kit_init ( void )
 {
 	chip_init();
 
-	PIN_init();
+	gpio_init();
 	D_OUT_init();
 
 	usbd_init();

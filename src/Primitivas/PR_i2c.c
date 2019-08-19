@@ -1,4 +1,5 @@
-#include "i2c.h"
+#include "Drivers/i2c.h"
+#include "Drivers/GPIO.h"
 
 void I2C0_IRQHandler()
 {
@@ -38,24 +39,24 @@ void I2C_Config(I2C_ID_T id, uint32_t clockrate, I2C_EVENTHANDLER_T event)
 
 	if (id == I2C0)
 	{
-		setPINSEL(SDA0, PINSEL_FUNC1);
-		setPINSEL(SCL0, PINSEL_FUNC1);
+		gpio_pinsel(SDA0, PINSEL_FUNC1);
+		gpio_pinsel(SCL0, PINSEL_FUNC1);
 	}
 	else if (id == I2C1)
 	{
-		configurePin(SDA1, PINMODE_NONE, PINSEL_FUNC3);
-		configurePin(SCL1, PINMODE_NONE, PINSEL_FUNC3);
+		gpio_configPin(SDA1, PINMODE_NONE, PINSEL_FUNC3);
+		gpio_configPin(SCL1, PINMODE_NONE, PINSEL_FUNC3);
 
-		set_MODE_OD(SDA1, 1);
-		set_MODE_OD(SCL1, 1);
+		gpio_pinmode_OD_enable(SDA1);
+		gpio_pinmode_OD_enable(SCL1);
 	}
 	else if(id == I2C2)
 	{
-		configurePin(SDA2, PINMODE_NONE, PINSEL_FUNC2);
-		configurePin(SCL2, PINMODE_NONE, PINSEL_FUNC2);
+		gpio_configPin(SDA2, PINMODE_NONE, PINSEL_FUNC2);
+		gpio_configPin(SCL2, PINMODE_NONE, PINSEL_FUNC2);
 
-		set_MODE_OD(SDA2, 1);
-		set_MODE_OD(SCL2, 1);
+		gpio_pinmode_OD_enable(SDA2);
+		gpio_pinmode_OD_enable(SCL2);
 	}
 
 	I2C_SetMasterEventHandler(id, event);

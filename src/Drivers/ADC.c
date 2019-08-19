@@ -39,9 +39,8 @@ void ADC_init()
 	// CLKDIV = 1 + este valor
 	LPC_ADC->ADCR = (0UL << CR_CLKDIV); // (12MHz / 0+1) = 12MHz (< 13MHz)
 
-	set_dir(ADC5, ENTRADA);
-	setPINSEL(ADC5, PINSEL_FUNC3);
-	setPINMODE(ADC5, PINMODE_NONE);
+	gpio_pinDir_input(ADC5);
+	gpio_configPin(ADC5, PINMODE_NONE, PINSEL_FUNC3);
 
 	// seteo AD0.5 como fuente de entrada analogica
 	LPC_ADC->ADCR |= (1UL << 5);
@@ -55,7 +54,7 @@ void ADC_init()
 
 void ADC_stop()
 {
-	setPINSEL(ADC5, PINSEL_GPIO);
+	gpio_pinsel(ADC5, PINSEL_GPIO);
 	LPC_ADC->ADCR _RESET_BIT(CR_BURST);	// Conversions are software controlled
 	LPC_ADC->ADCR _RESET_BIT(CR_PDN);	// The A/D converter is in power-down mode
 	PCONP &= ~PCONP_ADC;
@@ -68,7 +67,7 @@ void ADC_start()
 	PCONP |= PCONP_ADC;
 	LPC_ADC->ADCR _SET_BIT(CR_PDN);		// The A/D converter is operational
 	LPC_ADC->ADCR _SET_BIT(CR_BURST);	// The A/D converter does repeated conversions at up to 200 kHz
-	setPINSEL(ADC5, PINSEL_FUNC3);
+	gpio_pinsel(ADC5, PINSEL_FUNC3);
 	ISER0 = NVIC_ADC;
 	adc.status = true;
 }

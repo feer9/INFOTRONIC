@@ -73,26 +73,26 @@ void LCD_init(lcd_t *plcd, uint8_t internalReset)
 	init_struct(plcd);
 	set_lcd_pointer(plcd); // set primitive's file lcd_t struct pointer
 
-	setPINSEL(LCD_D4, PINSEL_GPIO);
-	setPINSEL(LCD_D5, PINSEL_GPIO);
-	setPINSEL(LCD_D6, PINSEL_GPIO);
-	setPINSEL(LCD_D7, PINSEL_GPIO);
-	setPINSEL(LCD_RS, PINSEL_GPIO);
-	setPINSEL(LCD_E , PINSEL_GPIO);
+	gpio_pinsel(LCD_D4, PINSEL_GPIO);
+	gpio_pinsel(LCD_D5, PINSEL_GPIO);
+	gpio_pinsel(LCD_D6, PINSEL_GPIO);
+	gpio_pinsel(LCD_D7, PINSEL_GPIO);
+	gpio_pinsel(LCD_RS, PINSEL_GPIO);
+	gpio_pinsel(LCD_E , PINSEL_GPIO);
 
-	set_dir_output(LCD_D4);
-	set_dir_output(LCD_D5);
-	set_dir_output(LCD_D6);
-	set_dir_output(LCD_D7);
-	set_dir_output(LCD_RS);
-	set_dir_output(LCD_E );
+	gpio_pinDir_output(LCD_D4);
+	gpio_pinDir_output(LCD_D5);
+	gpio_pinDir_output(LCD_D6);
+	gpio_pinDir_output(LCD_D7);
+	gpio_pinDir_output(LCD_RS);
+	gpio_pinDir_output(LCD_E );
 
-	clear_pin(LCD_D4);
-	clear_pin(LCD_D5);
-	clear_pin(LCD_D6);
-	clear_pin(LCD_D7);
-	clear_pin(LCD_RS);
-	clear_pin(LCD_E );
+	gpio_clearPin(LCD_D4);
+	gpio_clearPin(LCD_D5);
+	gpio_clearPin(LCD_D6);
+	gpio_clearPin(LCD_D7);
+	gpio_clearPin(LCD_RS);
+	gpio_clearPin(LCD_E );
 
 	if(internalReset)
 		LCD_init4Bits_IR();
@@ -101,66 +101,63 @@ void LCD_init(lcd_t *plcd, uint8_t internalReset)
 	LCD_config();
 }
 
-// TODO: reduce to the minimum this delays
-
 static void LCD_init4Bits()
 {
-	write_pin(LCD_E, 0);
-	write_pin(LCD_RS, 0);
+	gpio_writePin(LCD_E, 0);
+	gpio_writePin(LCD_RS, 0);
 	// Wait for more than 15 ms after VCC rises to 4.5 V
 	delay_ms(20);
 
-	write_pin(LCD_E, 1);
+	gpio_writePin(LCD_E, 1);
 
-	write_pin(LCD_D4, 1);
-	write_pin(LCD_D5, 1);
-	write_pin(LCD_D6, 0);
-	write_pin(LCD_D7, 0);
+	gpio_writePin(LCD_D4, 1);
+	gpio_writePin(LCD_D5, 1);
+	gpio_writePin(LCD_D6, 0);
+	gpio_writePin(LCD_D7, 0);
 
-	write_pin(LCD_E, 0);
+	gpio_writePin(LCD_E, 0);
 
 	// Wait for more than 4.1 ms
 	delay_ms(5);
 
-	write_pin(LCD_E, 1);
-	write_pin(LCD_E, 0);
+	gpio_writePin(LCD_E, 1);
+	gpio_writePin(LCD_E, 0);
 
 	// Wait for more than 100 μs
 	delay_us(200);
 
-	write_pin(LCD_E, 1);
-	write_pin(LCD_E, 0);
+	gpio_writePin(LCD_E, 1);
+	gpio_writePin(LCD_E, 0);
 
 
 	// Set interface to be 4 bits long
-	write_pin(LCD_E,1);
+	gpio_writePin(LCD_E,1);
 
-	write_pin(LCD_D4,0);
-	write_pin(LCD_D5,1);
-	write_pin(LCD_D6,0);
-	write_pin(LCD_D7,0);
+	gpio_writePin(LCD_D4,0);
+	gpio_writePin(LCD_D5,1);
+	gpio_writePin(LCD_D6,0);
+	gpio_writePin(LCD_D7,0);
 
-	write_pin(LCD_E,0);
-
+	gpio_writePin(LCD_E,0);
 }
 
 static void LCD_init4Bits_IR()
 {
-	delay_us(25000);
+	delay_ms(25);
 
 	// Initialization by internal reset
 	// Sets to 4-bit operation
-	write_pin(LCD_E, 1);
+	gpio_writePin(LCD_E, 1);
 
-	write_pin(LCD_D4, 0);
-	write_pin(LCD_D5, 1);
-	write_pin(LCD_D6, 0);
-	write_pin(LCD_D7, 0);
-	write_pin(LCD_RS, 0);
+	gpio_writePin(LCD_D4, 0);
+	gpio_writePin(LCD_D5, 1);
+	gpio_writePin(LCD_D6, 0);
+	gpio_writePin(LCD_D7, 0);
+	gpio_writePin(LCD_RS, 0);
 
-	write_pin(LCD_E, 0);
+	gpio_writePin(LCD_E, 0);
 
-//	delay_us(5000);
+//	delay_ms(5);
 }
 
 static void LCD_config()
@@ -255,16 +252,16 @@ void LCD_send()
 		data = (uint8_t) s_data;
 
 		// data [bit 7] has register select
-		write_pin(LCD_RS, data >> 7);
+		gpio_writePin(LCD_RS, data >> 7);
 
-		write_pin(LCD_E, 1);
+		gpio_writePin(LCD_E, 1);
 
-		write_pin(LCD_D7, (data >> 3) & 0x01);
-		write_pin(LCD_D6, (data >> 2) & 0x01);
-		write_pin(LCD_D5, (data >> 1) & 0x01);
-		write_pin(LCD_D4, (data >> 0) & 0x01);
+		gpio_writePin(LCD_D7, (data >> 3) & 0x01);
+		gpio_writePin(LCD_D6, (data >> 2) & 0x01);
+		gpio_writePin(LCD_D5, (data >> 1) & 0x01);
+		gpio_writePin(LCD_D4, (data >> 0) & 0x01);
 
-		write_pin(LCD_E, 0);
+		gpio_writePin(LCD_E, 0);
 	}
 }
 

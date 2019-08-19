@@ -1,8 +1,8 @@
 #include "Aplicacion.h"
 #include <string.h>
-#include "../Drivers/lpc_types.h"
-#include "../Drivers/regsLPC1769.h"
-#include "../Drivers/KitInfo2_BaseBoard.h"
+#include "lpc_types.h"
+#include "regsLPC1769.h"
+#include "KitInfo2_BaseBoard.h"
 #include "../Drivers/oled_ssd1306.h"
 #include "../Drivers/LCD.h"
 #include "../Drivers/Teclado.h"
@@ -66,11 +66,11 @@ void RIT_IRQHandler(void) // Repetitive Interrupt Timer cada 200us
 
 
 static inline void ledLpcG_Off(void) {
-	write_pin(LEDLPC_G, LEDLPC_OFF);
+	gpio_writePin(LEDLPC_G, LEDLPC_OFF);
 }
 
 static void ledLpcG_Blink(void) {
-	write_pin(LEDLPC_G, LEDLPC_ON);
+	gpio_writePin(LEDLPC_G, LEDLPC_ON);
 	startTimer(NULL, 100, ledLpcG_Off);
 }
 
