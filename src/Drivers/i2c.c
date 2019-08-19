@@ -45,8 +45,8 @@ struct i2c_slave_interface {
 };
 
 __DATA(RamAHB32) static uint8_t g_i2c_txBuff[I2C_BUF_TX_SZ];
-#define I2C_BUF_TX_BASE			(&g_i2c_txBuff)
-#define I2C_BUF_TX_TOP			(I2C_STACK_MEM_BASE + I2C_BUF_TX_SZ)
+#define I2C_BUF_TX_BASE			g_i2c_txBuff
+#define I2C_BUF_TX_TOP			(I2C_BUF_TX_BASE + I2C_BUF_TX_SZ)
 
 /* I2C interfaces */
 // since I only use one i2c interface, why waste my memory?
@@ -62,31 +62,14 @@ static struct i2c_slave_interface i2c_slave[I2C_NUM_INTERFACE][I2C_SLAVE_NUM_INT
 static volatile uint32_t i2c_busy_timeouts = 0;
 static const uint32_t i2c_busy_limit = 999999; // adapt value to hardware setup and I2C clock rate
 
-// debug
-//static uint32_t i2c_overflows = 0;
-//static uint32_t i2c_max_pendings = 0;
-//static uint32_t i2c_max_buffer_filled = 0;
-
+#ifdef DEBUG
+static uint32_t i2c_overflows = 0;
+static uint32_t i2c_max_pendings = 0;
+static uint32_t i2c_max_buffer_filled = 0;
+#endif
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-
-static void critical_section(I2C_ID_T id, bool st)
-{
-	static bool intStat[I2C_NUM_INTERFACE] = {0};
-
-	if(st){	// enter critical section
-		intStat[id] = NVIC_IRQStatus(I2C_IRQn + (IRQn_Type) id);
-		if(intStat[id]) {
-			NVIC_DisableIRQ(I2C_IRQn + (IRQn_Type) id);
-		}
-	}
-	else {	// exit critical section
-		if(intStat[id]) {
-			NVIC_EnableIRQ(I2C_IRQn + (IRQn_Type) id);
-		}
-	}
-}
 
 static inline void enableClk(I2C_ID_T id)
 {
@@ -358,6 +341,7 @@ static int handleSlaveXferState(LPC_I2C_T *pI2C, I2C_XFER_T *xfer)
 #endif
 	return ret;
 }
+
 static void appendToBuffer(uint8_t *buffer, uint16_t index, const uint8_t *data, uint16_t len)
 {
 	if(index + len < I2C_BUF_TX_SZ) {
@@ -367,6 +351,23 @@ static void appendToBuffer(uint8_t *buffer, uint16_t index, const uint8_t *data,
 		size_t tmp = I2C_BUF_TX_SZ - index;
 		memcpy(&buffer[index], data, tmp);
 		memcpy(&buffer[0], data +  tmp, len - tmp);
+	}
+}
+
+static void critical_section(I2C_ID_T id, bool st)
+{
+	static bool intStat[I2C_NUM_INTERFACE] = {0};
+
+	if(st){	// enter critical section
+		intStat[id] = NVIC_IRQStatus(I2C_IRQn + (IRQn_Type) id);
+		if(intStat[id]) {
+			NVIC_DisableIRQ(I2C_IRQn + (IRQn_Type) id);
+		}
+	}
+	else {	// exit critical section
+		if(intStat[id]) {
+			NVIC_EnableIRQ(I2C_IRQn + (IRQn_Type) id);
+		}
 	}
 }
 
@@ -381,7 +382,10 @@ static void updateIndexes(I2C_ID_T id, uint16_t txBuff_indexIn, uint16_t txBuffB
 	iic->txBuff_indexIn = txBuff_indexIn;
 	iic->pendingList_indexIn = (iic->pendingList_indexIn + 1) % I2C_PENDING_LIST_SZ;
 	iic->txBuffCount += txBuffBytes;
-//	i2c_max_buffer_filled = MAX(i2c_max_buffer_filled, iic->txBuffCount); // debug
+	iic->pending++;
+#ifdef DEBUG
+	i2c_max_buffer_filled = MAX(i2c_max_buffer_filled, iic->txBuffCount);
+#endif
 
 	// EXIT CRITICAL SECTION
 	critical_section(id, false);
@@ -454,15 +458,6 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 		/* Wait for the status to change */
 		while (*stat == I2C_STATUS_START || *stat == I2C_STATUS_BUSY)
 		{
-			if (busy_counter > i2c_busy_limit)
-			{
-				// I2C bus hang-up identified...
-				i2c_busy_timeouts++;
-				*stat = I2C_STATUS_BUSERR;
-				// set stop bit for forced access to the I2C bus
-				iic->ip->CONSET = I2C_CON_STO;
-			}
-
 			if( !optPolling(iic->mXfer->options) && (*stat != I2C_STATUS_START))
 				break;
 
@@ -471,7 +466,14 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 			if (I2C_IsStateChanged(id))
 				I2C_MasterStateHandler(id);
 
-			busy_counter++;
+			if (++busy_counter > i2c_busy_limit)
+			{
+				// I2C bus hang-up identified...
+				i2c_busy_timeouts++;
+				*stat = I2C_STATUS_BUSERR;
+				// set stop bit for forced access to the I2C bus
+				iic->ip->CONSET = I2C_CON_STO;
+			}
 		}
 		break;
 
@@ -487,7 +489,9 @@ void I2C_EventHandler(I2C_ID_T id, I2C_EVENT_T event)
 			NVIC_EnableIRQ(I2C_IRQn + (IRQn_Type) id);
 		}
 		else {
-//			i2c_max_pendings = MAX(i2c_max_pendings, iic->pending); // debug
+#ifdef DEBUG
+			i2c_max_pendings = MAX(i2c_max_pendings, iic->pending);
+#endif
 			iic->pending--;
 		//	iic->txBuff_indexOut = (iic->txBuff_indexOut + iic->mXfer->buffered) % I2C_BUF_TX_SZ; // es necesario?
 			iic->txBuffCount -= iic->mXfer->buffered;
@@ -537,16 +541,17 @@ int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
 			(iic->txBuffCount + buffSzReq > I2C_BUF_TX_SZ ) ) {
 		xfer->status = I2C_STATUS_BUF_FULL;
-//		i2c_overflows++; // debug
+#ifdef DEBUG
+		i2c_overflows++;
+#endif
 	}
 	else
 	{
-		// save status to avoid changes by any interrupt without disabling them
+		// save status to avoid changing stuff while an interrupt may occur
 		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
-		iic->pending++;
 
-		if(!(iic->flags & 0x01)) {// if not locked
+		if(!(iic->flags & 0x01)) { // if not locked
 			xfer->status = I2C_STATUS_START;
 			iic->mEvent(id, I2C_EVENT_LOCK);
 		}
@@ -571,6 +576,8 @@ int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 		xfer->sent = 0;
 		memcpy(&iic->mXferList[pendingList_indexIn], xfer, sizeof (I2C_XFER_T));
 
+		updateIndexes(id, txBuff_indexIn, buffSzReq);
+
 		if(xfer->status == I2C_STATUS_START) {
 			iic->mXfer = &iic->mXferList[pendingList_indexIn];
 			/* If slave xfer not in progress */
@@ -579,13 +586,10 @@ int I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
 			}
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
-
-		updateIndexes(id, txBuff_indexIn, buffSzReq);
 	}
 
 	return (int) xfer->status;
 }
-
 
 // Send command followed by some data
 int I2C_MasterSendCmdData(  I2C_ID_T id,
@@ -604,17 +608,18 @@ int I2C_MasterSendCmdData(  I2C_ID_T id,
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
 			(iic->txBuffCount + buffSzReq > I2C_BUF_TX_SZ ) ) {
 		status = I2C_STATUS_BUF_FULL;
-//		i2c_overflows++; // debug
+#ifdef DEBUG
+		i2c_overflows++;
+#endif
 	}
 	else
 	{
-		// save status to avoid changes by any interrupt without disabling them
+		// save status to avoid changing stuff while an interrupt may occur
 		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
 		uint16_t bindex_aux = txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
-		iic->pending++;
 
-		if(!(iic->flags & 0x01)) {// if not locked
+		if(!(iic->flags & 0x01)) { // if not locked
 			iic->mEvent(id, I2C_EVENT_LOCK);
 		}
 		else {
@@ -648,6 +653,8 @@ int I2C_MasterSendCmdData(  I2C_ID_T id,
 		xfer->status = status;
 		xfer->options = options;
 
+		updateIndexes(id, bindex_aux, buffSzReq);
+
 		if(status == I2C_STATUS_START) {
 			iic->mXfer = xfer;
 			/* If slave xfer not in progress */
@@ -656,8 +663,6 @@ int I2C_MasterSendCmdData(  I2C_ID_T id,
 			}
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
-
-		updateIndexes(id, bindex_aux, buffSzReq);
 	}
 
 	return (int) status;
@@ -679,14 +684,15 @@ int I2C_MasterSend( I2C_ID_T id,
 	if ( ( iic->pending == I2C_PENDING_LIST_SZ ) ||
 			(iic->txBuffCount + buffSzReq > I2C_BUF_TX_SZ ) ) {
 		status = I2C_STATUS_BUF_FULL;
-//		i2c_overflows++; // debug
+#ifdef DEBUG
+		i2c_overflows++;
+#endif
 	}
 	else
 	{
-		// save status to avoid changes by any interrupt without disabling them
+		// save status to avoid changing stuff while an interrupt may occur
 		uint16_t txBuff_indexIn = iic->txBuff_indexIn;
 		uint8_t pendingList_indexIn = iic->pendingList_indexIn;
-		iic->pending++;
 
 		if(!(iic->flags & 0x01)) { // if not locked
 			iic->mEvent(id, I2C_EVENT_LOCK);
@@ -714,6 +720,9 @@ int I2C_MasterSend( I2C_ID_T id,
 		xfer->status = status;
 		xfer->options = options;
 
+		txBuff_indexIn = (txBuff_indexIn + len) % I2C_BUF_TX_SZ;
+		updateIndexes(id, txBuff_indexIn, buffSzReq);
+
 		if(status == I2C_STATUS_START) {
 			iic->mXfer = xfer;
 			/* If slave xfer not in progress */
@@ -722,9 +731,6 @@ int I2C_MasterSend( I2C_ID_T id,
 			}
 			iic->mEvent(id, I2C_EVENT_WAIT);
 		}
-
-		txBuff_indexIn = (txBuff_indexIn + len) % I2C_BUF_TX_SZ;
-		updateIndexes(id, txBuff_indexIn, buffSzReq);
 	}
 
 	return (int) status;

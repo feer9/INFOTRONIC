@@ -17,8 +17,8 @@
 // next to usb memory area
 //#define I2C_STACK_MEM_BASE		((uint8_t*)0x2007C800UL)
 //#define I2C_STACK_MEM_SIZE		0x0800
-#define I2C_BUF_TX_SZ			0x0080
-#define I2C_PENDING_LIST_SZ		0x0020
+#define I2C_BUF_TX_SZ			0x0080UL
+#define I2C_PENDING_LIST_SZ		0x0020UL
 
 /** Return values for SLAVE handler
   Chip drivers will usally be designed to match their events with this value */
@@ -207,12 +207,12 @@ typedef struct I2C_XFER {
 
 	uint16_t           rxSz;		/**< Number of bytes to be received,
 									   if 0 only transmission we be carried on */
+	uint8_t            slaveAddr;	/**< 7-bit I2C Slave address */
+	uint8_t            options;		/**< OR'ed I2C_OPT_x flags */
 
 	void (*cb) (struct I2C_XFER *);	/**< Callback function that will be executed on transfer end */
-
-	uint8_t            slaveAddr;	/**< 7-bit I2C Slave address */
 	I2C_STATUS_T       status;		/**< Status of the current I2C transfer */
-	uint8_t            options;		/**< OR'ed I2C_OPT_x flags */
+
 } I2C_XFER_T;
 
 typedef void (*i2c_cb_t) (struct I2C_XFER *this);
