@@ -193,6 +193,9 @@ static int write()
 
 /********** end of private code **********/
 
+// todo: move public code to primitives, using three functions to fill
+// eeprom struct, query eeprom busy status and fill callback.
+// rx_handler() and tx_handler() will need to be non static. (change the name!)
 
 status EEPROM_read(uint16_t address, uint8_t *buff, uint16_t sz)
 {
