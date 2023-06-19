@@ -43,6 +43,9 @@ size_t UART0_sendString(char *msg)
 {
 	size_t i;
 
+	if(!uart0->status)
+		return 0;
+
 	for(i=0; msg[i]; i++)
 	{
 		if( pushTx(msg[i]) != SUCCESS )
@@ -54,6 +57,9 @@ size_t UART0_sendString(char *msg)
 // return n bytes sent
 size_t UART0_send(uint8_t *msg, size_t len)
 {
+	if(!uart0->status)
+		return 0;
+
 	uint8_t buf[17] = {0};
 	size_t i, remain = len%16;
 	len -= remain;
@@ -68,6 +74,10 @@ size_t UART0_send(uint8_t *msg, size_t len)
 size_t UART0_sendRequest(UART0_requests_t id)
 {
 	size_t ret = 0;
+
+	if(!UART0_isUp())
+		UART0_setUp();
+
 	switch(id)
 	{
 	case UART0_REQUEST_TIME:
