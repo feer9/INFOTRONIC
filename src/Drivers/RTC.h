@@ -4,6 +4,7 @@
 #include "chip.h"
 #include "regsLPC1769.h"
 #include "KitInfo2_BaseBoard.h"
+#include "Drivers/GPIO.h"
 
 typedef struct {
 	uint32_t sec;

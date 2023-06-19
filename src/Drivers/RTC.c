@@ -35,24 +35,38 @@ void RTC_init()
 
 void RTC_IRQHandler(void)
 {
+	// Read the Interrupt Location Register and Auxiliary control register
+	uint32_t ILR = LPC_RTC->ILR;
+	uint32_t RTC_AUX = LPC_RTC->RTC_AUX;
+
 	// RTCCIF (counter increment interrupt)
-	if(LPC_RTC->ILR & _BIT(0))
+	if(ILR & _BIT(0))
 	{
-		LPC_RTC->ILR = _BIT(0);
 		if(LCD_isInClock() && LCD_isOn())
 			LCD_updateClock();
 	}
 
 	// RTCALF (alarma)
-	if(LPC_RTC->ILR & _BIT(1))
+	if(ILR & _BIT(1))
 	{
-		LPC_RTC->ILR = _BIT(1);
 		LPC_RTC->AMR = 0xFFUL; // desactivo alarma
 	//	uint32_t dummy = PCON;
 		PCON |= (1UL << 8);
 
 		gpio_togglePin(LEDLPC_B);
 	}
+
+	// RTC_OSCF
+	if (RTC_AUX & _BIT(4))
+	{
+		// This bit is set when the RTC oscillator fails to toggle
+		// on the next cycle, and when RTC power is first turned on.
+		//UART0_requestTime();
+	}
+
+	// Clear interrupts
+	LPC_RTC->ILR = ILR;
+	LPC_RTC->RTC_AUX = RTC_AUX;
 }
 
 void RTC_resetTime()
