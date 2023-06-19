@@ -31,6 +31,7 @@ uint8_t u8x8_gpio_and_delay_sw_lpc1769(u8x8_t *u8x8, uint8_t msg, uint8_t arg_in
 uint8_t u8x8_gpio_and_delay_lpc1769(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
 uint8_t u8x8_byte_i2c_lpc1769(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
 
+
 void ssd1306_loop(void);
 void ssd1306_init(u8g2_t *u8g2);
 void ssd1306_setPointer(u8g2_t *p);

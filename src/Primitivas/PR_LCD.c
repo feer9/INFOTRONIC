@@ -1,4 +1,4 @@
-#include "../Drivers/chip.h"
+#include "chip.h"
 #include "../Drivers/varios.h"
 #include "../Drivers/LCD.h"
 #include "../Drivers/Timer.h"
