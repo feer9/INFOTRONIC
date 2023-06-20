@@ -3,7 +3,8 @@
 
 #include "chip.h"
 #include "KitInfo2_BaseBoard.h"
-#include "../Aplicacion/Aplicacion.h"
+#include "GPIO.h"
+#include "Aplicacion/Aplicacion.h"
 
 
 void ADC_init(void);

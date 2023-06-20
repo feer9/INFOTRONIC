@@ -8,7 +8,6 @@
 #ifndef KITINFO2_BASEBOARD_H_
 #define KITINFO2_BASEBOARD_H_
 
-#include "GPIO.h"
 
 
 //#define CORE_CLK	100000000

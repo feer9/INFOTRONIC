@@ -1,6 +1,7 @@
 *.launch
 Debug/
 Release/
+.vscode
 
 Thumbs.db
 .directory

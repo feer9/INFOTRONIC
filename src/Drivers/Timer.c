@@ -1,6 +1,6 @@
 #include "Timer.h"
 
-//TODO: agregar un contador con el Timer1. Ver que onda el RIT
+//TODO: agregar un contador con el Timer1.
 
 // recibe el tiempo del prescaler en microsegundos
 void TIMER0_init(uint32_t us)

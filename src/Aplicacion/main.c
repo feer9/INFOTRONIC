@@ -1,4 +1,4 @@
-#include <cr_section_macros.h>
+//#include <cr_section_macros.h>
 #include "../Drivers/UART.h"
 #include "../Drivers/oled_ssd1306.h"
 #include "../vcom/cdc_vcom.h"
@@ -6,7 +6,7 @@
 
 extern void kit_init(void);
 
-
+__attribute__((__noreturn__))
 int main(void)
 {
 	kit_init();
@@ -15,7 +15,7 @@ int main(void)
 	{
 		UART0_receive();
 
-		ssd1306_loop();
+		ssd1306_loop();//todo: change this to oled_loop()
 
 		usbd_cdc_vcom();
 

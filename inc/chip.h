@@ -394,6 +394,11 @@ static inline void NVIC_DisableIRQ(IRQn_Type IRQn)
   ICER[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* disable interrupt */
 }
 
+static inline bool NVIC_IRQStatus(IRQn_Type IRQn)
+{
+	return (bool) ((ISER[((uint32_t)(IRQn) >> 5)] >> ((uint32_t)(IRQn) & 0x1F)) & 1UL);
+}
+
 static inline void NVIC_ClearPendingIRQ(IRQn_Type IRQn)
 {
   ICPR[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* disable interrupt */

@@ -23,7 +23,7 @@ static struct ADC adc = {
 
 inline bool     ADC_hasChanged (void) { return adc.change;  }
 inline void     ADC_clearChange(void) { adc.change = false; }
-inline uint32_t ADC_getVal     (void) { return adc.AD5_val;     }
+inline uint32_t ADC_getVal     (void) { return adc.AD5_val; }
 inline bool     ADC_isOn       (void) { return adc.status;  }
 
 void ADC_init()

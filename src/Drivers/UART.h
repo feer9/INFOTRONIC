@@ -3,6 +3,7 @@
 
 #include "chip.h"
 #include "regsLPC1769.h"
+#include "GPIO.h"
 #include "KitInfo2_BaseBoard.h"
 
 #define U0_INIT_STATUS OFF
@@ -51,8 +52,6 @@ typedef struct {
 	__RW bool	 TxStart;
 	__RW bool    status;
 }uart_t;
-
-
 
 
 

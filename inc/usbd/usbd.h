@@ -33,7 +33,6 @@
  *  @{
  */
 
-//#include "lpcopen/lpc_types.h"
 #include "lpc_types.h"
 
 #if defined(__GNUC__)
