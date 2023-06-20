@@ -496,7 +496,7 @@ uint8_t u8x8_cad_ssd13xx_fast_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, vo
       /* assumes, that the args of a command is not longer than 31 bytes */
       /* speed improvement is about 4% compared to the classic version */
       if ( in_transfer != 0 )
-	 u8x8_byte_EndTransfer(u8x8); 
+        u8x8_byte_EndTransfer(u8x8);
       
       u8x8_byte_StartTransfer(u8x8);
       u8x8_byte_SendByte(u8x8, 0x000);	/* cmd byte for ssd13xx controller */
@@ -519,9 +519,8 @@ uint8_t u8x8_cad_ssd13xx_fast_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, vo
       break;      
     case U8X8_MSG_CAD_SEND_DATA:
       if ( in_transfer != 0 )
-	u8x8_byte_EndTransfer(u8x8); 
-      
-    
+        u8x8_byte_EndTransfer(u8x8);
+
       /* the FeatherWing OLED with the 32u4 transfer of long byte */
       /* streams was not possible. This is broken down to */
       /* smaller streams, 32 seems to be the limit... */
@@ -530,11 +529,11 @@ uint8_t u8x8_cad_ssd13xx_fast_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, vo
       /* so this is done here. Even further, only 24 bytes will be sent, */
       /* because there will be another byte (DC) required during the transfer */
       p = arg_ptr;
-       while( arg_int > 24 )
+      while( arg_int > 128 ) // MODIFIED TO 128 IN LPC1769
       {
-	u8x8_i2c_data_transfer(u8x8, 24, p);
-	arg_int-=24;
-	p+=24;
+        u8x8_i2c_data_transfer(u8x8, 128, p);
+        arg_int-=128;
+        p+=128;
       }
       u8x8_i2c_data_transfer(u8x8, arg_int, p);
       in_transfer = 0;
@@ -542,14 +541,14 @@ uint8_t u8x8_cad_ssd13xx_fast_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, vo
     case U8X8_MSG_CAD_INIT:
       /* apply default i2c adr if required so that the start transfer msg can use this */
       if ( u8x8->i2c_address == 255 )
-	u8x8->i2c_address = 0x078;
+        u8x8->i2c_address = 0x078;
       return u8x8->byte_cb(u8x8, msg, arg_int, arg_ptr);
     case U8X8_MSG_CAD_START_TRANSFER:
       in_transfer = 0;
       break;
     case U8X8_MSG_CAD_END_TRANSFER:
       if ( in_transfer != 0 )
-	u8x8_byte_EndTransfer(u8x8); 
+        u8x8_byte_EndTransfer(u8x8);
       in_transfer = 0;
       break;
     default:

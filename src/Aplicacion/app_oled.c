@@ -169,7 +169,7 @@ void ssd1306_loop(void)
 		u8g2_ClearBuffer(u8g2);
 		u8g2_DrawXBM(u8g2, 32,0, bitmap_mushroom_width, bitmap_mushroom_height, bitmap_mushroom);
 		u8g2_SendBuffer(u8g2);
-		decimas_oled = 50;
+		decimas_oled = 5;//= 50;
 	//	keep_going = false;
 		break;
 
