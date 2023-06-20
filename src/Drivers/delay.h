@@ -53,5 +53,6 @@ void delay_system_ticks(uint32_t sys_ticks);
 */
 void delay_us(uint32_t us);
 void delay_ms(uint32_t ms);
+void delay   (uint32_t seconds);
 
 #endif /* _DELAY_H */

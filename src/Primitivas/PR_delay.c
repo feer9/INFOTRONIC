@@ -29,3 +29,9 @@ void delay_ms(uint32_t ms)
 	sys_ticks *= ms;
 	delay_system_ticks(sys_ticks);
 }
+
+void delay(uint32_t seconds)
+{
+	for( ; seconds ; --seconds )
+		delay_ms(1000);
+}
