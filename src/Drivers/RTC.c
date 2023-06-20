@@ -1,17 +1,31 @@
 #include "RTC.h"
 #include "LCD.h"
 
-
-
 void RTC_init()
 {
-	PCONP |= PCONP_RTC;				// power control periferic rtc
-	LPC_RTC->RTC_AUXEN _SET_BIT(4);	// the RTC Oscillator Fail detect interrupt is enabled
+	ICER0 = NVIC_RTC;				// Disable interrupt in NVIC
+	PCONP |= PCONP_RTC;				// Enable RTC in Power Control Periferic
 
-	LPC_RTC->CIIR = 1UL;	// interrupcion cada: bit0->seg bit1->min bit2->hora...
-	LPC_RTC->AMR = 0xFFUL;	// when 'n' bit is 1, the value is not compared for the alarm
-	ICPR0 = NVIC_RTC;		// limpio interrupcion
-	ISER0 = NVIC_RTC;		// habilito interrupcion en el NVIC
+	LPC_RTC->CIIR = 1UL;			// Interrupt each: bit0->sec bit1->min bit2->hour...
+	LPC_RTC->AMR  = 0xFFUL;			// When 'n' bit is 1, the value is not compared for the alarm
+	LPC_RTC->CCR  = 1UL;			// Clock Enable
+
+	if(LPC_RTC->RTC_AUX & _BIT(4))	// RTC Oscillator Fail detect flag.
+	{
+		LPC_RTC->CCR = 0x12;        // CLKEN = 0, CTCRST = 1, CCALEN = 1
+		LPC_RTC->CALIBRATION = 86400 | (1UL<<17); // adelanta ~1seg / dia
+
+		RTC_resetTime();
+
+		LPC_RTC->RTC_AUX _SET_BIT(4); // clear flag
+		LPC_RTC->CCR = 0x01;        // CLKEN = 1
+	}
+}
+
+void RTC_enableInterrupts(void)
+{
+	LPC_RTC->RTC_AUXEN setBIT(4);	// The RTC Oscillator Fail detect interrupt is enabled
+	ISER0 = NVIC_RTC;
 }
 
 void RTC_IRQHandler(void)
@@ -19,6 +33,10 @@ void RTC_IRQHandler(void)
 	// Read the Interrupt Location Register and Auxiliary control register
 	uint32_t ILR = LPC_RTC->ILR;
 	uint32_t RTC_AUX = LPC_RTC->RTC_AUX;
+
+	// Clear interrupt flags
+	LPC_RTC->ILR = ILR;
+	LPC_RTC->RTC_AUX = RTC_AUX;
 
 	// RTCCIF (counter increment interrupt)
 	if(ILR & _BIT(0))
@@ -42,27 +60,7 @@ void RTC_IRQHandler(void)
 	{
 		// This bit is set when the RTC oscillator fails to toggle
 		// on the next cycle, and when RTC power is first turned on.
-
-//		CCR->CLKEN  = 0 : The time counters are disabled so that they may be initialized.
-//		CCR->CTCRST = 1 : The elements in the internal oscillator divider are reset
-//		CCR->CCALEN = 1 : The calibration counter is disabled and reset to zero
-		LPC_RTC->CCR = 0x12;
-
-		LPC_RTC->CALIBRATION = 86400 | (0x01 << 17); 	// adelantaba ~1seg / dia
-
-		RTC_resetTime();
-
-		LPC_RTC->RTC_AUX _SET_BIT(4);	// clear flag
-
-//		CCR->CLKEN  = 1: The time counters are enabled
-//		CCR->CTCRST = 0: Remain reset until CCR[1] is changed to zero -> lo pongo a 0
-//		CCR->CCALEN = 0 : The calibration counter is enabled and counting
-		LPC_RTC->CCR = 0x01;
 	}
-
-	// Clear interrupts
-	LPC_RTC->ILR = ILR;
-	LPC_RTC->RTC_AUX = RTC_AUX;
 }
 
 void RTC_resetTime()
@@ -108,7 +106,7 @@ void RTC_getTime(rtc_t *rtc)
 	rtc->year		= LPC_RTC->YEAR;
 }
 
-void RTC_setTime_fromString(char *s)
+void RTC_setTime_fromString(uint8_t *s)
 {
 	rtc_t rtc;
 	rtc.year       = (uint32_t) (s[0] << 8) | s[1];

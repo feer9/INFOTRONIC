@@ -27,7 +27,6 @@ void kit_init ( void )
 	usbd_init();
 	UART0_init(U0_INIT_STATUS);
 	ADC_init();
-	RTC_init();
 	ExtInt_init();
 
 	APP_setGlobalSymbols(&lcd, &u8g2);
@@ -35,12 +34,9 @@ void kit_init ( void )
 	TIMER0_init(1000);   // 1ms
 	SysTick_init(10000); // 10ms
 	RIT_init(200);		 // 200us
+	RTC_init();
 
-#ifdef DEBUG
-	LCD_init(&lcd, LCD_INTERNAL_RESET_DISABLED);
-#else
-	LCD_init(&lcd, LCD_INTERNAL_RESET_ENABLED);
-#endif
+	LCD_init(&lcd, LCD_INTERNAL_RESET_MODE);
 	ssd1306_init(&u8g2);
 	ssd1306_off();
 

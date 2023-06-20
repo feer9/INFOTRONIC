@@ -21,8 +21,10 @@ void RTC_init		( void );
 void RTC_setTime	(rtc_t*);
 void RTC_getTime	(rtc_t*);
 void RTC_resetTime	( void );
-void RTC_setTime_fromString(char*);
+void RTC_setTime_fromString(uint8_t*);
 void RTC_setGPREG_fromTime(void);
 void RTC_setAlarmInMinutes(uint32_t minutes);
 void RTC_setAlarmInSeconds(uint32_t seconds);
+void RTC_enableInterrupts(void);
+
 #endif /* DRIVERS_RTC_H_ */

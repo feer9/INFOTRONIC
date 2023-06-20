@@ -34,7 +34,11 @@
 #define msg_4_2		"OLED Status: OFF"
 #define desc_4_1	" hold to change"
 
-
+#ifdef DEBUG
+	#define LCD_INTERNAL_RESET_MODE LCD_INTERNAL_RESET_DISABLED
+#else
+	#define LCD_INTERNAL_RESET_MODE LCD_INTERNAL_RESET_ENABLED
+#endif
 
 
 struct menu_level {
@@ -58,7 +62,7 @@ void showMenu(void);
 void enterMenu(void);
 void showADC(void);
 void stopADC(void);
-void tramaRecibida(char *msg);
+void tramaRecibida(uint8_t *msg, uint32_t len);
 void toggle_on_lcd(void);
 void toggle_off_lcd(void);
 

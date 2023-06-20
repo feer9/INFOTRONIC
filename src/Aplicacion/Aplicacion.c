@@ -108,6 +108,7 @@ void showClock()
 {
 	if(lcd->isInClock == false && lcd->isOn == true)
 	{
+		RTC_enableInterrupts();
 		LCD_stopScroll();
 		LCD_displayClock();
 		lcd->isInClock = true;
@@ -469,7 +470,7 @@ void defaultKeyHandler(bool st)
 }
 
 
-void tramaRecibida(char *msg)
+void tramaRecibida(uint8_t *msg, uint32_t len)
 {
 	int i = 0;
 	switch(msg[i++])
@@ -480,16 +481,15 @@ void tramaRecibida(char *msg)
 		if(msg[i] == 'T')
 		{
 			i++;
-			// check 2 bytes year + 1 month + 1 day + 1 hour + 1 min + 1 sec = 7 bytes
-			if(strlen(&msg[i]) == 7) {
+			// AT: 2 + year: 2 + month: 1 + day: 1 + hour: 1 + min: 1 + sec: 1 = 9 bytes
+			if(len == 9) {
 				RTC_setTime_fromString(&msg[i]);
 				RTC_setGPREG_fromTime();
 			}
-
 		}
 	}
 
 	// test de comunicacion
-	if(!strncmp(msg, "PUT0", 4))
+	if(!strncmp((char*)msg, "PUT0", 4))
 		UART0_sendString("<F0RRo>\r\n");
 }
