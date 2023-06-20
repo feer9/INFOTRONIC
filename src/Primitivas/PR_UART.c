@@ -98,7 +98,7 @@ inline void UART0_requestTime(void)
 void UART0_receive(void)
 {
 	int16_t data;
-	char c;
+	uint8_t c;
 	static uint32_t i=0;
 	static bool recibiendoTrama = false;
 	static char msg[LCD_MAX_MSG_SIZE];
@@ -108,16 +108,16 @@ void UART0_receive(void)
 
 	if ((data = popRx()) != -1)
 	{
-		c = (char) data;
+		c = (uint8_t) data;
 		if(recibiendoTrama)
 		{
 			if(c == '>')
 			{
 				recibiendoTrama = false;
 				msg[i] = '\0';
-				i = 0;
 
-				tramaRecibida(msg);
+				tramaRecibida(msg, i);
+				i = 0;
 			}
 			else
 			{
