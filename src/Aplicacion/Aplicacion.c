@@ -114,7 +114,7 @@ void showClock()
 	}
 }
 
-volatile static int8_t adc_timerId;
+volatile static int8_t adc_timerId = -1;
 
 void showADC()
 {
