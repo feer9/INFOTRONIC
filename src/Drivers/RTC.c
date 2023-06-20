@@ -8,25 +8,6 @@ void RTC_init()
 	PCONP |= PCONP_RTC;				// power control periferic rtc
 	LPC_RTC->RTC_AUXEN _SET_BIT(4);	// the RTC Oscillator Fail detect interrupt is enabled
 
-	if(LPC_RTC->RTC_AUX & _BIT(4))	// RTC Oscillator Fail detect flag.
-	{
-//		CCR->CLKEN  = 0 : The time counters are disabled so that they may be initialized.
-//		CCR->CTCRST = 1 : The elements in the internal oscillator divider are reset
-//		CCR->CCALEN = 1 : The calibration counter is disabled and reset to zero
-		LPC_RTC->CCR = 0x12;
-
-		LPC_RTC->CALIBRATION = 86400 | (0x01 << 17); 	// adelantaba ~1seg / dia
-
-		RTC_resetTime();
-
-		LPC_RTC->RTC_AUX _SET_BIT(4);	// clear flag
-
-//		CCR->CLKEN  = 1: The time counters are enabled
-//		CCR->CTCRST = 0: Remain reset until CCR[1] is changed to zero -> lo pongo a 0
-//		CCR->CCALEN = 0 : The calibration counter is enabled and counting
-		LPC_RTC->CCR = 0x01;
-	}
-
 	LPC_RTC->CIIR = 1UL;	// interrupcion cada: bit0->seg bit1->min bit2->hora...
 	LPC_RTC->AMR = 0xFFUL;	// when 'n' bit is 1, the value is not compared for the alarm
 	ICPR0 = NVIC_RTC;		// limpio interrupcion
@@ -56,12 +37,27 @@ void RTC_IRQHandler(void)
 		gpio_togglePin(LEDLPC_B);
 	}
 
-	// RTC_OSCF
+	// RTC_OSCF (Oscillator Fail detect flag).
 	if (RTC_AUX & _BIT(4))
 	{
 		// This bit is set when the RTC oscillator fails to toggle
 		// on the next cycle, and when RTC power is first turned on.
-		//UART0_requestTime();
+
+//		CCR->CLKEN  = 0 : The time counters are disabled so that they may be initialized.
+//		CCR->CTCRST = 1 : The elements in the internal oscillator divider are reset
+//		CCR->CCALEN = 1 : The calibration counter is disabled and reset to zero
+		LPC_RTC->CCR = 0x12;
+
+		LPC_RTC->CALIBRATION = 86400 | (0x01 << 17); 	// adelantaba ~1seg / dia
+
+		RTC_resetTime();
+
+		LPC_RTC->RTC_AUX _SET_BIT(4);	// clear flag
+
+//		CCR->CLKEN  = 1: The time counters are enabled
+//		CCR->CTCRST = 0: Remain reset until CCR[1] is changed to zero -> lo pongo a 0
+//		CCR->CCALEN = 0 : The calibration counter is enabled and counting
+		LPC_RTC->CCR = 0x01;
 	}
 
 	// Clear interrupts
@@ -81,9 +77,9 @@ void RTC_resetTime()
 	LPC_RTC->SEC   = 0;
 
 	// Guardo la fecha en que actualicé el rtc para ajustar la calibracion
-	LPC_RTC->GPREG0 = 20200000;
-	LPC_RTC->GPREG1 = 000000;
-	LPC_RTC->GPREG2 = 0;
+	LPC_RTC->GPREG0 = 20200000; // YYYYMMDD
+	LPC_RTC->GPREG1 = 000000;   // HHMMSS
+	LPC_RTC->GPREG2 = 0;        // boot cycles
 	LPC_RTC->GPREG3 = 0;
 	LPC_RTC->GPREG4 = 0;
 }
@@ -133,12 +129,12 @@ void RTC_setGPREG_fromTime ()
 	uint32_t tmp;
 
 	tmp = 10000 * LPC_RTC->YEAR + 100 * LPC_RTC->MONTH + LPC_RTC->DOM;
-	LPC_RTC->GPREG0 = tmp;
+	LPC_RTC->GPREG0 = tmp; // YYYYMMDD
 
 	tmp = 10000 * LPC_RTC->HOUR + 100 * LPC_RTC->MIN   + LPC_RTC->SEC;
-	LPC_RTC->GPREG1 = tmp;
+	LPC_RTC->GPREG1 = tmp; // HHMMSS
 
-	LPC_RTC->GPREG2 = 0; // starts count
+//	LPC_RTC->GPREG2 = 0;   // reset boot cycles
 }
 
 void RTC_setAlarmInMinutes(uint32_t minutes)
